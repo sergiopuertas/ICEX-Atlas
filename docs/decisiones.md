@@ -1,0 +1,56 @@
+# Registro de decisiones (ADR ligero)
+
+Formato: **D-NNN · Título** — contexto → decisión → consecuencias.
+
+## D-001 · Escala 1.000 → 5.000 socios
+Contexto: el prompt pedía dimensionar para 10.000 y diseñar para 100.000. El 16/11/2026 producto lo reduce para controlar coste.
+Decisión: dimensionar para **1.000** socios al arrancar con **tope de diseño de 5.000**.
+Consecuencias: plan **Supabase Pro** (instancia Small/Medium) basta; no hace falta Team. Pro incluye 500 conexiones
+Realtime concurrentes; con 5.000 socios y ~10 % de concurrencia en pico estamos en el límite, por eso se desactiva el
+tope de gasto (spend cap) para poder ampliar cuota sin corte. El feed sigue en *fan-out on read* (D-010) y la tabla
+`feed_items` queda preparada pero inactiva. Las particiones mensuales de mensajes se mantienen porque son baratas y
+facilitan la retención.
+
+## D-002 · Flutter 3.47.9 (N‑1) fijado con FVM
+La estable más reciente el 16/11/2026 es 3.50.0 (11/11/2026); N‑1 = **3.47.9** (Dart 3.13.7). Fijado en `.fvmrc`.
+
+## D-003 · Toda la Data API pasa por el esquema `api`
+Solo se expone `api` en `config.toml`. Cada módulo vive en su esquema (no expuesto). Las funciones de `api` son
+`security invoker` (RLS aplica) salvo las que necesitan escribir en filas de otros usuarios (notificaciones, colas),
+que son `security definer` con `set search_path = ''` y comprobación explícita de membresía.
+En la app, todos los repositorios dependen de una interfaz `ApiClient.rpc()` → fácil de simular en tests.
+
+## D-004 · Modelos Dart escritos a mano, codegen solo donde aporta
+Riverpod con `riverpod_generator` y Drift con `drift_dev` (obligatorios). Los modelos de dominio son clases inmutables
+con `fromJson` manual: menos tiempo de build y sin dependencia de `freezed`.
+
+## D-005 · Fuentes empaquetadas
+DM Sans y Sora se incluyen como TTF (licencia OFL, obtenidas de Fontsource) en lugar de `google_fonts`, para no
+enviar la IP del usuario a Google en tiempo de ejecución (RGPD) y funcionar offline.
+
+## D-006 · Proveedor OIDC de pruebas propio (`oidc-provider` de panva) en Docker
+El prompt sugiere mock-oauth2-server o Keycloak. Se usa un contenedor Node con `oidc-provider` (implementación OIDC
+certificada) porque permite emitir exactamente el claim `icex_member_verified` igual que hará WordPress, con dos
+usuarios semilla (verificado y no verificado) y sin configuración de reinos. Imagen base `node:22-alpine` (Docker Hub).
+
+## D-007 · Proveedor `custom:icex-alumni` dado de alta por Admin API
+Los proveedores OIDC personalizados de Supabase Auth (GA abril 2026) no se configuran en `config.toml`; se crean con la
+Admin API (`POST /auth/v1/admin/custom-providers`). `scripts/setup-local-auth.sh` lo hace en local y el runbook explica
+producción.
+
+## D-008 · Verificación de socio en dos capas
+1. **Before User Created hook** (SQL): rechaza el alta si el ID token no trae `icex_member_verified = true`.
+2. **Custom Access Token hook** (SQL): en cada emisión/refresh de JWT comprueba `identity.members.status = 'active'`
+   y añade `user_role`; si el socio está dado de baja, devuelve error → no hay sesión nueva.
+3. **RLS**: todas las políticas exigen `identity.is_member()` (fila activa). Un usuario de Auth sin membresía activa
+   no lee ni escribe nada aunque tenga un JWT válido.
+El cron diario (`identity.sync_memberships`) marca bajas y revoca sesiones (`auth.sessions`/`auth.refresh_tokens`).
+
+## D-009 · Mensajes particionados por mes **por rango de UUIDv7**
+Una tabla particionada exige que la PK contenga la clave de partición. Como el id es UUIDv7 (ordenado por tiempo),
+se particiona por `RANGE (id)` con límites calculados del primer UUIDv7 de cada mes. Así `id` sigue siendo PK única
+→ idempotencia por id sin columnas extra. `pg_cron` crea las particiones de los 3 meses siguientes.
+
+## D-010 · Feed fase 1 = fan-out on read
+`api.get_feed(cursor)` une seguidos + clubs + novedades oficiales con índice `(autor_id, creado desc)` y keyset
+`(creado, id)`. `feed.feed_items` existe sin uso para migrar a fan-out on write si algún día hace falta.

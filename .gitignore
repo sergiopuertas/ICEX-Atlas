@@ -1,0 +1,37 @@
+# Secretos
+.env
+.env.*
+!.env.example
+supabase/.env
+supabase/functions/.env
+**/google-services.json
+**/GoogleService-Info.plist
+*.jks
+*.keystore
+*.p8
+*.p12
+*.mobileprovision
+# Supabase local
+supabase/.branches
+supabase/.temp
+# Flutter / Dart
+**/.dart_tool/
+**/build/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/coverage/
+**/*.iml
+.fvm/flutter_sdk
+**/ios/Pods/
+**/ios/Flutter/ephemeral/
+**/android/.gradle/
+**/android/local.properties
+# Node / Deno
+node_modules/
+docker/oidc-provider/node_modules/
+# Fastlane
+**/fastlane/report.xml
+**/fastlane/README.md
+**/fastlane/test_output
+# SO
+.DS_Store
