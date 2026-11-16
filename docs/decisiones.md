@@ -87,3 +87,9 @@ salen siempre de la búsqueda vectorial (nunca del LLM), así no se inventan per
 `page_width: 100`) y `unnecessary_type_name_in_constructor`/`unnecessary_const_in_enum_constructor` (sintaxis
 abreviada de constructores de Dart 3.13; mantenemos la clásica, que es la que usa el ecosistema Flutter).
 Además: `strict-casts`, `strict-inference`, `strict-raw-types`. `flutter analyze` debe dar 0 avisos.
+
+## D-016 · Accesibilidad: dos colores de fase oscurecidos un 5-10 %
+Los badges de fase llevan texto blanco de 11 px en negrita (no cuenta como «texto grande» en WCAG). Con los colores
+exactos del mockup, Fase 0 (#8A7E75, 3,95:1) y Fase II (#DA4620, 4,31:1) no llegaban al 4,5:1 de WCAG 2.2 AA. Se usan
+#7C7169 (4,75:1) y #CF431E (4,69:1): visualmente casi idénticos. Un test (`test/core/core_test.dart`) comprueba el
+contraste de todas las combinaciones de texto/fondo del tema.

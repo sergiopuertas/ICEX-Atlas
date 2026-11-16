@@ -13,7 +13,7 @@ String scrubText(String input) => input
     .replaceAll(_email, '[email]')
     .replaceAll(_jwt, '[token]')
     .replaceAll(_uuid, '[id]')
-    .replaceAll(RegExp('/perfil/[^/?#]+'), '/perfil/[slug]');
+    .replaceAll(RegExp(r'/perfil/[^/?#\s]+'), '/perfil/[slug]');
 
 SentryEvent? scrubEvent(SentryEvent event, Hint hint) {
   event

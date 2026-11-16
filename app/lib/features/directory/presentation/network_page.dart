@@ -208,6 +208,7 @@ class MemberCard extends StatelessWidget {
           children: [
             SizedBox(
               height: 100,
+              width: double.infinity,
               child: Stack(
                 alignment: Alignment.bottomCenter,
                 children: [

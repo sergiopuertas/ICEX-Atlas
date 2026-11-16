@@ -137,6 +137,7 @@ class _Header extends ConsumerWidget {
         children: [
           SizedBox(
             height: 116,
+            width: double.infinity,
             child: Stack(
               alignment: Alignment.bottomCenter,
               children: [

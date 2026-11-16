@@ -18,9 +18,10 @@ abstract final class IcexColors {
   static const secondary = Color(0xFFF8F4F2);
   static const destructive = Color(0xFFE7000B);
 
-  static const phase0 = Color(0xFF8A7E75);
+  // Fase 0 y Fase II, un 10 % más oscuros que el mockup para cumplir 4,5:1 con texto blanco (D-016).
+  static const phase0 = Color(0xFF7C7169);
   static const phase1 = Color(0xFFE78B30);
-  static const phase2 = Color(0xFFDA4620);
+  static const phase2 = Color(0xFFCF431E);
   static const Color phaseActive = primary;
 
   static Color phase(Fase f) => switch (f) {
@@ -35,6 +36,7 @@ abstract final class IcexColors {
 }
 
 abstract final class IcexTheme {
+  static const Color _fg = IcexColors.foreground;
   static const radius = 12.0;
   static const display = 'Sora';
   static const body = 'DM Sans';
@@ -57,52 +59,58 @@ abstract final class IcexTheme {
     final base = ThemeData(useMaterial3: true, colorScheme: scheme, fontFamily: body);
     return base.copyWith(
       scaffoldBackgroundColor: IcexColors.page,
-      textTheme: base.textTheme
-          .apply(bodyColor: IcexColors.foreground, displayColor: IcexColors.foreground)
-          .copyWith(
-            headlineLarge: const TextStyle(
-              fontFamily: display,
-              fontSize: 28,
-              fontWeight: FontWeight.w700,
-            ),
-            headlineMedium: const TextStyle(
-              fontFamily: display,
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-            ),
-            headlineSmall: const TextStyle(
-              fontFamily: display,
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-            ),
-            titleLarge: const TextStyle(
-              fontFamily: display,
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
-            titleMedium: const TextStyle(
-              fontFamily: display,
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-            ),
-            titleSmall: const TextStyle(
-              fontFamily: body,
-              fontSize: 15,
-              fontWeight: FontWeight.w600,
-            ),
-            bodyLarge: const TextStyle(fontFamily: body, fontSize: 16, height: 1.5),
-            bodyMedium: const TextStyle(fontFamily: body, fontSize: 14, height: 1.45),
-            bodySmall: const TextStyle(
-              fontFamily: body,
-              fontSize: 12.5,
-              color: IcexColors.mutedForeground,
-            ),
-            labelLarge: const TextStyle(
-              fontFamily: body,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
+      // Cada estilo lleva su color: copyWith sustituye estilos completos (sin color → invisible).
+      textTheme: base.textTheme.copyWith(
+        headlineLarge: const TextStyle(
+          fontFamily: display,
+          fontSize: 28,
+          fontWeight: FontWeight.w700,
+          color: _fg,
+        ),
+        headlineMedium: const TextStyle(
+          fontFamily: display,
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: _fg,
+        ),
+        headlineSmall: const TextStyle(
+          fontFamily: display,
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          color: _fg,
+        ),
+        titleLarge: const TextStyle(
+          fontFamily: display,
+          fontSize: 18,
+          fontWeight: FontWeight.w600,
+          color: _fg,
+        ),
+        titleMedium: const TextStyle(
+          fontFamily: display,
+          fontSize: 16,
+          fontWeight: FontWeight.w600,
+          color: _fg,
+        ),
+        titleSmall: const TextStyle(
+          fontFamily: body,
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          color: _fg,
+        ),
+        bodyLarge: const TextStyle(fontFamily: body, fontSize: 16, height: 1.5, color: _fg),
+        bodyMedium: const TextStyle(fontFamily: body, fontSize: 14, height: 1.45, color: _fg),
+        bodySmall: const TextStyle(
+          fontFamily: body,
+          fontSize: 12.5,
+          color: IcexColors.mutedForeground,
+        ),
+        labelLarge: const TextStyle(
+          fontFamily: body,
+          fontSize: 14,
+          fontWeight: FontWeight.w600,
+          color: _fg,
+        ),
+      ),
       appBarTheme: const AppBarTheme(
         backgroundColor: IcexColors.card,
         foregroundColor: IcexColors.foreground,

@@ -85,6 +85,9 @@ class SupabaseApiClient implements ApiClient {
       return await run();
     } on PostgrestException catch (e) {
       throw AppFailure.fromCode(e.code, e.message, hint: e.hint);
+    } on FunctionsFetchException {
+      // Fallo de red al invocar una Edge Function (sin respuesta HTTP).
+      throw const NetworkFailure();
     } on FunctionException catch (e) {
       final details = e.details;
       final msg = details is Map ? details['message']?.toString() : e.reasonPhrase;

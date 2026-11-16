@@ -14,6 +14,7 @@ class IcexStripe extends StatelessWidget {
     child: SizedBox(
       height: height,
       child: const Row(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Expanded(child: ColoredBox(color: IcexColors.primary)),
           Expanded(flex: 2, child: ColoredBox(color: IcexColors.accent)),
@@ -166,7 +167,8 @@ class LoadingView extends StatelessWidget {
   );
 }
 
-/// Tarjeta blanca con borde suave del mockup.
+/// Tarjeta blanca con borde suave del mockup. Material (no DecoratedBox) para que las
+/// salpicaduras de ListTile/InkWell sean visibles; acento rojo opcional a la izquierda.
 class IcexCard extends StatelessWidget {
   const IcexCard({
     required this.child,
@@ -180,21 +182,27 @@ class IcexCard extends StatelessWidget {
   final bool accentLeft;
 
   @override
-  Widget build(BuildContext context) => Container(
-    decoration: BoxDecoration(
-      color: IcexColors.card,
+  Widget build(BuildContext context) => Material(
+    color: IcexColors.card,
+    clipBehavior: Clip.antiAlias,
+    shape: RoundedRectangleBorder(
       borderRadius: BorderRadius.circular(IcexTheme.radius),
-      border: accentLeft
-          ? const Border(
-              left: BorderSide(color: IcexColors.primary, width: 4),
-              top: BorderSide(color: IcexColors.border),
-              right: BorderSide(color: IcexColors.border),
-              bottom: BorderSide(color: IcexColors.border),
-            )
-          : Border.all(color: IcexColors.border),
+      side: const BorderSide(color: IcexColors.border),
     ),
-    padding: padding,
-    child: child,
+    child: accentLeft
+        ? Stack(
+            children: [
+              Padding(padding: padding.add(const EdgeInsets.only(left: 4)), child: child),
+              const Positioned(
+                left: 0,
+                top: 0,
+                bottom: 0,
+                width: 4,
+                child: ColoredBox(color: IcexColors.primary),
+              ),
+            ],
+          )
+        : Padding(padding: padding, child: child),
   );
 }
 

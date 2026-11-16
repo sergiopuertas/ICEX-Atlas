@@ -145,26 +145,40 @@ class _ComposerState extends ConsumerState<Composer> {
           const SizedBox(height: 6),
           Row(
             children: [
-              TextButton.icon(
-                onPressed: _busy ? null : _pickImage,
-                icon: const Icon(Icons.image_outlined, size: 20),
-                label: Text(l.composerPhoto),
+              Expanded(
+                child: Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    TextButton.icon(
+                      onPressed: _busy ? null : _pickImage,
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                      ),
+                      icon: const Icon(Icons.image_outlined, size: 20),
+                      label: Text(l.composerPhoto),
+                    ),
+                    TextButton.icon(
+                      onPressed: _busy
+                          ? null
+                          : () => setState(() => _tipo = PostTipo.oportunidadLaboral),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                      ),
+                      icon: const Icon(Icons.work_outline, size: 20),
+                      label: Text(l.composerOffer),
+                    ),
+                    PopupMenuButton<PostTipo>(
+                      tooltip: l.composerType,
+                      icon: const Icon(Icons.more_horiz, color: IcexColors.mutedForeground),
+                      onSelected: (t) => setState(() => _tipo = t),
+                      itemBuilder: (_) => [
+                        for (final t in PostTipo.publicables)
+                          PopupMenuItem(value: t, child: Text(PostTypeBadge.describe(t).$2)),
+                      ],
+                    ),
+                  ],
+                ),
               ),
-              TextButton.icon(
-                onPressed: _busy ? null : () => setState(() => _tipo = PostTipo.oportunidadLaboral),
-                icon: const Icon(Icons.work_outline, size: 20),
-                label: Text(l.composerOffer),
-              ),
-              PopupMenuButton<PostTipo>(
-                tooltip: l.composerType,
-                icon: const Icon(Icons.more_horiz, color: IcexColors.mutedForeground),
-                onSelected: (t) => setState(() => _tipo = t),
-                itemBuilder: (_) => [
-                  for (final t in PostTipo.publicables)
-                    PopupMenuItem(value: t, child: Text(PostTypeBadge.describe(t).$2)),
-                ],
-              ),
-              const Spacer(),
               FilledButton(
                 key: const Key('composer-publish'),
                 onPressed: canPublish ? _publish : null,
