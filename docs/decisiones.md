@@ -73,3 +73,17 @@ explícito del runbook de producción y de PARADAS_HUMANAS.
 Cambios en `[auth.hook.*]` de `config.toml` no se aplican con `db reset`: hace falta `supabase stop && supabase start`.
 Detectado al ver que un no socio entraba con los hooks recién configurados. El test de integración
 `scripts/e2e/auth.test.mjs` cubre ahora el rechazo de no verificados contra el stack real.
+
+## D-014 · Embeddings de 384 dimensiones (gte-small en el propio Edge Runtime)
+`orientador.documents.embedding` es `vector(384)`. En producción el proveedor por defecto es `gte-small`, que
+Supabase ejecuta dentro del Edge Runtime (`Supabase.ai.Session`): los textos de perfiles y publicaciones no salen
+de la región de Supabase. En desarrollo/tests: `MockEmbeddings` (feature hashing determinista). Cambiar a otro
+modelo con otra dimensión exige una migración del índice HNSW. El LLM que redacta los pasos es intercambiable
+(`LLM_PROVIDER`: mock | openai-compatible | anthropic) y su elección es una parada humana. Los alumni sugeridos
+salen siempre de la búsqueda vectorial (nunca del LLM), así no se inventan personas.
+
+## D-015 · Linter estricto: very_good_analysis 11 con tres excepciones
+`public_member_api_docs` (es una app, no un paquete), `lines_longer_than_80_chars` (usamos `dart format` con
+`page_width: 100`) y `unnecessary_type_name_in_constructor`/`unnecessary_const_in_enum_constructor` (sintaxis
+abreviada de constructores de Dart 3.13; mantenemos la clásica, que es la que usa el ecosistema Flutter).
+Además: `strict-casts`, `strict-inference`, `strict-raw-types`. `flutter analyze` debe dar 0 avisos.
