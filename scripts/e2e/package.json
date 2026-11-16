@@ -1,0 +1,8 @@
+{
+  "name": "icex-atlas-e2e",
+  "private": true,
+  "type": "module",
+  "description": "Pruebas de integración contra la Supabase local (mismo contrato que usa la app Flutter)",
+  "scripts": { "test": "node --test --test-concurrency=1 ./*.test.mjs" },
+  "dependencies": { "@supabase/supabase-js": "2.119.0" }
+}

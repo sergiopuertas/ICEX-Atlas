@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "strict": true
+  },
+  "lint": {
+    "rules": {
+      "tags": [
+        "recommended"
+      ]
+    }
+  },
+  "fmt": {
+    "lineWidth": 130,
+    "singleQuote": true
+  },
+  "tasks": {
+    "check": "deno check --no-lock */index.ts tests/*.ts",
+    "test": "deno test --no-lock --allow-env --allow-net tests/"
+  }
+}
