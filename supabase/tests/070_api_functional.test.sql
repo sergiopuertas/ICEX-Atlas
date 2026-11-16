@@ -42,6 +42,7 @@ select is((api.community_stats() ->> 'alumni')::int, 6340, 'Cifras oficiales con
 -- ------------------------------------------------------------- orientador ----
 select tests.clear_authentication();
 update config.app_config set value = '2' where key = 'orientador.daily_limit';
+delete from orientador.queries where user_id = :'ana';   -- independiente de ejecuciones previas
 select tests.authenticate_as(:'ana');
 select lives_ok($$select api.orientador_reserve(gen_random_uuid(), 'fase_1', 'Alemania', 'Energía', 'Entrevista Fase II')$$, 'Orientador: 1ª consulta');
 select lives_ok($$select api.orientador_reserve(gen_random_uuid(), 'fase_1', 'Alemania', 'Energía', 'Otra')$$, 'Orientador: 2ª consulta');
