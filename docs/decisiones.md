@@ -54,3 +54,22 @@ se particiona por `RANGE (id)` con límites calculados del primer UUIDv7 de cada
 ## D-010 · Feed fase 1 = fan-out on read
 `api.get_feed(cursor)` une seguidos + clubs + novedades oficiales con índice `(autor_id, creado desc)` y keyset
 `(creado, id)`. `feed.feed_items` existe sin uso para migrar a fan-out on write si algún día hace falta.
+
+## D-011 · IdP de pruebas en red Docker TEST-NET-3 con TLS de desarrollo
+Supabase Auth exige issuer **HTTPS** y bloquea issuers que resuelvan a IPs privadas (protección SSRF, también en
+tiempo de ejecución). En local: el IdP vive en la red `icex-atlas-idpnet` (203.0.113.0/24, rango de documentación
+RFC 5737, no privado) como `idp.icex-atlas.test`, con certificado firmado por una CA de desarrollo
+(`scripts/dev-certs.sh`). `scripts/setup-local.sh` conecta el contenedor de Auth a esa red y añade la CA a su almacén.
+En el host, `idp.icex-atlas.test → 127.0.0.1`. Funciona en Linux, CI y Docker Desktop sin iptables.
+En producción no aplica nada de esto: WordPress tiene un dominio público con certificado real.
+
+## D-012 · `custom_claims_allowlist` obligatorio en el proveedor
+Supabase Auth descarta los claims no estándar del ID token salvo los incluidos en `custom_claims_allowlist` del
+proveedor. Sin `icex_member_verified` en esa lista **ningún socio nuevo podría entrar** (el hook lo rechazaría).
+Los claims permitidos llegan a `raw_user_meta_data.custom_claims`. Se configura en local (setup-local.sh) y es un paso
+explícito del runbook de producción y de PARADAS_HUMANAS.
+
+## D-013 · Los hooks de Auth requieren reiniciar el stack
+Cambios en `[auth.hook.*]` de `config.toml` no se aplican con `db reset`: hace falta `supabase stop && supabase start`.
+Detectado al ver que un no socio entraba con los hooks recién configurados. El test de integración
+`scripts/e2e/auth.test.mjs` cubre ahora el rechazo de no verificados contra el stack real.

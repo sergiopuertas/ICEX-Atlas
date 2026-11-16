@@ -1,0 +1,11 @@
+{
+  "name": "icex-atlas-oidc-dev",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Proveedor OIDC de pruebas que imita a la web WordPress de ICEX Alumni (solo desarrollo local)",
+  "type": "module",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "dependencies": { "oidc-provider": "9.15.0" },
+  "engines": { "node": ">=22" }
+}

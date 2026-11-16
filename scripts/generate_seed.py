@@ -194,6 +194,10 @@ for p in people:
                 f"now() - interval '{random.randint(30, 400)} days', now(), now())")
 w("insert into auth.users (id, instance_id, aud, role, email, raw_app_meta_data, raw_user_meta_data, created_at, updated_at, email_confirmed_at) values\n  "
   + ",\n  ".join(rows) + ";")
+# GoTrue no admite NULL en estas columnas de texto al leer el usuario (login OIDC de los usuarios semilla).
+w("update auth.users set confirmation_token = '', recovery_token = '', email_change_token_new = '', email_change = '', "
+  "email_change_token_current = '', phone_change = '', phone_change_token = '', reauthentication_token = '' "
+  "where email like '%@demo.icexalumni.invalid';")
 
 w("\n-- Identidades OIDC de los usuarios de prueba (login con el proveedor local custom:icex-alumni)")
 for name, (sub, email, _) in LOGIN_USERS.items():

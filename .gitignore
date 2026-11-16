@@ -35,3 +35,4 @@ docker/oidc-provider/node_modules/
 **/fastlane/test_output
 # SO
 .DS_Store
+docker/certs/
