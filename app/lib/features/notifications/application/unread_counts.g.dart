@@ -16,7 +16,8 @@ final unreadProvider = UnreadProvider._();
 
 /// No leídos (mensajes y notificaciones) para los badges. Se refresca con los eventos
 /// del canal privado `user:<id>` de Realtime.
-final class UnreadProvider extends $AsyncNotifierProvider<Unread, UnreadCounts> {
+final class UnreadProvider
+    extends $AsyncNotifierProvider<Unread, UnreadCounts> {
   /// No leídos (mensajes y notificaciones) para los badges. Se refresca con los eventos
   /// del canal privado `user:<id>` de Realtime.
   UnreadProvider._()
@@ -38,7 +39,7 @@ final class UnreadProvider extends $AsyncNotifierProvider<Unread, UnreadCounts> 
   Unread create() => Unread();
 }
 
-String _$unreadHash() => r'f22074e4dae702b63674d118b82a7e5bd8cdcda3';
+String _$unreadHash() => r'ed64a4678c24d7346af7f08d46bf1ea48f4b8607';
 
 /// No leídos (mensajes y notificaciones) para los badges. Se refresca con los eventos
 /// del canal privado `user:<id>` de Realtime.

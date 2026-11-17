@@ -41,7 +41,8 @@ final class DirectoryControllerProvider
   }
 }
 
-String _$directoryControllerHash() => r'9b4cf2937c984ac3dc9a3a955b382af632017661';
+String _$directoryControllerHash() =>
+    r'7f25eaf44fca4c5f455b6560af3de99f3ee1111a';
 
 abstract class _$DirectoryController extends $Notifier<DirectoryState> {
   DirectoryState build();

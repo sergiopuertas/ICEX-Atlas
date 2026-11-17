@@ -6,7 +6,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-eval "$(supabase status -o env 2>/dev/null | grep -E '^(API_URL|SERVICE_ROLE_KEY|SECRET_KEY|DB_URL)=')"
+eval "$(supabase status -o env 2>/dev/null | grep -E '^(API_URL|SERVICE_ROLE_KEY|SECRET_KEY|DB_URL|ANON_KEY)=')"
 OIDC_ISSUER="${OIDC_ISSUER:-https://idp.icex-atlas.test:9010}"
 OIDC_CLIENT_ID="${OIDC_CLIENT_ID:-supabase-local}"
 OIDC_CLIENT_SECRET="${OIDC_CLIENT_SECRET:-supabase-local-secret}"
@@ -17,6 +17,7 @@ if ! grep -q 'idp.icex-atlas.test' /etc/hosts 2>/dev/null; then
 fi
 
 ./scripts/dev-certs.sh
+[[ -f supabase/functions/.env ]] || cp supabase/functions/.env.local.example supabase/functions/.env
 AUTH_CONTAINER="supabase_auth_${PROJECT_ID}"
 echo "→ El contenedor de Auth confía en la CA de desarrollo (Supabase Auth exige issuer HTTPS)"
 CA_FP="$(openssl x509 -in docker/certs/dev-ca.crt -noout -fingerprint -sha256 | cut -d= -f2 | tr -d :)"
@@ -59,4 +60,15 @@ select vault.create_secret('http://supabase_kong_${PROJECT_ID}:8000', 'project_u
 select vault.create_secret('${SERVICE_ROLE_KEY}', 'service_role_key')
  where not exists (select 1 from vault.secrets where name = 'service_role_key');
 SQL
+echo "→ Configuración de la app (app/env/local.json)"
+cat > app/env/local.json <<JSON
+{
+  "SUPABASE_URL": "${API_URL}",
+  "SUPABASE_ANON_KEY": "${ANON_KEY}",
+  "OIDC_PROVIDER": "custom:icex-alumni",
+  "AUTH_REDIRECT": "es.icexalumni.atlas://login-callback",
+  "APP_ENV": "local",
+  "SHOW_DEMO_BANNER": true
+}
+JSON
 echo "✓ Entorno local listo. Usuarios OIDC de prueba: ana, javier, laura (admin), nueva (alta nueva), pedro (no socio)."

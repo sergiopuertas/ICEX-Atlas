@@ -30,7 +30,8 @@ final class AppEnvProvider extends $FunctionalProvider<AppEnv, AppEnv, AppEnv>
 
   @$internal
   @override
-  $ProviderElement<AppEnv> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<AppEnv> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
   @override
   AppEnv create(Ref ref) {
@@ -39,7 +40,10 @@ final class AppEnvProvider extends $FunctionalProvider<AppEnv, AppEnv, AppEnv>
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(AppEnv value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<AppEnv>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<AppEnv>(value),
+    );
   }
 }
 
@@ -89,7 +93,8 @@ String _$supabaseClientHash() => r'3db2a4c212c7f24cea9810e376225aa1a6cab012';
 @ProviderFor(apiClient)
 final apiClientProvider = ApiClientProvider._();
 
-final class ApiClientProvider extends $FunctionalProvider<ApiClient, ApiClient, ApiClient>
+final class ApiClientProvider
+    extends $FunctionalProvider<ApiClient, ApiClient, ApiClient>
     with $Provider<ApiClient> {
   ApiClientProvider._()
     : super(
@@ -107,7 +112,8 @@ final class ApiClientProvider extends $FunctionalProvider<ApiClient, ApiClient, 
 
   @$internal
   @override
-  $ProviderElement<ApiClient> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
+  $ProviderElement<ApiClient> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
 
   @override
   ApiClient create(Ref ref) {
@@ -116,7 +122,10 @@ final class ApiClientProvider extends $FunctionalProvider<ApiClient, ApiClient, 
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(ApiClient value) {
-    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<ApiClient>(value));
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<ApiClient>(value),
+    );
   }
 }
 
@@ -125,7 +134,8 @@ String _$apiClientHash() => r'5acb032bcc626accadd537d6cb9fa96a964ebcb1';
 @ProviderFor(authGateway)
 final authGatewayProvider = AuthGatewayProvider._();
 
-final class AuthGatewayProvider extends $FunctionalProvider<AuthGateway, AuthGateway, AuthGateway>
+final class AuthGatewayProvider
+    extends $FunctionalProvider<AuthGateway, AuthGateway, AuthGateway>
     with $Provider<AuthGateway> {
   AuthGatewayProvider._()
     : super(
@@ -166,7 +176,8 @@ String _$authGatewayHash() => r'3aed19f6de2fe91e7b787d176897473084ae0062';
 final realtimeGatewayProvider = RealtimeGatewayProvider._();
 
 final class RealtimeGatewayProvider
-    extends $FunctionalProvider<RealtimeGateway, RealtimeGateway, RealtimeGateway>
+    extends
+        $FunctionalProvider<RealtimeGateway, RealtimeGateway, RealtimeGateway>
     with $Provider<RealtimeGateway> {
   RealtimeGatewayProvider._()
     : super(
@@ -206,7 +217,8 @@ String _$realtimeGatewayHash() => r'364d30092f8bab9b89bec751dbdf55a0cd2e43c3';
 @ProviderFor(appDatabase)
 final appDatabaseProvider = AppDatabaseProvider._();
 
-final class AppDatabaseProvider extends $FunctionalProvider<AppDatabase, AppDatabase, AppDatabase>
+final class AppDatabaseProvider
+    extends $FunctionalProvider<AppDatabase, AppDatabase, AppDatabase>
     with $Provider<AppDatabase> {
   AppDatabaseProvider._()
     : super(
@@ -246,7 +258,8 @@ String _$appDatabaseHash() => r'59cce38d45eeaba199eddd097d8e149d66f9f3e1';
 @ProviderFor(idGenerator)
 final idGeneratorProvider = IdGeneratorProvider._();
 
-final class IdGeneratorProvider extends $FunctionalProvider<IdGenerator, IdGenerator, IdGenerator>
+final class IdGeneratorProvider
+    extends $FunctionalProvider<IdGenerator, IdGenerator, IdGenerator>
     with $Provider<IdGenerator> {
   IdGeneratorProvider._()
     : super(
@@ -287,7 +300,12 @@ String _$idGeneratorHash() => r'db1f00a556b20ab100c38b593333652dc28108d9';
 final profilesRepositoryProvider = ProfilesRepositoryProvider._();
 
 final class ProfilesRepositoryProvider
-    extends $FunctionalProvider<ProfilesRepository, ProfilesRepository, ProfilesRepository>
+    extends
+        $FunctionalProvider<
+          ProfilesRepository,
+          ProfilesRepository,
+          ProfilesRepository
+        >
     with $Provider<ProfilesRepository> {
   ProfilesRepositoryProvider._()
     : super(
@@ -305,8 +323,9 @@ final class ProfilesRepositoryProvider
 
   @$internal
   @override
-  $ProviderElement<ProfilesRepository> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<ProfilesRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
   ProfilesRepository create(Ref ref) {
@@ -322,13 +341,19 @@ final class ProfilesRepositoryProvider
   }
 }
 
-String _$profilesRepositoryHash() => r'85e587b0ac460c05cb8a9231c84be7f18447bb27';
+String _$profilesRepositoryHash() =>
+    r'85e587b0ac460c05cb8a9231c84be7f18447bb27';
 
 @ProviderFor(socialRepository)
 final socialRepositoryProvider = SocialRepositoryProvider._();
 
 final class SocialRepositoryProvider
-    extends $FunctionalProvider<SocialRepository, SocialRepository, SocialRepository>
+    extends
+        $FunctionalProvider<
+          SocialRepository,
+          SocialRepository,
+          SocialRepository
+        >
     with $Provider<SocialRepository> {
   SocialRepositoryProvider._()
     : super(
@@ -369,7 +394,12 @@ String _$socialRepositoryHash() => r'7953b2138f135a89e39d0fef10ebe83cd6e398da';
 final directoryRepositoryProvider = DirectoryRepositoryProvider._();
 
 final class DirectoryRepositoryProvider
-    extends $FunctionalProvider<DirectoryRepository, DirectoryRepository, DirectoryRepository>
+    extends
+        $FunctionalProvider<
+          DirectoryRepository,
+          DirectoryRepository,
+          DirectoryRepository
+        >
     with $Provider<DirectoryRepository> {
   DirectoryRepositoryProvider._()
     : super(
@@ -387,8 +417,9 @@ final class DirectoryRepositoryProvider
 
   @$internal
   @override
-  $ProviderElement<DirectoryRepository> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<DirectoryRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
   DirectoryRepository create(Ref ref) {
@@ -404,7 +435,8 @@ final class DirectoryRepositoryProvider
   }
 }
 
-String _$directoryRepositoryHash() => r'1d1520986b049faaa20daf801eb75311036a4b16';
+String _$directoryRepositoryHash() =>
+    r'1d1520986b049faaa20daf801eb75311036a4b16';
 
 @ProviderFor(feedRepository)
 final feedRepositoryProvider = FeedRepositoryProvider._();
@@ -451,7 +483,12 @@ String _$feedRepositoryHash() => r'3d3b93890d5b4386e4ae6062115968e51ae3fd46';
 final messagingRepositoryProvider = MessagingRepositoryProvider._();
 
 final class MessagingRepositoryProvider
-    extends $FunctionalProvider<MessagingRepository, MessagingRepository, MessagingRepository>
+    extends
+        $FunctionalProvider<
+          MessagingRepository,
+          MessagingRepository,
+          MessagingRepository
+        >
     with $Provider<MessagingRepository> {
   MessagingRepositoryProvider._()
     : super(
@@ -469,8 +506,9 @@ final class MessagingRepositoryProvider
 
   @$internal
   @override
-  $ProviderElement<MessagingRepository> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<MessagingRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
   MessagingRepository create(Ref ref) {
@@ -486,7 +524,8 @@ final class MessagingRepositoryProvider
   }
 }
 
-String _$messagingRepositoryHash() => r'f0836b09e3b2b515937c57557262d6b8ae59c92e';
+String _$messagingRepositoryHash() =>
+    r'f0836b09e3b2b515937c57557262d6b8ae59c92e';
 
 @ProviderFor(messageOutbox)
 final messageOutboxProvider = MessageOutboxProvider._();
@@ -556,8 +595,9 @@ final class NotificationsRepositoryProvider
 
   @$internal
   @override
-  $ProviderElement<NotificationsRepository> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<NotificationsRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
   NotificationsRepository create(Ref ref) {
@@ -573,7 +613,8 @@ final class NotificationsRepositoryProvider
   }
 }
 
-String _$notificationsRepositoryHash() => r'a1c3f00a3e80571657a24cd7306a5cc09b9baff4';
+String _$notificationsRepositoryHash() =>
+    r'a1c3f00a3e80571657a24cd7306a5cc09b9baff4';
 
 @ProviderFor(mapRepository)
 final mapRepositoryProvider = MapRepositoryProvider._();
@@ -620,7 +661,8 @@ String _$mapRepositoryHash() => r'a399ec7552e933f0b76b61d0e79094ccedd426d4';
 final clubsRepositoryProvider = ClubsRepositoryProvider._();
 
 final class ClubsRepositoryProvider
-    extends $FunctionalProvider<ClubsRepository, ClubsRepository, ClubsRepository>
+    extends
+        $FunctionalProvider<ClubsRepository, ClubsRepository, ClubsRepository>
     with $Provider<ClubsRepository> {
   ClubsRepositoryProvider._()
     : super(
@@ -661,7 +703,12 @@ String _$clubsRepositoryHash() => r'1d639ab126183740f17bc58ab62c5b1d056b2779';
 final orientadorRepositoryProvider = OrientadorRepositoryProvider._();
 
 final class OrientadorRepositoryProvider
-    extends $FunctionalProvider<OrientadorRepository, OrientadorRepository, OrientadorRepository>
+    extends
+        $FunctionalProvider<
+          OrientadorRepository,
+          OrientadorRepository,
+          OrientadorRepository
+        >
     with $Provider<OrientadorRepository> {
   OrientadorRepositoryProvider._()
     : super(
@@ -679,8 +726,9 @@ final class OrientadorRepositoryProvider
 
   @$internal
   @override
-  $ProviderElement<OrientadorRepository> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<OrientadorRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
   OrientadorRepository create(Ref ref) {
@@ -696,13 +744,19 @@ final class OrientadorRepositoryProvider
   }
 }
 
-String _$orientadorRepositoryHash() => r'f9fc589a74ec74426ca3e79ba31bd6e1340841dc';
+String _$orientadorRepositoryHash() =>
+    r'f9fc589a74ec74426ca3e79ba31bd6e1340841dc';
 
 @ProviderFor(accountRepository)
 final accountRepositoryProvider = AccountRepositoryProvider._();
 
 final class AccountRepositoryProvider
-    extends $FunctionalProvider<AccountRepository, AccountRepository, AccountRepository>
+    extends
+        $FunctionalProvider<
+          AccountRepository,
+          AccountRepository,
+          AccountRepository
+        >
     with $Provider<AccountRepository> {
   AccountRepositoryProvider._()
     : super(
@@ -720,8 +774,9 @@ final class AccountRepositoryProvider
 
   @$internal
   @override
-  $ProviderElement<AccountRepository> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<AccountRepository> $createElement(
+    $ProviderPointer pointer,
+  ) => $ProviderElement(pointer);
 
   @override
   AccountRepository create(Ref ref) {

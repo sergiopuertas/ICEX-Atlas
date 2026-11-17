@@ -1,0 +1,85 @@
+require "base64"
+
+# Fastlane de ICEX Atlas. Ejecutar desde app/:  bundle exec fastlane <plataforma> <lane>
+# Secretos: variables de entorno (ver .env.example). Publicar en tiendas es una PARADA HUMANA:
+# estas lanes suben a canales internos (TestFlight / pista interna); la promoción a producción la hace una persona.
+
+default_platform(:android)
+
+DART_DEFINES = "--dart-define-from-file=env/#{ENV.fetch('APP_ENV', 'production')}.json"
+
+def build_number
+  # Monótono y reproducible: número de ejecución de CI o marca de tiempo.
+  ENV["GITHUB_RUN_NUMBER"] || Time.now.strftime("%y%m%d%H%M")
+end
+
+platform :android do
+  desc "Prepara key.properties desde secretos de CI"
+  private_lane :signing do
+    keystore = File.expand_path("../android/app/upload.jks", __dir__)
+    File.binwrite(keystore, Base64.decode64(ENV.fetch("ANDROID_KEYSTORE_BASE64")))
+    File.write(File.expand_path("../android/key.properties", __dir__), <<~PROPS)
+      storeFile=upload.jks
+      storePassword=#{ENV.fetch('ANDROID_KEYSTORE_PASSWORD')}
+      keyAlias=#{ENV.fetch('ANDROID_KEY_ALIAS')}
+      keyPassword=#{ENV.fetch('ANDROID_KEY_PASSWORD')}
+    PROPS
+  end
+
+  desc "Compila el App Bundle firmado"
+  lane :build do
+    signing
+    sh("cd .. && flutter build appbundle --release --build-number=#{build_number} #{DART_DEFINES} --obfuscate --split-debug-info=build/symbols")
+  end
+
+  desc "Sube a la pista interna de Google Play (no publica en producción)"
+  lane :internal do
+    build
+    json = Base64.decode64(ENV.fetch("PLAY_JSON_KEY_BASE64"))
+    upload_to_play_store(
+      track: "internal",
+      release_status: "draft",
+      aab: File.expand_path("../build/app/outputs/bundle/release/app-release.aab", __dir__),
+      json_key_data: json,
+      skip_upload_metadata: true, skip_upload_images: true, skip_upload_screenshots: true
+    )
+  end
+end
+
+platform :ios do
+  private_lane :asc_key do
+    app_store_connect_api_key(
+      key_id: ENV.fetch("APP_STORE_CONNECT_API_KEY_ID"),
+      issuer_id: ENV.fetch("APP_STORE_CONNECT_API_ISSUER_ID"),
+      key_content: ENV.fetch("APP_STORE_CONNECT_API_KEY_CONTENT"),
+      is_key_content_base64: true
+    )
+  end
+
+  desc "Certificados y perfiles con match (solo lectura en CI)"
+  lane :certificates do
+    asc_key
+    setup_ci if ENV["CI"]
+    match(type: "appstore", readonly: true, git_url: ENV.fetch("MATCH_GIT_URL"))
+  end
+
+  desc "Compila el IPA firmado (perfil de match, firma manual)"
+  lane :build do
+    certificates
+    update_code_signing_settings(
+      path: "ios/Runner.xcodeproj", use_automatic_signing: false, targets: ["Runner"],
+      team_id: ENV.fetch("APPLE_TEAM_ID"), code_sign_identity: "Apple Distribution",
+      profile_name: "match AppStore es.icexalumni.atlas"
+    )
+    sh("cd .. && flutter build ipa --release --export-method app-store --build-number=#{build_number} #{DART_DEFINES} --obfuscate --split-debug-info=build/symbols")
+  end
+
+  desc "Sube a TestFlight (no envía a revisión)"
+  lane :beta do
+    build
+    upload_to_testflight(
+      ipa: Dir[File.expand_path("../build/ios/ipa/*.ipa", __dir__)].first,
+      skip_waiting_for_build_processing: true, skip_submission: true
+    )
+  end
+end

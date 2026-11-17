@@ -99,3 +99,15 @@ contraste de todas las combinaciones de texto/fondo del tema.
 OIDC y el esquema `api`. La comprobación de rol en el cliente es solo de experiencia de usuario: cada `api.admin_*`
 valida `identity.is_admin()`/`is_moderator()` en PostgreSQL (cubierto por pgTAP). Moderación ve Resumen y Denuncias;
 solo administración publica novedades, gestiona clubs, cambia roles y suspende socios.
+
+## D-018 · Firebase opcional en compilación
+El plugin Gradle `com.google.gms.google-services` (4.5.0) solo se aplica si existe `android/app/google-services.json`,
+y `Firebase.initializeApp()` está protegido. Así la app compila y se prueba en local y en CI sin proyecto Firebase,
+que es una parada humana. Con la configuración presente (inyectada por CI desde secretos) el push se activa sin
+cambiar código. En iOS, `Runner.entitlements` declara `aps-environment`.
+
+## D-019 · Release: Fastlane y CI sin publicar en tiendas
+Los flujos `release-mobile.yml` suben solo a **TestFlight** y a la **pista interna** de Play como borrador
+(`skip_submission`, `release_status: draft`). Pasar a producción en las tiendas es siempre una acción humana en cada
+consola. El despliegue del backend (`deploy-backend.yml`) es manual (`workflow_dispatch`) y producción exige
+aprobación del *environment* de GitHub. El seed nunca se aplica fuera de local.

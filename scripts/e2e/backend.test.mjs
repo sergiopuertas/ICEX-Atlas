@@ -2,7 +2,7 @@
 // Requisitos: `supabase start`, `./scripts/setup-local.sh`, funciones servidas
 // (por defecto en el edge-runtime: http://127.0.0.1:54321/functions/v1; o FUNCTIONS_URL con
 // scripts/serve-functions-host.sh) y NODE_EXTRA_CA_CERTS=docker/certs/dev-ca.crt.
-import { test } from 'node:test';
+import { after, test } from 'node:test';
 import assert from 'node:assert/strict';
 import { randomUUID } from 'node:crypto';
 import { createClient } from '@supabase/supabase-js';
@@ -24,12 +24,19 @@ function uuidv7() {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 
+// Cierra todos los sockets de Realtime al final, también si un test falla (si no, el proceso no termina).
+const clients = [];
+after(async () => {
+  await Promise.all(clients.map(async (c) => { await c.removeAllChannels(); c.realtime.disconnect(); }));
+});
+
 async function sessionFor(sub) {
   const { session, error } = await loginAs(sub, { anonKey: ANON });
   assert.equal(error, null, `login de ${sub}: ${error}`);
   const client = createClient(URL_, ANON, { db: { schema: 'api' }, auth: { persistSession: false, autoRefreshToken: false } });
   await client.auth.setSession({ access_token: session.access_token, refresh_token: session.refresh_token });
   await client.realtime.setAuth(session.access_token);
+  clients.push(client);
   return { client, session, uid: session.user.id };
 }
 
@@ -87,20 +94,31 @@ test('Recorrido completo: login → feed → publicar → seguir → mensaje en 
   // Mensaje en tiempo real: Javier escucha el canal privado de la conversación
   const convId = (await ana.client.rpc('find_direct_conversation', { p_to: javier.uid })).data
     ?? (await ana.client.rpc('send_message', { p_id: uuidv7(), p_cuerpo: 'Hola Javier', p_to: javier.uid, p_categoria: 'networking' })).data.conversation_id;
+  // En frío (justo tras `supabase db reset`) Realtime abre su conexión de replicación al unirse el primer
+  // cliente y los mensajes de esos segundos no se retransmiten: la app los recupera con get_messages al
+  // reconectar. Aquí se reenvía un mensaje nuevo cada 3 s hasta que uno llega por Realtime (máx. 30 s).
+  const sentIds = new Set();
   const received = new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('No llegó el mensaje por Realtime en 10 s')), 10_000);
+    let ticker;
+    const timer = setTimeout(() => { clearInterval(ticker); reject(new Error('No llegó ningún mensaje por Realtime en 30 s')); }, 30_000);
+    const send = async () => {
+      const id = uuidv7();
+      sentIds.add(id);
+      const sent = await ana.client.rpc('send_message', { p_id: id, p_cuerpo: 'Mensaje en tiempo real', p_conversation_id: convId });
+      if (sent.error) reject(new Error(sent.error.message));
+    };
     const ch = javier.client.channel(`conversation:${convId}`, { config: { private: true } })
-      .on('broadcast', { event: 'message.created' }, (msg) => { clearTimeout(timer); resolve({ msg, ch }); })
-      .subscribe(async (status) => {
-        if (status === 'SUBSCRIBED') {
-          const sent = await ana.client.rpc('send_message', { p_id: msgId, p_cuerpo: 'Mensaje en tiempo real', p_conversation_id: convId });
-          if (sent.error) reject(new Error(sent.error.message));
-        }
+      .on('broadcast', { event: 'message.created' }, (msg) => {
+        if (!sentIds.has(msg.payload.id)) return;
+        clearTimeout(timer); clearInterval(ticker); resolve({ msg, ch });
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED' && !ticker) { send(); ticker = setInterval(send, 3000); }
       });
   });
-  const msgId = uuidv7();
   const { msg, ch } = await received;
-  assert.equal(msg.payload.id, msgId);
+  const msgId = msg.payload.id;
+  assert.ok(sentIds.has(msgId));
   assert.equal(msg.payload.cuerpo, 'Mensaje en tiempo real');
   await javier.client.removeChannel(ch);
 

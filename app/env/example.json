@@ -1,0 +1,9 @@
+{
+  "SUPABASE_URL": "http://127.0.0.1:54321",
+  "SUPABASE_ANON_KEY": "",
+  "OIDC_PROVIDER": "custom:icex-alumni",
+  "AUTH_REDIRECT": "es.icexalumni.atlas://login-callback",
+  "APP_ENV": "local",
+  "SENTRY_DSN": "",
+  "SHOW_DEMO_BANNER": true
+}

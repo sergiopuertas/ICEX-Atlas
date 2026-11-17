@@ -38,3 +38,6 @@ docker/oidc-provider/node_modules/
 docker/certs/
 scripts/e2e/node_modules/
 **/test/goldens/failures/
+app/env/*.json
+!app/env/example.json
+**/android/key.properties

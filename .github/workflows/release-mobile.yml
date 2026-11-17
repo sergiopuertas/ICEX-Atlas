@@ -1,0 +1,82 @@
+# Builds de tienda con Fastlane. Sube a canales INTERNOS (TestFlight / pista interna).
+# La publicación en producción en las tiendas la hace una persona (docs/PARADAS_HUMANAS.md).
+name: Release mobile
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        type: choice
+        options: [android, ios, both]
+        default: both
+
+permissions:
+  contents: read
+
+jobs:
+  android:
+    if: inputs.platform != 'ios'
+    runs-on: ubuntu-latest
+    environment: production
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: app/pubspec.yaml
+          cache: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: app
+      - name: Configuración de la app (dart-define)
+        run: echo '${{ secrets.APP_ENV_PRODUCTION_JSON }}' > env/production.json
+      - name: Firebase (google-services.json)
+        run: echo '${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}' | base64 -d > android/app/google-services.json
+      - run: flutter pub get
+      - run: bundle exec fastlane android internal
+        env:
+          APP_ENV: production
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          PLAY_JSON_KEY_BASE64: ${{ secrets.PLAY_JSON_KEY_BASE64 }}
+
+  ios:
+    if: inputs.platform != 'android'
+    runs-on: macos-15
+    environment: production
+    defaults:
+      run:
+        working-directory: app
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: app/pubspec.yaml
+          cache: true
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: app
+      - run: echo '${{ secrets.APP_ENV_PRODUCTION_JSON }}' > env/production.json
+      - run: echo '${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}' | base64 -d > ios/Runner/GoogleService-Info.plist
+      - run: flutter pub get && cd ios && pod install
+      - run: bundle exec fastlane ios beta
+        env:
+          APP_ENV: production
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}

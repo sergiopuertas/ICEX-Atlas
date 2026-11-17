@@ -12,7 +12,8 @@ part of 'chat_controller.dart';
 @ProviderFor(ChatController)
 final chatControllerProvider = ChatControllerFamily._();
 
-final class ChatControllerProvider extends $AsyncNotifierProvider<ChatController, ChatState> {
+final class ChatControllerProvider
+    extends $AsyncNotifierProvider<ChatController, ChatState> {
   ChatControllerProvider._({
     required ChatControllerFamily super.from,
     required ({String? conversationId, String? toUserId}) super.argument,
@@ -49,7 +50,7 @@ final class ChatControllerProvider extends $AsyncNotifierProvider<ChatController
   }
 }
 
-String _$chatControllerHash() => r'12b3c06a662350e2a7e0ba6836324925a37ffd69';
+String _$chatControllerHash() => r'78ea1ce2adb4a0d516ab0339c370c1574b20a66e';
 
 final class ChatControllerFamily extends $Family
     with
@@ -99,7 +100,10 @@ abstract class _$ChatController extends $AsyncNotifier<ChatState> {
             >;
     return element.handleCreate(
       ref,
-      () => build(conversationId: _$args.conversationId, toUserId: _$args.toUserId),
+      () => build(
+        conversationId: _$args.conversationId,
+        toUserId: _$args.toUserId,
+      ),
     );
   }
 }
@@ -108,7 +112,8 @@ abstract class _$ChatController extends $AsyncNotifier<ChatState> {
 final conversationsControllerProvider = ConversationsControllerProvider._();
 
 final class ConversationsControllerProvider
-    extends $AsyncNotifierProvider<ConversationsController, ConversationsState> {
+    extends
+        $AsyncNotifierProvider<ConversationsController, ConversationsState> {
   ConversationsControllerProvider._()
     : super(
         from: null,
@@ -128,14 +133,17 @@ final class ConversationsControllerProvider
   ConversationsController create() => ConversationsController();
 }
 
-String _$conversationsControllerHash() => r'4b1dbcb6481d1b93d3e76d3eae29807b3171cd47';
+String _$conversationsControllerHash() =>
+    r'ea7a5318fc86f690fafbf11f360db8fa509221a2';
 
-abstract class _$ConversationsController extends $AsyncNotifier<ConversationsState> {
+abstract class _$ConversationsController
+    extends $AsyncNotifier<ConversationsState> {
   FutureOr<ConversationsState> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref = this.ref as $Ref<AsyncValue<ConversationsState>, ConversationsState>;
+    final ref =
+        this.ref as $Ref<AsyncValue<ConversationsState>, ConversationsState>;
     final element =
         ref.element
             as $ClassProviderElement<

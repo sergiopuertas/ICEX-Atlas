@@ -12,7 +12,8 @@ part of 'session_controller.dart';
 @ProviderFor(SessionController)
 final sessionControllerProvider = SessionControllerProvider._();
 
-final class SessionControllerProvider extends $NotifierProvider<SessionController, SessionState> {
+final class SessionControllerProvider
+    extends $NotifierProvider<SessionController, SessionState> {
   SessionControllerProvider._()
     : super(
         from: null,

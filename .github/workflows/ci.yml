@@ -1,0 +1,129 @@
+# CI de ICEX Atlas: todo debe estar en verde para fusionar en main.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  flutter:
+    name: Flutter (analyze, tests, cobertura)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      matrix:
+        project: [app, admin]
+    defaults:
+      run:
+        working-directory: ${{ matrix.project }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: app/pubspec.yaml   # 3.47.9 (N-1), igual que .fvmrc
+          cache: true
+      - run: flutter pub get
+      - name: Código generado al día (Riverpod, Drift)
+        if: matrix.project == 'app'
+        run: |
+          dart run build_runner build -d
+          git diff --exit-code -- lib
+      - name: Formato (excepto código generado)
+        run: dart format --output=none --set-exit-if-changed $(git ls-files 'lib/*.dart' 'test/*.dart' | grep -vE '\.g\.dart$|l10n/app_localizations')
+      - run: flutter analyze --fatal-infos
+      - run: flutter test --coverage
+      - name: Cobertura ≥ 80 % en domain y data
+        if: matrix.project == 'app'
+        run: python3 ../scripts/coverage_layers.py coverage/lcov.info 80
+      - name: Golden diffs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: golden-failures-${{ matrix.project }}
+          path: ${{ matrix.project }}/test/goldens/failures/
+          if-no-files-found: ignore
+
+  edge-functions:
+    name: Edge Functions (deno lint, check, test)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: supabase/functions
+    steps:
+      - uses: actions/checkout@v4
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: deno lint
+      - run: deno check --no-lock */index.ts tests/*.ts
+      - run: deno test --no-lock --allow-env --allow-net tests/
+
+  database:
+    name: Base de datos (migraciones, pgTAP, RLS) + E2E
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: supabase/setup-cli@v1
+        with:
+          version: latest
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Supabase local
+        run: supabase start -x studio,mailpit,logflare,vector,supavisor
+      - name: Migraciones desde cero + seed
+        run: supabase db reset
+      - name: Ninguna migración pendiente de generar (sin cambios manuales)
+        run: |
+          supabase db diff --local --schema api,identity,profiles,social,clubs,feed,messaging,notifications,orientador,moderation,config > /tmp/diff.sql
+          cat /tmp/diff.sql
+          grep -q '"diff":""' /tmp/diff.sql   # la CLI devuelve JSON; "diff" vacío = sin cambios fuera de migraciones
+      - name: pgTAP (incluye "RLS en todas las tablas")
+        run: supabase test db
+      - name: IdP de pruebas + proveedor OIDC
+        run: |
+          echo "127.0.0.1 idp.icex-atlas.test" | sudo tee -a /etc/hosts
+          ./scripts/setup-local.sh
+      - name: Edge Functions (host)
+        run: |
+          nohup ./scripts/serve-functions-host.sh > /tmp/functions.log 2>&1 &
+          sleep 8
+      - name: E2E (login → feed → publicar → seguir → mensaje en tiempo real)
+        working-directory: scripts/e2e
+        run: |
+          npm ci || npm install
+          eval "$(supabase status -o env | grep -E '^(ANON_KEY|SERVICE_ROLE_KEY)=')"
+          SUPABASE_ANON_KEY=$ANON_KEY SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY \
+          FUNCTIONS_URL=http://127.0.0.1:54400 NODE_EXTRA_CA_CERTS=../../docker/certs/dev-ca.crt \
+          node --test --test-concurrency=1 ./*.test.mjs
+      - name: Rendimiento (p95 < 200 ms con los datos semilla)
+        run: ./scripts/perf.sh
+      - name: Logs
+        if: failure()
+        run: |
+          cat /tmp/functions.log || true
+          for f in /tmp/fn-*.log; do echo "== $f"; tail -n 50 "$f"; done || true
+
+  secrets:
+    name: Sin secretos en el repositorio
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

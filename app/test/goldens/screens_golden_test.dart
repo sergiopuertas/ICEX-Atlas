@@ -27,7 +27,8 @@ import '../helpers/fakes.dart';
 const _phone = Size(400, 860);
 
 /// Fechas relativas a ahora: la antigüedad mostrada («hace 15 min») no depende del día del test.
-String _ago(int minutes) => DateTime.now().toUtc().subtract(Duration(minutes: minutes)).toIso8601String();
+String _ago(int minutes) =>
+    DateTime.now().toUtc().subtract(Duration(minutes: minutes)).toIso8601String();
 
 FakeApiClient demoApi() => FakeApiClient({
   'me': (_) => meJson(),

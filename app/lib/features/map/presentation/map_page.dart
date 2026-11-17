@@ -17,7 +17,7 @@ import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// Mapa mundial con alumni y clubs agrupados por zoom (clusters con número calculados en SQL).
-/// Teselas OpenStreetMap por defecto, configurables (MAP_TILE_URL / app_config).
+/// Teselas OpenStreetMap por defecto, configurables con MAP_TILE_URL (ver docs/runbook.md).
 class MapPage extends ConsumerStatefulWidget {
   const MapPage({super.key});
 

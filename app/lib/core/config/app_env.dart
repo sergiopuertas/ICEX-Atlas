@@ -1,3 +1,7 @@
+// Los valores de `fromEnvironment` cambian en compilación; el analizador los evalúa sin
+// defines y los marca como redundantes, por eso se desactiva la regla en este fichero.
+// ignore_for_file: avoid_redundant_argument_values
+
 /// Configuración inyectada en compilación con `--dart-define` (o `--dart-define-from-file`).
 ///
 /// Ver `.env.example` en la raíz del repositorio. Nunca se incluye aquí la clave
@@ -25,6 +29,16 @@ class AppEnv {
       defaultValue: 'es.icexalumni.atlas://login-callback',
     ),
     environment: String.fromEnvironment('APP_ENV', defaultValue: 'local'),
+    sentryDsn: String.fromEnvironment('SENTRY_DSN'),
+    mapTileUrl: String.fromEnvironment('MAP_TILE_URL', defaultValue: defaultTileUrl),
+    mapTileAttribution: String.fromEnvironment(
+      'MAP_TILE_ATTRIBUTION',
+      defaultValue: defaultTileAttribution,
+    ),
+    associationWebUrl: String.fromEnvironment(
+      'ASSOCIATION_WEB_URL',
+      defaultValue: 'https://icex-alumni.es',
+    ),
     showDemoBanner: bool.fromEnvironment('SHOW_DEMO_BANNER', defaultValue: true),
   );
 

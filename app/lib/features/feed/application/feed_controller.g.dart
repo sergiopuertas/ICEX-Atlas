@@ -12,7 +12,8 @@ part of 'feed_controller.dart';
 @ProviderFor(FeedController)
 final feedControllerProvider = FeedControllerProvider._();
 
-final class FeedControllerProvider extends $AsyncNotifierProvider<FeedController, FeedState> {
+final class FeedControllerProvider
+    extends $AsyncNotifierProvider<FeedController, FeedState> {
   FeedControllerProvider._()
     : super(
         from: null,
@@ -32,7 +33,7 @@ final class FeedControllerProvider extends $AsyncNotifierProvider<FeedController
   FeedController create() => FeedController();
 }
 
-String _$feedControllerHash() => r'b6238417293475c550ebab0aeba9dafc7087879e';
+String _$feedControllerHash() => r'bb7345af372881399c20a9326974b1e3febf5079';
 
 abstract class _$FeedController extends $AsyncNotifier<FeedState> {
   FutureOr<FeedState> build();
@@ -57,7 +58,11 @@ final communityStatsProvider = CommunityStatsProvider._();
 
 final class CommunityStatsProvider
     extends
-        $FunctionalProvider<AsyncValue<CommunityStats>, CommunityStats, FutureOr<CommunityStats>>
+        $FunctionalProvider<
+          AsyncValue<CommunityStats>,
+          CommunityStats,
+          FutureOr<CommunityStats>
+        >
     with $FutureModifier<CommunityStats>, $FutureProvider<CommunityStats> {
   CommunityStatsProvider._()
     : super(
@@ -75,8 +80,9 @@ final class CommunityStatsProvider
 
   @$internal
   @override
-  $FutureProviderElement<CommunityStats> $createElement($ProviderPointer pointer) =>
-      $FutureProviderElement(pointer);
+  $FutureProviderElement<CommunityStats> $createElement(
+    $ProviderPointer pointer,
+  ) => $FutureProviderElement(pointer);
 
   @override
   FutureOr<CommunityStats> create(Ref ref) {
@@ -89,7 +95,8 @@ String _$communityStatsHash() => r'c3364785ceacdf2de9b0d01518d7f0de5433fffc';
 @ProviderFor(Suggestions)
 final suggestionsProvider = SuggestionsProvider._();
 
-final class SuggestionsProvider extends $AsyncNotifierProvider<Suggestions, List<ProfileCard>> {
+final class SuggestionsProvider
+    extends $AsyncNotifierProvider<Suggestions, List<ProfileCard>> {
   SuggestionsProvider._()
     : super(
         from: null,
@@ -109,14 +116,15 @@ final class SuggestionsProvider extends $AsyncNotifierProvider<Suggestions, List
   Suggestions create() => Suggestions();
 }
 
-String _$suggestionsHash() => r'a777f3f2ae637b1b1ff810e2a074de3bdd18254f';
+String _$suggestionsHash() => r'3f9e2864dfbb891724a5cfd3da1428bef92f27e9';
 
 abstract class _$Suggestions extends $AsyncNotifier<List<ProfileCard>> {
   FutureOr<List<ProfileCard>> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref = this.ref as $Ref<AsyncValue<List<ProfileCard>>, List<ProfileCard>>;
+    final ref =
+        this.ref as $Ref<AsyncValue<List<ProfileCard>>, List<ProfileCard>>;
     final element =
         ref.element
             as $ClassProviderElement<
@@ -132,7 +140,8 @@ abstract class _$Suggestions extends $AsyncNotifier<List<ProfileCard>> {
 @ProviderFor(NewsController)
 final newsControllerProvider = NewsControllerProvider._();
 
-final class NewsControllerProvider extends $AsyncNotifierProvider<NewsController, FeedState> {
+final class NewsControllerProvider
+    extends $AsyncNotifierProvider<NewsController, FeedState> {
   NewsControllerProvider._()
     : super(
         from: null,

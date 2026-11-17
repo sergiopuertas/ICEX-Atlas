@@ -1,0 +1,4 @@
+# Identificadores de la app (los equipos y cuentas se configuran por variables de entorno).
+app_identifier("es.icexalumni.atlas")
+package_name("es.icexalumni.atlas")
+team_id(ENV["APPLE_TEAM_ID"]) if ENV["APPLE_TEAM_ID"]

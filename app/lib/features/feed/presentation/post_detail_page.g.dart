@@ -12,16 +12,19 @@ part of 'post_detail_page.dart';
 @ProviderFor(postDetail)
 final postDetailProvider = PostDetailFamily._();
 
-final class PostDetailProvider extends $FunctionalProvider<AsyncValue<Post>, Post, FutureOr<Post>>
+final class PostDetailProvider
+    extends $FunctionalProvider<AsyncValue<Post>, Post, FutureOr<Post>>
     with $FutureModifier<Post>, $FutureProvider<Post> {
-  PostDetailProvider._({required PostDetailFamily super.from, required String super.argument})
-    : super(
-        retry: null,
-        name: r'postDetailProvider',
-        isAutoDispose: true,
-        dependencies: null,
-        $allTransitiveDependencies: null,
-      );
+  PostDetailProvider._({
+    required PostDetailFamily super.from,
+    required String super.argument,
+  }) : super(
+         retry: null,
+         name: r'postDetailProvider',
+         isAutoDispose: true,
+         dependencies: null,
+         $allTransitiveDependencies: null,
+       );
 
   @override
   String debugGetCreateSourceHash() => _$postDetailHash();
@@ -68,7 +71,8 @@ final class PostDetailFamily extends $Family
         isAutoDispose: true,
       );
 
-  PostDetailProvider call(String id) => PostDetailProvider._(argument: id, from: this);
+  PostDetailProvider call(String id) =>
+      PostDetailProvider._(argument: id, from: this);
 
   @override
   String toString() => r'postDetailProvider';
@@ -115,7 +119,8 @@ final class CommentsControllerProvider
   }
 }
 
-String _$commentsControllerHash() => r'6d9278f3868a734661b4fb8ecfeb6e43596ddb0b';
+String _$commentsControllerHash() =>
+    r'6d9278f3868a734661b4fb8ecfeb6e43596ddb0b';
 
 final class CommentsControllerFamily extends $Family
     with
