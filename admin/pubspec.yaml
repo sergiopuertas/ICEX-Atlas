@@ -1,19 +1,25 @@
 name: icex_atlas_admin
-description: "A new Flutter project."
-publish_to: 'none'
-version: 0.1.0+1
+description: Panel de administración web de ICEX Atlas (novedades, moderación, clubs y socios).
+publish_to: none
+version: 1.0.0+1
 
 environment:
-  sdk: ^3.13.7
+  sdk: ^3.13.0
+  flutter: 3.47.9
 
 dependencies:
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  intl: ^0.20.2
+  supabase_flutter: ^2.18.3
+  uuid: ^4.6.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^6.0.0
+  very_good_analysis: ^11.0.0
 
 flutter:
   uses-material-design: true

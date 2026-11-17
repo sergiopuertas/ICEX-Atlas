@@ -26,17 +26,20 @@ import '../helpers/fakes.dart';
 
 const _phone = Size(400, 860);
 
+/// Fechas relativas a ahora: la antigüedad mostrada («hace 15 min») no depende del día del test.
+String _ago(int minutes) => DateTime.now().toUtc().subtract(Duration(minutes: minutes)).toIso8601String();
+
 FakeApiClient demoApi() => FakeApiClient({
   'me': (_) => meJson(),
   'get_feed': (_) => {
     'items': [
-      postJson(id: 'p1', createdAt: '2026-11-16T11:45:00Z'),
+      postJson(id: 'p1', createdAt: _ago(15)),
       postJson(
         id: 'p2',
         tipo: 'oportunidad_laboral',
         recomendado: true,
         recos: 153,
-        createdAt: '2026-11-16T11:10:00Z',
+        createdAt: _ago(50),
         autor: cardJson(
           id: 'u-3',
           nombre: 'Inés Domínguez Gil',

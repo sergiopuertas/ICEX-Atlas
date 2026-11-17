@@ -37,3 +37,4 @@ docker/oidc-provider/node_modules/
 .DS_Store
 docker/certs/
 scripts/e2e/node_modules/
+**/test/goldens/failures/

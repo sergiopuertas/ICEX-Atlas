@@ -93,3 +93,9 @@ Los badges de fase llevan texto blanco de 11 px en negrita (no cuenta como «tex
 exactos del mockup, Fase 0 (#8A7E75, 3,95:1) y Fase II (#DA4620, 4,31:1) no llegaban al 4,5:1 de WCAG 2.2 AA. Se usan
 #7C7169 (4,75:1) y #CF431E (4,69:1): visualmente casi idénticos. Un test (`test/core/core_test.dart`) comprueba el
 contraste de todas las combinaciones de texto/fondo del tema.
+
+## D-017 · Panel de administración en Flutter web, autorización solo en el servidor
+`/admin` es una app Flutter web mínima (Resumen, Novedades, Denuncias, Clubs, Socios) que usa el mismo login
+OIDC y el esquema `api`. La comprobación de rol en el cliente es solo de experiencia de usuario: cada `api.admin_*`
+valida `identity.is_admin()`/`is_moderator()` en PostgreSQL (cubierto por pgTAP). Moderación ve Resumen y Denuncias;
+solo administración publica novedades, gestiona clubs, cambia roles y suspende socios.

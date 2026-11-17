@@ -128,6 +128,10 @@ test('Edge Functions: orientador, media-upload (sin EXIF) y push-dispatcher', { 
   const ana = await sessionFor('ana');
   const token = ana.session.access_token;
 
+  // Indexa lo pendiente (en producción lo hace pg_cron cada minuto).
+  const idx = await callFn('orientador-indexer', SERVICE, {});
+  assert.equal(idx.status, 200, JSON.stringify(idx.body));
+
   const o = await callFn('orientador', token, { fase: 'fase_1', pais: 'Alemania', sector: 'Energía', consulta: 'Preparar la entrevista de Fase II' });
   assert.equal(o.status, 200, JSON.stringify(o.body));
   assert.ok(o.body.pasos.length >= 3);
