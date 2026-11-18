@@ -6,7 +6,8 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-eval "$(supabase status -o env 2>/dev/null | grep -E '^(API_URL|SERVICE_ROLE_KEY|SECRET_KEY|DB_URL|ANON_KEY)=')"
+# shellcheck source=lib/supabase-env.sh
+source scripts/lib/supabase-env.sh  # (el script ya hizo cd a la raíz)
 OIDC_ISSUER="${OIDC_ISSUER:-https://idp.icex-atlas.test:9010}"
 OIDC_CLIENT_ID="${OIDC_CLIENT_ID:-supabase-local}"
 OIDC_CLIENT_SECRET="${OIDC_CLIENT_SECRET:-supabase-local-secret}"

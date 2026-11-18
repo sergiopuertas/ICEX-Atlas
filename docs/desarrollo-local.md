@@ -149,8 +149,8 @@ Las plantillas que documentan cada variable (`.env.example`, `app/env/example.js
 - **Edge Functions:** `cd supabase/functions && deno test --no-lock --allow-env --allow-net tests/`.
 - **De extremo a extremo:**
   ```bash
+  source scripts/lib/supabase-env.sh      # desde la raíz: API_URL, ANON_KEY, SERVICE_ROLE_KEY…
   cd scripts/e2e && npm ci
-  eval "$(supabase status -o env | grep -E '^(ANON_KEY|SERVICE_ROLE_KEY)=')"
   SUPABASE_ANON_KEY=$ANON_KEY SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY \
     NODE_EXTRA_CA_CERTS=../../docker/certs/dev-ca.crt node --test --test-concurrency=1 ./*.test.mjs
   ```
@@ -175,5 +175,6 @@ Las plantillas que documentan cada variable (`.env.example`, `app/env/example.js
 | Android: «Connection refused 127.0.0.1:54321» | Se perdió `adb reverse` al reiniciar el emulador: ejecuta `./scripts/android-dev.sh` |
 | Tras el login vuelve a la pantalla de acceso | ¿Has entrado como Pedro? Es el no socio. Si no, ejecuta `./scripts/setup-local.sh`, que registra el proveedor con la lista de claims permitidos |
 | El orientador o la subida de fotos fallan | Mira los logs: `docker logs -f supabase_edge_runtime_icex-atlas` |
+| `setup-local.sh`: «No he podido leer la configuración de la Supabase local» | `supabase start` no terminó o la base de datos aún arranca: espera a que `supabase status` responda bien y repite |
 | `supabase start` falla por puertos ocupados | Otro proyecto Supabase está encendido: `supabase stop --project-id <otro>` |
 | El editor marca errores en `*.g.dart` | Regenera el código (tabla del apartado 9) |

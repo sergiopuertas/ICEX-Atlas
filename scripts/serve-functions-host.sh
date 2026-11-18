@@ -4,7 +4,8 @@
 # un proxy corporativo con CA propia). En condiciones normales usa `supabase start`.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-eval "$(supabase status -o env 2>/dev/null | grep -E '^(API_URL|SERVICE_ROLE_KEY|ANON_KEY)=')"
+# shellcheck source=lib/supabase-env.sh
+source scripts/lib/supabase-env.sh  # (el script ya hizo cd a la raíz)
 set -a; source supabase/functions/.env; set +a
 # El IdP/WordPress simulado usa la CA de desarrollo y no debe pasar por proxies.
 cat docker/certs/dev-ca.crt ${DENO_CERT:+"$DENO_CERT"} > /tmp/icex-deno-ca.pem

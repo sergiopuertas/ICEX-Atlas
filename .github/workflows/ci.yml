@@ -102,10 +102,10 @@ jobs:
           nohup ./scripts/serve-functions-host.sh > /tmp/functions.log 2>&1 &
           sleep 8
       - name: E2E (login → feed → publicar → seguir → mensaje en tiempo real)
-        working-directory: scripts/e2e
         run: |
+          source scripts/lib/supabase-env.sh
+          cd scripts/e2e
           npm ci || npm install
-          eval "$(supabase status -o env | grep -E '^(ANON_KEY|SERVICE_ROLE_KEY)=')"
           SUPABASE_ANON_KEY=$ANON_KEY SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY \
           FUNCTIONS_URL=http://127.0.0.1:54400 NODE_EXTRA_CA_CERTS=../../docker/certs/dev-ca.crt \
           node --test --test-concurrency=1 ./*.test.mjs
