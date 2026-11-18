@@ -23,7 +23,6 @@ supabase/.temp
 **/.flutter-plugins-dependencies
 **/coverage/
 **/*.iml
-.fvm/flutter_sdk
 **/ios/Pods/
 **/ios/Flutter/ephemeral/
 **/android/.gradle/
@@ -43,3 +42,6 @@ scripts/e2e/node_modules/
 app/env/*.json
 !app/env/example.json
 **/android/key.properties
+
+# FVM Version Cache
+.fvm/

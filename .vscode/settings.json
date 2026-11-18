@@ -1,4 +1,5 @@
 {
+<<<<<<< HEAD
   // Deno solo en las Edge Functions; el resto del repo es Dart/Node.
   "deno.enablePaths": ["supabase/functions"],
   "deno.lint": true,
@@ -17,3 +18,7 @@
     "app/coverage": true
   }
 }
+=======
+  "dart.flutterSdkPath": ".fvm/versions/3.47.9"
+}
+>>>>>>> f689c5b (for merge)
