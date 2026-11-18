@@ -9,6 +9,7 @@ de la web de la asociación.
 
 | Documento | Para qué |
 |---|---|
+| [`docs/desarrollo-local.md`](docs/desarrollo-local.md) | Guía para arrancar y probar en local con VS Code |
 | [`docs/arquitectura.md`](docs/arquitectura.md) | Arquitectura, módulos, flujos y rendimiento medido |
 | [`docs/decisiones.md`](docs/decisiones.md) | Decisiones técnicas (D-001…) y su justificación |
 | [`docs/runbook.md`](docs/runbook.md) | Despliegue a producción, rotación de claves, restauración de copias |
@@ -33,12 +34,10 @@ Usuarios de prueba (se eligen con un botón en la pantalla del IdP simulado, sin
 y `pedro` (**no socio**: ve la pantalla de acceso denegado). Los datos semilla son ficticios: 640 perfiles,
 publicaciones, clubs y conversaciones.
 
-> **Simulador o emulador.** El login abre `https://idp.icex-atlas.test:9010`, firmado por una CA de desarrollo
-> (`docker/certs/dev-ca.crt`). Instala esa CA en el simulador o emulador y, en Android, apunta el nombre a la IP del
-> host (`10.0.2.2`) y usa `SUPABASE_URL=http://10.0.2.2:54321`. En el simulador de iOS basta con instalar la CA
-> (`xcrun simctl keychain booted add-root-cert docker/certs/dev-ca.crt`).
+> **Simulador, emulador y VS Code:** sigue [`docs/desarrollo-local.md`](docs/desarrollo-local.md). Explica cómo confiar en
+> la CA de desarrollo, preparar el emulador de Android (`scripts/android-dev.sh`) y lanzar todo con F5.
 
-Panel admin: `cd admin && flutter run -d chrome --dart-define-from-file=../app/env/local.json` (entra como `laura`).
+Panel admin: `cd admin && flutter run -d chrome --web-port 3000 --dart-define-from-file=../app/env/local.json` (entra como `laura`).
 Supabase Studio: http://127.0.0.1:54323.
 
 ## Tests

@@ -1,6 +1,6 @@
 // Utilidades HTTP comunes: CORS (panel admin web), respuestas JSON y logs sin datos personales.
 
-const ALLOWED_ORIGINS = (Deno.env.get('ADMIN_ALLOWED_ORIGINS') ?? 'http://localhost:8080,http://127.0.0.1:8080')
+const ALLOWED_ORIGINS = (Deno.env.get('ADMIN_ALLOWED_ORIGINS') ?? 'http://localhost:3000,http://127.0.0.1:3000')
   .split(',').map((s) => s.trim()).filter(Boolean);
 
 export function corsHeaders(req: Request): Record<string, string> {

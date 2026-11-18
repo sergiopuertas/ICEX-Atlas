@@ -144,7 +144,7 @@ Leyenda: ☐ pendiente · Responsable sugerido entre corchetes.
    - Azure OpenAI o Amazon Bedrock en región UE con *data zone* UE.
    - Anthropic a través de una nube con región UE.
    Contrata y firma el DPA. Después configura `LLM_PROVIDER`, `LLM_BASE_URL` (endpoint UE), `LLM_API_KEY` y `LLM_MODEL`
-   con `supabase secrets set`. Los embeddings no salen de Supabase (`EMBEDDINGS_PROVIDER=gte-small`, D-014).
+   con `supabase secrets set`. Los embeddings no salen de Supabase (`EMBEDDINGS_PROVIDER=supabase-gte-small`, D-014).
    Hasta entonces, `LLM_PROVIDER=mock` da respuestas deterministas.
 
 ☐ **F2. Proveedor de email transaccional** [responsable técnico + DPD]

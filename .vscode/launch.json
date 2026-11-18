@@ -1,0 +1,30 @@
+{
+  // Requiere haber ejecutado antes: supabase start && ./scripts/setup-local.sh (genera app/env/local.json).
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "App · local",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "app",
+      "program": "lib/main.dart",
+      "args": ["--dart-define-from-file=env/local.json"]
+    },
+    {
+      "name": "Panel admin · local (Chrome :3000)",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "admin",
+      "program": "lib/main.dart",
+      "deviceId": "chrome",
+      "args": ["--web-port", "3000", "--dart-define-from-file=../app/env/local.json"]
+    },
+    {
+      "name": "Tests Flutter · app",
+      "type": "dart",
+      "request": "launch",
+      "cwd": "app",
+      "program": "test/"
+    }
+  ]
+}

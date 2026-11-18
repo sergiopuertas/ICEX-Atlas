@@ -1,0 +1,19 @@
+{
+  // Deno solo en las Edge Functions; el resto del repo es Dart/Node.
+  "deno.enablePaths": ["supabase/functions"],
+  "deno.lint": true,
+  "[dart]": {
+    "editor.formatOnSave": true,
+    "editor.rulers": [100]
+  },
+  // El ancho (100) lo fija analysis_options.yaml → formatter.page_width.
+  "files.exclude": {
+    "**/.dart_tool": true,
+    "**/build": true
+  },
+  "search.exclude": {
+    "**/*.g.dart": true,
+    "**/node_modules": true,
+    "app/coverage": true
+  }
+}

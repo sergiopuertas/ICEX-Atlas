@@ -2,6 +2,8 @@
 .env
 .env.*
 !.env.example
+# Plantilla con valores mock para desarrollo local (la copia real, supabase/functions/.env, se ignora)
+!supabase/functions/.env.local.example
 supabase/.env
 supabase/functions/.env
 **/google-services.json

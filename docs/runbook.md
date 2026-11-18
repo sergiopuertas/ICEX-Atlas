@@ -56,7 +56,7 @@ Entornos: **staging** y **production**. Son dos proyectos Supabase en la misma r
 
 8. **Secretos de las Edge Functions.** Ejecuta `supabase secrets set --env-file <fichero> --project-ref <ref>`.
    El fichero sigue la sección «Edge Functions» de `.env.example`:
-   `LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`, `EMBEDDINGS_PROVIDER=gte-small`, `PUSH_PROVIDER=fcm`,
+   `LLM_PROVIDER`, `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL`, `EMBEDDINGS_PROVIDER=supabase-gte-small`, `PUSH_PROVIDER=fcm`,
    `FCM_SERVICE_ACCOUNT_JSON`, `WP_BASE_URL`, `WP_SYNC_TOKEN`, `MEMBERSHIP_MAX_REVOKE_RATIO`, `ADMIN_ALLOWED_ORIGINS`.
 
 9. **Storage.** Los buckets (`avatars`, `post-media`) y sus políticas los crean las migraciones. Comprueba que siguen siendo **privados**.
