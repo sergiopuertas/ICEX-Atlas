@@ -7,7 +7,14 @@
 # PUBLISHABLE_KEY/SECRET_KEY). Aquí se aceptan todas las variantes y, si aun así falta algo,
 # se explica qué pasa en lugar de fallar con "unbound variable".
 
-__supabase_status="$(supabase status -o env 2>&1 || true)"
+# Usa la CLI global si existe (brew/scoop) y, si no, `npx supabase` (lo que usa quien solo tiene Node).
+if command -v supabase >/dev/null 2>&1; then
+  __supabase_cli=(supabase)
+else
+  __supabase_cli=(npx -y supabase)
+fi
+
+__supabase_status="$("${__supabase_cli[@]}" status -o env 2>&1 || true)"
 
 __supabase_get() {
   # Devuelve el valor de la clave $1 o vacío. Tolera: KEY=v · KEY="v" · export KEY="v" · KEY = "v"
@@ -28,13 +35,14 @@ if [[ -z "${API_URL}" || -z "${DB_URL}" || -z "${ANON_KEY}" || -z "${SERVICE_ROL
   {
     echo "✗ No he podido leer la configuración de la Supabase local con 'supabase status -o env'."
     echo "  Comprueba que 'supabase start' terminó bien y que estás en la raíz del repositorio."
-    echo "  Versión de la CLI: $(supabase --version 2>/dev/null || echo 'desconocida')"
+    __v="$("${__supabase_cli[@]}" --version 2>/dev/null | head -n1)"
+    echo "  Versión de la CLI: ${__v:-desconocida}"
     echo "  Salida recibida (claves recortadas):"
     printf '%s\n' "${__supabase_status}" | sed -E 's/(=[[:space:]]*"?[^"]{12})[^"]*/\1…/' | sed 's/^/    /'
   } >&2
-  unset -f __supabase_get; unset __supabase_status
+  unset -f __supabase_get; unset __supabase_status __supabase_cli __v
   return 1 2>/dev/null || exit 1  # `return` si se carga con source (no cierra tu terminal)
 fi
 export API_URL DB_URL ANON_KEY SERVICE_ROLE_KEY
 unset -f __supabase_get
-unset __supabase_status
+unset __supabase_status __supabase_cli
