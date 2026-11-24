@@ -139,6 +139,7 @@ class _MapPageState extends ConsumerState<MapPage> {
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
+      useRootNavigator: true,
       builder: (_) => _ClusterSheet(cluster: c),
     );
   }
@@ -146,6 +147,7 @@ class _MapPageState extends ConsumerState<MapPage> {
   Future<void> _showFilters(BuildContext context) => showModalBottomSheet<void>(
     context: context,
     showDragHandle: true,
+    useRootNavigator: true,
     builder: (_) => Consumer(
       builder: (context, ref, _) {
         final l = AppLocalizations.of(context);

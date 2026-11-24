@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:icex_atlas/core/auth/auth_gateway.dart';
 import 'package:icex_atlas/core/errors/failure.dart';
 import 'package:icex_atlas/core/providers.dart';
@@ -66,17 +67,35 @@ class SessionController extends _$SessionController {
 
   Future<void> signOut() async {
     _loadedFor = null;
-    await ref.read(appDatabaseProvider).wipe();
-    await ref.read(authGatewayProvider).signOut();
-    state = const SignedOut();
+    try {
+      await ref.read(appDatabaseProvider).wipe();
+    } on Object {
+      // La caché local no debe impedir cerrar sesión.
+    }
+    try {
+      await ref.read(authGatewayProvider).signOut();
+    } finally {
+      state = const SignedOut();
+    }
   }
 
   /// Vuelve a cargar el perfil propio (tras editarlo).
+  ///
+  /// A diferencia de la carga inicial, un fallo aquí (p. ej. red) NO cierra la sesión:
+  /// se conserva el perfil anterior. Antes, editar el perfil con mala cobertura echaba
+  /// al usuario a la pantalla de login.
   Future<void> refreshMe() async {
     final s = state;
-    if (s is SignedIn) {
-      _loadedFor = null;
-      await _loadMe(s.me.userId);
+    if (s is! SignedIn) return;
+    try {
+      final me = await ref.read(profilesRepositoryProvider).me();
+      if (ref.mounted && state is SignedIn && _loadedFor == me.userId) state = SignedIn(me);
+    } on ForbiddenFailure {
+      if (!ref.mounted) return;
+      state = const AccessDenied();
+      await ref.read(authGatewayProvider).signOut();
+    } on AppFailure {
+      // Conservar el estado actual.
     }
   }
 
@@ -94,17 +113,23 @@ class SessionController extends _$SessionController {
 
   Future<void> _loadMe(String userId) async {
     _loadedFor = userId;
+    // Si mientras tanto se cerró sesión o entró otro usuario, la respuesta es obsoleta.
+    bool stale() => !ref.mounted || _loadedFor != userId;
     try {
       final me = await ref.read(profilesRepositoryProvider).me();
+      if (stale()) return;
       state = SignedIn(me);
     } on ForbiddenFailure {
+      if (stale()) return;
       // JWT válido pero sin membresía activa (baja): fuera.
       state = const AccessDenied();
       await ref.read(authGatewayProvider).signOut();
     } on NetworkFailure {
+      if (stale()) return;
       _loadedFor = null;
       state = const SignedOut(error: 'network');
     } on AppFailure catch (e) {
+      if (stale()) return;
       _loadedFor = null;
       state = SignedOut(error: e.message);
     }
@@ -113,3 +138,14 @@ class SessionController extends _$SessionController {
   /// Desde la pantalla de acceso denegado.
   void reset() => state = const SignedOut();
 }
+
+/// Id del usuario con sesión, o `null`.
+///
+/// Los servicios ligados a la sesión (push, presencia, no leídos, Realtime) deben depender de
+/// esto y no de [sessionControllerProvider]: ese estado cambia cada vez que se recarga el
+/// perfil (editar, cambiar foto, privacidad…), y antes eso reiniciaba el servicio de push
+/// (que al pararse da de baja el token del dispositivo), la presencia y las suscripciones
+/// de Realtime.
+@Riverpod(keepAlive: true)
+String? sessionUserId(Ref ref) =>
+    ref.watch(sessionControllerProvider.select((s) => s is SignedIn ? s.me.userId : null));

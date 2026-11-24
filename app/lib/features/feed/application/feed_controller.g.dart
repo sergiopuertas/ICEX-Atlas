@@ -8,19 +8,28 @@ part of 'feed_controller.dart';
 
 // GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint, type=warning
+/// Feed de Inicio. Se mantiene vivo mientras dura la sesión (no se recarga ni pierde la
+/// paginación al cambiar de pestaña, como en LinkedIn o Instagram) y se descarta al cambiar
+/// de usuario.
 
 @ProviderFor(FeedController)
 final feedControllerProvider = FeedControllerProvider._();
 
+/// Feed de Inicio. Se mantiene vivo mientras dura la sesión (no se recarga ni pierde la
+/// paginación al cambiar de pestaña, como en LinkedIn o Instagram) y se descarta al cambiar
+/// de usuario.
 final class FeedControllerProvider
     extends $AsyncNotifierProvider<FeedController, FeedState> {
+  /// Feed de Inicio. Se mantiene vivo mientras dura la sesión (no se recarga ni pierde la
+  /// paginación al cambiar de pestaña, como en LinkedIn o Instagram) y se descarta al cambiar
+  /// de usuario.
   FeedControllerProvider._()
     : super(
         from: null,
         argument: null,
         retry: null,
         name: r'feedControllerProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -33,7 +42,11 @@ final class FeedControllerProvider
   FeedController create() => FeedController();
 }
 
-String _$feedControllerHash() => r'bb7345af372881399c20a9326974b1e3febf5079';
+String _$feedControllerHash() => r'6b23e3937fcd0ea211525933c1e4f987ea795703';
+
+/// Feed de Inicio. Se mantiene vivo mientras dura la sesión (no se recarga ni pierde la
+/// paginación al cambiar de pestaña, como en LinkedIn o Instagram) y se descarta al cambiar
+/// de usuario.
 
 abstract class _$FeedController extends $AsyncNotifier<FeedState> {
   FutureOr<FeedState> build();
@@ -70,7 +83,7 @@ final class CommunityStatsProvider
         argument: null,
         retry: null,
         name: r'communityStatsProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -90,7 +103,7 @@ final class CommunityStatsProvider
   }
 }
 
-String _$communityStatsHash() => r'c3364785ceacdf2de9b0d01518d7f0de5433fffc';
+String _$communityStatsHash() => r'0a37e2243639994e3060e0c5d65009c12d1d7a28';
 
 @ProviderFor(Suggestions)
 final suggestionsProvider = SuggestionsProvider._();
@@ -103,7 +116,7 @@ final class SuggestionsProvider
         argument: null,
         retry: null,
         name: r'suggestionsProvider',
-        isAutoDispose: true,
+        isAutoDispose: false,
         dependencies: null,
         $allTransitiveDependencies: null,
       );
@@ -116,7 +129,7 @@ final class SuggestionsProvider
   Suggestions create() => Suggestions();
 }
 
-String _$suggestionsHash() => r'3f9e2864dfbb891724a5cfd3da1428bef92f27e9';
+String _$suggestionsHash() => r'586b4cac4dbab02d5a760015d2df468bb7ab8f09';
 
 abstract class _$Suggestions extends $AsyncNotifier<List<ProfileCard>> {
   FutureOr<List<ProfileCard>> build();
@@ -161,7 +174,7 @@ final class NewsControllerProvider
   NewsController create() => NewsController();
 }
 
-String _$newsControllerHash() => r'b016517a84a0faa28750c7713ad0fc178598aa2c';
+String _$newsControllerHash() => r'3c08d90b7e846be1697d33820a1a411a7a66a724';
 
 abstract class _$NewsController extends $AsyncNotifier<FeedState> {
   FutureOr<FeedState> build();

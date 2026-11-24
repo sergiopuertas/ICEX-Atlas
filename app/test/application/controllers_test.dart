@@ -10,6 +10,7 @@ import 'package:icex_atlas/core/providers.dart';
 import 'package:icex_atlas/features/directory/application/directory_controller.dart';
 import 'package:icex_atlas/features/directory/data/directory_repository.dart';
 import 'package:icex_atlas/features/feed/application/feed_controller.dart';
+import 'package:icex_atlas/features/feed/application/post_interactions.dart';
 import 'package:icex_atlas/features/feed/domain/post.dart';
 import 'package:icex_atlas/features/messaging/application/chat_controller.dart';
 import 'package:icex_atlas/features/messaging/data/realtime_gateway.dart';
@@ -102,6 +103,33 @@ void main() {
       await settle();
       expect(c.read(sessionControllerProvider), isA<SignedOut>());
     });
+
+    test('refreshMe sin red conserva la sesión (antes echaba al login)', () async {
+      final auth = FakeAuthGateway(currentUserId: 'u-1');
+      final api = FakeApiClient({'me': (_) => meJson()});
+      final c = container(api, auth: auth)..read(sessionControllerProvider);
+      await settle();
+      expect(c.read(sessionControllerProvider), isA<SignedIn>());
+      api.responders['me'] = failWith(const NetworkFailure());
+      await c.read(sessionControllerProvider.notifier).refreshMe();
+      expect(c.read(sessionControllerProvider), isA<SignedIn>());
+    });
+
+    test(
+      'sessionUserId no cambia al recargar el perfil (push/presencia no se reinician)',
+      () async {
+        final auth = FakeAuthGateway(currentUserId: 'u-1');
+        final c = container(FakeApiClient({'me': (_) => meJson()}), auth: auth)
+          ..read(sessionControllerProvider);
+        await settle();
+        var changes = 0;
+        c.listen(sessionUserIdProvider, (_, _) => changes++);
+        expect(c.read(sessionUserIdProvider), 'u-1');
+        await c.read(sessionControllerProvider.notifier).refreshMe();
+        await c.read(sessionControllerProvider.notifier).refreshMe();
+        expect(changes, 0);
+      },
+    );
   });
 
   group('FeedController', () {
@@ -135,22 +163,21 @@ void main() {
       expect(c.read(feedControllerProvider).value!.hasMore, isFalse);
       await c.read(feedControllerProvider.notifier).loadMore(); // sin más páginas: no llama
 
+      // Recomendar / comentar / borrar viven en el estado compartido (PostOverrides): la
+      // misma publicación se ve igual en Inicio, perfil y detalle.
+      Post shown(Post p) => c.read(postOverridesProvider).resolve(p)!;
       final p1 = c.read(feedControllerProvider).value!.posts.first;
-      await c.read(feedControllerProvider.notifier).toggleRecommend(p1);
-      expect(c.read(feedControllerProvider).value!.posts.first.recomendado, isTrue);
-      expect(c.read(feedControllerProvider).value!.posts.first.recomendacionesCount, 77);
+      await c.read(postOverridesProvider.notifier).toggleRecommend(p1);
+      expect(shown(p1).recomendado, isTrue);
+      expect(shown(p1).recomendacionesCount, 77);
 
       recommendFails = true;
       final p2 = c.read(feedControllerProvider).value!.posts[1];
       await expectLater(
-        c.read(feedControllerProvider.notifier).toggleRecommend(p2),
+        c.read(postOverridesProvider.notifier).toggleRecommend(p2),
         throwsA(isA<NetworkFailure>()),
       );
-      expect(
-        c.read(feedControllerProvider).value!.posts[1].recomendado,
-        isFalse,
-        reason: 'revertido',
-      );
+      expect(shown(p2).recomendado, isFalse, reason: 'revertido');
 
       final created = await c
           .read(feedControllerProvider.notifier)
@@ -159,19 +186,54 @@ void main() {
       expect(api.last('create_post').params['p_id'], '01900000-0000-7000-8000-000000000001');
       expect(api.last('create_post').params['p_media'], isEmpty);
 
-      c.read(feedControllerProvider.notifier).updateComments('p1', 99);
-      expect(
-        c
-            .read(feedControllerProvider)
-            .value!
-            .posts
-            .firstWhere((p) => p.id == 'p1')
-            .comentariosCount,
-        99,
-      );
+      final before = shown(p1).comentariosCount;
+      c.read(postOverridesProvider.notifier).commentAdded(p1);
+      expect(shown(p1).comentariosCount, before + 1);
 
-      await c.read(feedControllerProvider.notifier).delete(created);
-      expect(c.read(feedControllerProvider).value!.posts.any((p) => p.id == created.id), isFalse);
+      await c.read(postOverridesProvider.notifier).delete(created);
+      expect(
+        c.read(postOverridesProvider).resolve(created),
+        isNull,
+        reason: 'oculta en todas partes',
+      );
+    });
+
+    test('loadMore con error: no relanza y no entra en bucle de reintentos', () async {
+      var calls = 0;
+      final api = FakeApiClient({
+        'get_feed': (p) {
+          if (p['p_cursor'] == null) {
+            return {
+              'items': [postJson(id: 'p1')],
+              'next_cursor': 'c2',
+            };
+          }
+          calls++;
+          throw const NetworkFailure();
+        },
+      });
+      final c = container(api);
+      await c.read(feedControllerProvider.future);
+      await c.read(feedControllerProvider.notifier).loadMore();
+      await c.read(feedControllerProvider.notifier).loadMore();
+      await c.read(feedControllerProvider.notifier).loadMore();
+      expect(calls, 1, reason: 'pausa tras el fallo');
+      expect(c.read(feedControllerProvider).value!.loadingMore, isFalse);
+    });
+
+    test('toques repetidos en Recomendar mientras hay una petición en curso: una sola', () async {
+      final api = FakeApiClient({
+        'get_feed': (_) => {
+          'items': [postJson(id: 'p1')],
+          'next_cursor': null,
+        },
+        'recommend': (_) => {'recomendado': true, 'recomendaciones_count': 1},
+      });
+      final c = container(api);
+      final p1 = (await c.read(feedControllerProvider.future)).posts.single;
+      final n = c.read(postOverridesProvider.notifier);
+      await Future.wait([n.toggleRecommend(p1), n.toggleRecommend(p1)]);
+      expect(api.calls.where((x) => x.name == 'recommend'), hasLength(1));
     });
 
     test('sugerencias (seguir optimista) y cifras', () async {
@@ -192,12 +254,40 @@ void main() {
         }),
       );
       final list = await c.read(suggestionsProvider.future);
-      await c.read(suggestionsProvider.notifier).follow(list.single);
+      await c.read(suggestionsProvider.notifier).toggleFollow(list.single);
       expect(c.read(suggestionsProvider).value!.single.isFollowing, isTrue);
+      c.read(suggestionsProvider.notifier).dismiss(list.single);
+      expect(c.read(suggestionsProvider).value, isEmpty);
       expect((await c.read(communityStatsProvider.future)).alumni, 6340);
       await c.read(newsControllerProvider.future);
       await c.read(newsControllerProvider.notifier).loadMore();
       expect(c.read(newsControllerProvider).value!.posts, hasLength(2));
+    });
+
+    test('Novedades: un fallo al paginar no deja la lista bloqueada', () async {
+      var fail = true;
+      final c = container(
+        FakeApiClient({
+          'get_news': (p) {
+            if (p['p_cursor'] == null) {
+              return {
+                'items': [postJson(id: 'n1', tipo: 'novedad_oficial')],
+                'next_cursor': 'x',
+              };
+            }
+            if (fail) throw const NetworkFailure();
+            return {
+              'items': [postJson(id: 'n2', tipo: 'novedad_oficial')],
+              'next_cursor': null,
+            };
+          },
+        }),
+      );
+      await c.read(newsControllerProvider.future);
+      await c.read(newsControllerProvider.notifier).loadMore();
+      expect(c.read(newsControllerProvider).value!.loadingMore, isFalse);
+      fail = false;
+      expect(c.read(newsControllerProvider).value!.hasMore, isTrue);
     });
   });
 

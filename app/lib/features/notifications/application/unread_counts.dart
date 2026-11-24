@@ -14,11 +14,11 @@ typedef UnreadCounts = ({int mensajes, int notificaciones});
 class Unread extends _$Unread {
   @override
   Future<UnreadCounts> build() async {
-    final session = ref.watch(sessionControllerProvider);
-    if (session is! SignedIn) return (mensajes: 0, notificaciones: 0);
+    final userId = ref.watch(sessionUserIdProvider);
+    if (userId == null) return (mensajes: 0, notificaciones: 0);
     final sub = ref
         .watch(realtimeGatewayProvider)
-        .userEvents(session.me.userId)
+        .userEvents(userId)
         .listen((_) => unawaited(refresh()));
     ref.onDispose(sub.cancel);
     return await ref.read(notificationsRepositoryProvider).unreadCounts();
@@ -27,7 +27,7 @@ class Unread extends _$Unread {
   Future<void> refresh() async {
     try {
       final c = await ref.read(notificationsRepositoryProvider).unreadCounts();
-      state = AsyncData(c);
+      if (ref.mounted) state = AsyncData(c);
     } on Object {
       // conservar el último valor
     }

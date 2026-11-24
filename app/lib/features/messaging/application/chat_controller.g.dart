@@ -50,7 +50,7 @@ final class ChatControllerProvider
   }
 }
 
-String _$chatControllerHash() => r'78ea1ce2adb4a0d516ab0339c370c1574b20a66e';
+String _$chatControllerHash() => r'0b476816ad948bedd9610f4fb37cad6e787788b5';
 
 final class ChatControllerFamily extends $Family
     with
@@ -134,7 +134,7 @@ final class ConversationsControllerProvider
 }
 
 String _$conversationsControllerHash() =>
-    r'ea7a5318fc86f690fafbf11f360db8fa509221a2';
+    r'9436b65b82cf12047aa6c795c402c10fd88f7e38';
 
 abstract class _$ConversationsController
     extends $AsyncNotifier<ConversationsState> {

@@ -53,8 +53,7 @@ class Presence with WidgetsBindingObserver {
 }
 
 final presenceProvider = Provider<Presence?>((ref) {
-  final session = ref.watch(sessionControllerProvider);
-  if (session is! SignedIn) return null;
+  if (ref.watch(sessionUserIdProvider) == null) return null;
   final p = Presence(() => ref.read(messagingRepositoryProvider).heartbeat(), () async {
     await ref.read(messageOutboxProvider).flush();
   })..start();

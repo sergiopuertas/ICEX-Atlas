@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:icex_atlas/core/auth/session_controller.dart';
 import 'package:icex_atlas/features/auth/presentation/login_page.dart';
 import 'package:icex_atlas/features/directory/presentation/network_page.dart';
+import 'package:icex_atlas/features/feed/presentation/compose_page.dart';
 import 'package:icex_atlas/features/feed/presentation/home_page.dart';
 import 'package:icex_atlas/features/feed/presentation/news_page.dart';
 import 'package:icex_atlas/features/feed/presentation/post_detail_page.dart';
@@ -33,6 +34,7 @@ abstract final class Routes {
   static const notifications = '/notificaciones';
   static const settings = '/ajustes';
   static const editProfile = '/perfil/editar';
+  static const compose = '/publicar';
 
   static String profile(String slug) => '/perfil/$slug';
   static String chat(String conversationId) => '/mensajes/$conversationId';
@@ -64,7 +66,6 @@ String? _legacyChatRedirect(Uri location) {
 }
 
 final _rootKey = GlobalKey<NavigatorState>(debugLabel: 'root');
-final _shellKey = GlobalKey<NavigatorState>(debugLabel: 'shell');
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier<SessionState>(ref.read(sessionControllerProvider));
@@ -84,29 +85,27 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: Routes.login, builder: (_, _) => const LoginPage()),
       GoRoute(path: Routes.accessDenied, builder: (_, _) => const AccessDeniedPage()),
-      ShellRoute(
-        navigatorKey: _shellKey,
-        builder: (context, state, child) => AppShell(location: state.uri.path, child: child),
-        routes: [
-          GoRoute(
-            path: Routes.home,
-            pageBuilder: (_, _) => const NoTransitionPage(child: HomePage()),
+      // Una rama (y un Navigator) por pestaña: al cambiar de pestaña cada una conserva su
+      // estado, su scroll y sus datos, como en Instagram o LinkedIn. Con el ShellRoute
+      // anterior cada cambio destruía la página: el feed se recargaba, se perdía la posición
+      // y el Orientador olvidaba sus respuestas.
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, shell) => AppShell(navigationShell: shell),
+        branches: [
+          StatefulShellBranch(
+            routes: [GoRoute(path: Routes.home, builder: (_, _) => const HomePage())],
           ),
-          GoRoute(
-            path: Routes.network,
-            pageBuilder: (_, _) => const NoTransitionPage(child: NetworkPage()),
+          StatefulShellBranch(
+            routes: [GoRoute(path: Routes.network, builder: (_, _) => const NetworkPage())],
           ),
-          GoRoute(
-            path: Routes.map,
-            pageBuilder: (_, _) => const NoTransitionPage(child: MapPage()),
+          StatefulShellBranch(
+            routes: [GoRoute(path: Routes.map, builder: (_, _) => const MapPage())],
           ),
-          GoRoute(
-            path: Routes.messages,
-            pageBuilder: (_, _) => const NoTransitionPage(child: ConversationsPage()),
+          StatefulShellBranch(
+            routes: [GoRoute(path: Routes.messages, builder: (_, _) => const ConversationsPage())],
           ),
-          GoRoute(
-            path: Routes.orientador,
-            pageBuilder: (_, _) => const NoTransitionPage(child: OrientadorPage()),
+          StatefulShellBranch(
+            routes: [GoRoute(path: Routes.orientador, builder: (_, _) => const OrientadorPage())],
           ),
         ],
       ),
@@ -119,6 +118,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootKey,
         path: '/mensajes/:id',
         builder: (_, s) => ChatPage(conversationId: s.pathParameters['id']),
+      ),
+      GoRoute(
+        path: Routes.compose,
+        builder: (_, s) => ComposePage(initial: s.extra),
       ),
       GoRoute(path: Routes.news, builder: (_, _) => const NewsPage()),
       GoRoute(path: Routes.notifications, builder: (_, _) => const NotificationsPage()),

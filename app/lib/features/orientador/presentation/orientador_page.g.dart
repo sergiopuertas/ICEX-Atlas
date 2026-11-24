@@ -42,7 +42,7 @@ final class OrientadorControllerProvider
 }
 
 String _$orientadorControllerHash() =>
-    r'eefd097b5f381af57a31368f156fd9ffda843e4b';
+    r'f00696acb275cf394848a138f7ecdf36522f3cb2';
 
 abstract class _$OrientadorController extends $Notifier<OrientadorState> {
   OrientadorState build();

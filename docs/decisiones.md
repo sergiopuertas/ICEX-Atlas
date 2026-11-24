@@ -111,3 +111,28 @@ Los flujos `release-mobile.yml` suben solo a **TestFlight** y a la **pista inter
 (`skip_submission`, `release_status: draft`). Pasar a producción en las tiendas es siempre una acción humana en cada
 consola. El despliegue del backend (`deploy-backend.yml`) es manual (`workflow_dispatch`) y producción exige
 aprobación del *environment* de GitHub. El seed nunca se aplica fuera de local.
+
+## D-020 · Navegación con `StatefulShellRoute.indexedStack`
+Las cinco pestañas (Inicio, Red, Mapa, Mensajes, Orientador) son ramas de un `StatefulShellRoute.indexedStack`
+de go_router en lugar de un `ShellRoute`. Cada pestaña conserva su `Navigator`, su scroll y sus datos al cambiar
+de pestaña, como en Instagram o LinkedIn; antes cada cambio destruía la página (el feed se recargaba y el
+Orientador perdía sus respuestas). Volver a tocar la pestaña activa la lleva arriba (`tabReselectedProvider`).
+Las hojas inferiores que se abren desde una pestaña usan `useRootNavigator: true` para cubrir la barra inferior.
+
+## D-021 · Estado compartido de publicaciones (`PostOverrides`)
+Recomendar, comentar y borrar se aplican sobre un único estado (`postOverridesProvider`, keepAlive por usuario)
+que leen todas las tarjetas (`ConnectedPostCard`), en lugar de que cada lista tenga su copia. Así una publicación
+se ve igual en Inicio, en el perfil y en el detalle. El estado se limpia al refrescar el feed y al cambiar de
+usuario. Las peticiones de Recomendar en curso bloquean toques repetidos sobre la misma publicación.
+
+## D-022 · Servicios de sesión dependen de `sessionUserIdProvider`
+Push, presencia, no leídos y las suscripciones de Realtime dependen del id del usuario (`sessionUserIdProvider`,
+un `select` sobre la sesión) y no del estado de sesión completo. El estado cambia cada vez que se recarga el perfil
+(editar, cambiar foto, privacidad) y antes eso reiniciaba esos servicios; el de push, al pararse, daba de baja el
+token del dispositivo. `refreshMe()` ya no cierra la sesión ante un fallo de red.
+
+## D-023 · Diálogos con campo de texto como `StatefulWidget`
+Todo diálogo con `TextField` crea y libera su `TextEditingController` en su propio `State`
+(`lib/shared/widgets/dialogs.dart`). Liberarlo tras `await showDialog(...)` provocaba
+«A TextEditingController was used after being disposed» durante la animación de cierre. Publicar y compartir
+en la red usan ahora una pantalla de composición completa (`/publicar`) en lugar de un diálogo.

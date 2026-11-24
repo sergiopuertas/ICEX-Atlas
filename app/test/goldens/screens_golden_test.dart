@@ -131,8 +131,10 @@ Future<void> pumpPhone(WidgetTester t, Widget w) async {
   t.view.devicePixelRatio = 1;
   addTearDown(() => t.binding.setSurfaceSize(null));
   await t.pumpWidget(w);
-  await t.pump(const Duration(milliseconds: 50));
-  await t.pump(const Duration(milliseconds: 50));
+  // Sesión → perfil → feed: varias respuestas asíncronas encadenadas.
+  for (var i = 0; i < 6; i++) {
+    await t.pump(const Duration(milliseconds: 50));
+  }
 }
 
 void main() {
@@ -156,7 +158,7 @@ void main() {
   testWidgets('Inicio (feed)', (t) async {
     final api = demoApi();
     await pumpPhone(t, harness(const Scaffold(body: HomePage()), api));
-    expect(find.text('Ana Ortega Jiménez'), findsWidgets);
+    expect(find.text('Javier Martín Jiménez'), findsWidgets);
     expect(find.text('Comparte una novedad con la red ICEX Alumni…'), findsOneWidget);
     expect(find.textContaining('Reunión Anual'), findsOneWidget);
     await expectLater(find.byType(Scaffold).first, matchesGoldenFile('files/inicio.png'));

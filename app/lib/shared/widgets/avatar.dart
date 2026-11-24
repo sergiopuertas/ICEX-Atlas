@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,11 +8,23 @@ import 'package:icex_atlas/core/theme/icex_theme.dart';
 import 'package:icex_atlas/features/profiles/domain/profile.dart';
 
 /// URL firmada (bucket privado) con transformación de tamaño en Storage.
+///
+/// Se conserva 50 min (la firma dura 60): antes se descartaba en cuanto el avatar salía de
+/// pantalla, y al volver a hacer scroll cada foto mostraba las iniciales hasta resolver otra
+/// vez la URL (parpadeo), aunque la imagen ya estuviera en la caché de disco.
 // ignore: specify_nonobvious_property_types (tipo interno de Riverpod)
-final signedImageUrlProvider = FutureProvider.autoDispose.family<String, (String, String, int)>(
-  (ref, args) =>
-      ref.watch(apiClientProvider).signedUrl(args.$1, args.$2, width: args.$3, height: args.$3),
-);
+final signedImageUrlProvider = FutureProvider.autoDispose.family<String, (String, String, int)>((
+  ref,
+  args,
+) async {
+  final url = await ref
+      .watch(apiClientProvider)
+      .signedUrl(args.$1, args.$2, width: args.$3, height: args.$3);
+  final link = ref.keepAlive();
+  final timer = Timer(const Duration(minutes: 50), link.close);
+  ref.onDispose(timer.cancel);
+  return url;
+});
 
 /// Avatar circular con anillo del color de la fase (mockup). Iniciales si no hay foto.
 class Avatar extends ConsumerWidget {
@@ -46,7 +60,9 @@ class Avatar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final px = (size * MediaQuery.devicePixelRatioOf(context)).round().clamp(48, 400);
+    // Tamaños redondeados a escalones: menos variantes de la misma foto en Storage y caché.
+    final raw = (size * MediaQuery.devicePixelRatioOf(context)).round().clamp(48, 400);
+    final px = const [64, 128, 200, 300, 400].firstWhere((b) => b >= raw, orElse: () => 400);
     final fallback = CircleAvatar(
       backgroundColor: IcexColors.muted,
       child: Text(

@@ -41,7 +41,7 @@ final class SessionControllerProvider
   }
 }
 
-String _$sessionControllerHash() => r'507e85e234b2b4be0d5ebea247b79419c20604cf';
+String _$sessionControllerHash() => r'ff122b00d57770a3d5cba206cad4be99ddcdbcd5';
 
 abstract class _$SessionController extends $Notifier<SessionState> {
   SessionState build();
@@ -60,3 +60,67 @@ abstract class _$SessionController extends $Notifier<SessionState> {
     return element.handleCreate(ref, build);
   }
 }
+
+/// Id del usuario con sesión, o `null`.
+///
+/// Los servicios ligados a la sesión (push, presencia, no leídos, Realtime) deben depender de
+/// esto y no de [sessionControllerProvider]: ese estado cambia cada vez que se recarga el
+/// perfil (editar, cambiar foto, privacidad…), y antes eso reiniciaba el servicio de push
+/// (que al pararse da de baja el token del dispositivo), la presencia y las suscripciones
+/// de Realtime.
+
+@ProviderFor(sessionUserId)
+final sessionUserIdProvider = SessionUserIdProvider._();
+
+/// Id del usuario con sesión, o `null`.
+///
+/// Los servicios ligados a la sesión (push, presencia, no leídos, Realtime) deben depender de
+/// esto y no de [sessionControllerProvider]: ese estado cambia cada vez que se recarga el
+/// perfil (editar, cambiar foto, privacidad…), y antes eso reiniciaba el servicio de push
+/// (que al pararse da de baja el token del dispositivo), la presencia y las suscripciones
+/// de Realtime.
+
+final class SessionUserIdProvider
+    extends $FunctionalProvider<String?, String?, String?>
+    with $Provider<String?> {
+  /// Id del usuario con sesión, o `null`.
+  ///
+  /// Los servicios ligados a la sesión (push, presencia, no leídos, Realtime) deben depender de
+  /// esto y no de [sessionControllerProvider]: ese estado cambia cada vez que se recarga el
+  /// perfil (editar, cambiar foto, privacidad…), y antes eso reiniciaba el servicio de push
+  /// (que al pararse da de baja el token del dispositivo), la presencia y las suscripciones
+  /// de Realtime.
+  SessionUserIdProvider._()
+    : super(
+        from: null,
+        argument: null,
+        retry: null,
+        name: r'sessionUserIdProvider',
+        isAutoDispose: false,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
+
+  @override
+  String debugGetCreateSourceHash() => _$sessionUserIdHash();
+
+  @$internal
+  @override
+  $ProviderElement<String?> $createElement($ProviderPointer pointer) =>
+      $ProviderElement(pointer);
+
+  @override
+  String? create(Ref ref) {
+    return sessionUserId(ref);
+  }
+
+  /// {@macro riverpod.override_with_value}
+  Override overrideWithValue(String? value) {
+    return $ProviderOverride(
+      origin: this,
+      providerOverride: $SyncValueProvider<String?>(value),
+    );
+  }
+}
+
+String _$sessionUserIdHash() => r'049c812fb5cc8e3cae02db8b038d38064a055cce';

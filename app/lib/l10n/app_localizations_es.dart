@@ -766,4 +766,135 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get reportThanks => 'Gracias. El equipo de moderación lo revisará.';
+
+  @override
+  String get seeMore => '…ver más';
+
+  @override
+  String get close => 'Cerrar';
+
+  @override
+  String get moreOptions => 'Más opciones';
+
+  @override
+  String get copyText => 'Copiar texto';
+
+  @override
+  String get copied => 'Copiado';
+
+  @override
+  String viewProfileOf(String name) {
+    return 'Ver el perfil de $name';
+  }
+
+  @override
+  String get deletePostBody =>
+      'La publicación desaparecerá de tu perfil y del feed. No se puede deshacer.';
+
+  @override
+  String get shareInNetworkHint => 'Añade tu opinión (opcional)';
+
+  @override
+  String get sharedDone => 'Compartido en tu red';
+
+  @override
+  String get shareDefaultText => 'Comparto esta publicación';
+
+  @override
+  String get composeTitle => 'Crear publicación';
+
+  @override
+  String get composeHint => '¿Qué quieres compartir con la comunidad ICEX Alumni?';
+
+  @override
+  String get composeDiscardTitle => '¿Descartar la publicación?';
+
+  @override
+  String get composeDiscardBody => 'Perderás lo que has escrito.';
+
+  @override
+  String get keepEditing => 'Seguir editando';
+
+  @override
+  String get discard => 'Descartar';
+
+  @override
+  String get removePhoto => 'Quitar foto';
+
+  @override
+  String get composerEvent => 'Evento';
+
+  @override
+  String get composerPublished => 'Publicado';
+
+  @override
+  String get exploreNetwork => 'Explorar la red';
+
+  @override
+  String get seeAll => 'Ver todo';
+
+  @override
+  String get dismiss => 'Descartar';
+
+  @override
+  String get postTitle => 'Publicación';
+
+  @override
+  String get profileNoPosts => 'Aún no hay publicaciones.';
+
+  @override
+  String get followsYou => 'Te sigue';
+
+  @override
+  String get postsLabel => 'publicaciones';
+
+  @override
+  String profileBlocked(String name) {
+    return 'Has bloqueado a $name';
+  }
+
+  @override
+  String get today => 'Hoy';
+
+  @override
+  String get yesterday => 'Ayer';
+
+  @override
+  String get messageFailedTapRetry => 'No enviado · toca para reintentar';
+
+  @override
+  String get noConversationsFilter => 'No hay conversaciones en esta categoría.';
+
+  @override
+  String get clearSearch => 'Borrar búsqueda';
+
+  @override
+  String get filters => 'Filtros';
+
+  @override
+  String get directoryGroups => 'Grupos de alumni';
+
+  @override
+  String get clearFilters => 'Quitar filtros';
+
+  @override
+  String get showResults => 'Ver resultados';
+
+  @override
+  String get notificationsNew => 'Nuevas';
+
+  @override
+  String get notificationsEarlier => 'Anteriores';
+
+  @override
+  String get change => 'Cambiar';
+
+  @override
+  String get unsavedChangesTitle => '¿Descartar los cambios?';
+
+  @override
+  String get unsavedChangesBody => 'Tienes cambios sin guardar en tu perfil.';
+
+  @override
+  String get orientadorIdeas => 'Ideas para empezar';
 }

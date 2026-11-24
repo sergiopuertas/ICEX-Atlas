@@ -11,50 +11,84 @@ import 'package:icex_atlas/features/feed/presentation/post_actions.dart';
 import 'package:icex_atlas/features/feed/presentation/post_card.dart';
 import 'package:icex_atlas/features/profiles/domain/profile.dart';
 import 'package:icex_atlas/l10n/app_localizations.dart';
+import 'package:icex_atlas/shared/widgets/app_shell.dart';
 import 'package:icex_atlas/shared/widgets/avatar.dart';
 import 'package:icex_atlas/shared/widgets/badges.dart';
 import 'package:icex_atlas/shared/widgets/common.dart';
 import 'package:icex_atlas/shared/widgets/follow_button.dart';
 
-/// Inicio (feed): tarjeta de perfil, compositor, novedad destacada, publicaciones y widgets
-/// (Orientador, La comunidad en cifras, Personas que quizá conozcas).
-class HomePage extends ConsumerWidget {
+/// Inicio (feed).
+///
+/// Disposición tipo LinkedIn: «Comparte una novedad» arriba, comunicado destacado y
+/// publicaciones a todo el ancho separadas por una franja fina. Los widgets del mockup
+/// (Personas que quizá conozcas, Orientador, La comunidad en cifras) se intercalan entre
+/// publicaciones; las sugerencias, como carrusel horizontal (Instagram).
+class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends ConsumerState<HomePage> {
+  final _scroll = ScrollController();
+
+  /// Posiciones (índice de publicación tras el que van) de los bloques intercalados.
+  static const _suggestionsAfter = 1;
+  static const _widgetsAfter = 4;
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    listenScrollToTop(ref, AppTab.home, _scroll);
     final l = AppLocalizations.of(context);
     final feed = ref.watch(feedControllerProvider);
     final session = ref.watch(sessionControllerProvider);
     final me = session is SignedIn ? session.me : null;
     final showDemo = ref.watch(appEnvProvider).showDemoBanner;
 
+    const widgetsBlock = [
+      Padding(padding: EdgeInsets.fromLTRB(16, 8, 16, 0), child: OrientadorTeaser()),
+      Padding(padding: EdgeInsets.fromLTRB(16, 8, 16, 0), child: CommunityStatsCard()),
+    ];
+    Widget block(List<Widget> children) => children.isEmpty
+        ? const SizedBox(height: 8)
+        : Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Column(children: children),
+          );
+    Widget extrasAfter(int i) => block([
+      if (i == _suggestionsAfter) const SuggestionsCarousel(),
+      if (i == _widgetsAfter) ...widgetsBlock,
+    ]);
+
     return RefreshIndicator(
       color: IcexColors.primary,
-      onRefresh: () => ref.refresh(feedControllerProvider.future),
+      onRefresh: () => ref.read(feedControllerProvider.notifier).refresh(),
       child: NotificationListener<ScrollNotification>(
         onNotification: (n) {
-          if (n.metrics.extentAfter < 600) {
+          if (n.metrics.extentAfter < 800) {
             ref.read(feedControllerProvider.notifier).loadMore().ignore();
           }
           return false;
         },
         child: CustomScrollView(
+          controller: _scroll,
+          physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
             if (showDemo) const SliverToBoxAdapter(child: DemoBanner()),
-            SliverToBoxAdapter(child: PageHeader(title: l.homeTitle)),
             if (me != null)
               SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
-                sliver: SliverToBoxAdapter(child: MyProfileCard(me: me.profile.card)),
-              ),
-            if (me != null)
-              SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.only(top: 8),
                 sliver: SliverToBoxAdapter(child: Composer(me: me.profile.card)),
               ),
             ...switch (feed) {
-              AsyncData(:final value) => [
+              AsyncValue(:final value?) => [
                 for (final d in value.destacadas)
                   SliverPadding(
                     padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -62,23 +96,51 @@ class HomePage extends ConsumerWidget {
                       child: FeaturedNewsBanner(post: d, onTap: () => context.push(Routes.news)),
                     ),
                   ),
-                if (value.posts.isEmpty)
+                if (value.posts.isEmpty) ...[
                   SliverToBoxAdapter(
-                    child: EmptyState(message: l.emptyFeed, icon: Icons.dynamic_feed_outlined),
+                    child: EmptyState(
+                      message: l.emptyFeed,
+                      icon: Icons.dynamic_feed_outlined,
+                      action: FilledButton.tonal(
+                        onPressed: () => StatefulNavigationShell.maybeOf(context)?.goBranch(1),
+                        child: Text(l.exploreNetwork),
+                      ),
+                    ),
                   ),
+                  const SliverToBoxAdapter(child: SuggestionsCarousel()),
+                ],
                 SliverPadding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                  padding: const EdgeInsets.only(top: 8),
                   sliver: SliverList.separated(
                     itemCount: value.posts.length + (value.hasMore ? 1 : 0),
-                    separatorBuilder: (_, i) =>
-                        i == 2 ? const _SideWidgets() : const SizedBox(height: 12),
+                    separatorBuilder: (_, i) => extrasAfter(i),
                     itemBuilder: (context, i) => i == value.posts.length
-                        ? const Padding(padding: EdgeInsets.all(16), child: LoadingView())
-                        : ConnectedPostCard(key: ValueKey(value.posts[i].id), post: value.posts[i]),
+                        ? const Padding(padding: EdgeInsets.all(24), child: LoadingView())
+                        : ConnectedPostCard(
+                            key: ValueKey(value.posts[i].id),
+                            post: value.posts[i],
+                            flat: true,
+                          ),
                   ),
                 ),
+                // Feed corto: los bloques cuyo hueco no existe van al final.
+                if (value.posts.isNotEmpty)
+                  SliverPadding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    sliver: SliverToBoxAdapter(
+                      child: Builder(
+                        builder: (_) {
+                          final separators = value.posts.length + (value.hasMore ? 1 : 0) - 1;
+                          return block([
+                            if (separators <= _suggestionsAfter) const SuggestionsCarousel(),
+                            if (separators <= _widgetsAfter) ...widgetsBlock,
+                          ]);
+                        },
+                      ),
+                    ),
+                  ),
               ],
-              AsyncError(:final error) => [
+              AsyncValue(:final error?) => [
                 SliverFillRemaining(
                   hasScrollBody: false,
                   child: ErrorView(
@@ -87,118 +149,22 @@ class HomePage extends ConsumerWidget {
                   ),
                 ),
               ],
-              _ => [const SliverFillRemaining(hasScrollBody: false, child: LoadingView())],
+              _ => [
+                SliverList.list(
+                  children: const [
+                    SizedBox(height: 8),
+                    PostSkeleton(),
+                    SizedBox(height: 8),
+                    PostSkeleton(),
+                  ],
+                ),
+              ],
             },
           ],
         ),
       ),
     );
   }
-}
-
-/// Tarjeta de perfil propia con franja roja/amarilla (mockup).
-class MyProfileCard extends StatelessWidget {
-  const MyProfileCard({required this.me, super.key});
-
-  final ProfileCard me;
-
-  @override
-  Widget build(BuildContext context) {
-    final l = AppLocalizations.of(context);
-    final t = Theme.of(context).textTheme;
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: IcexColors.card,
-        borderRadius: BorderRadius.circular(IcexTheme.radius),
-        border: Border.all(color: IcexColors.border),
-      ),
-      child: Column(
-        children: [
-          SizedBox(
-            height: 92,
-            width: double.infinity,
-            child: Stack(
-              alignment: Alignment.bottomCenter,
-              children: [
-                const Positioned.fill(bottom: 36, child: IcexStripe(height: 56)),
-                InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: () => context.push(Routes.profile(me.slug)),
-                  child: Avatar.of(me, size: 76, ring: true),
-                ),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            child: Column(
-              children: [
-                Text(me.nombre, style: t.titleMedium, textAlign: TextAlign.center),
-                if (me.headline.isNotEmpty)
-                  Text(
-                    me.headline,
-                    textAlign: TextAlign.center,
-                    style: t.bodyMedium?.copyWith(color: IcexColors.mutedForeground),
-                  ),
-                const SizedBox(height: 8),
-                PhasePromoRow(fase: me.fase, promocion: me.promocion),
-              ],
-            ),
-          ),
-          const Divider(),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            child: Column(
-              children: [
-                _KV(l.followers, '${me.seguidoresCount}'),
-                const SizedBox(height: 4),
-                _KV(l.following, '${me.siguiendoCount}'),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _KV extends StatelessWidget {
-  const _KV(this.k, this.v);
-
-  final String k;
-  final String v;
-
-  @override
-  Widget build(BuildContext context) => Row(
-    children: [
-      Text(
-        k,
-        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: IcexColors.mutedForeground),
-      ),
-      const Spacer(),
-      Text(v, style: const TextStyle(fontWeight: FontWeight.w700)),
-    ],
-  );
-}
-
-/// Widgets laterales del mockup, intercalados en el feed en móvil.
-class _SideWidgets extends StatelessWidget {
-  const _SideWidgets();
-
-  @override
-  Widget build(BuildContext context) => const Padding(
-    padding: EdgeInsets.symmetric(vertical: 12),
-    child: Column(
-      children: [
-        OrientadorTeaser(),
-        SizedBox(height: 12),
-        CommunityStatsCard(),
-        SizedBox(height: 12),
-        SuggestionsCard(),
-      ],
-    ),
-  );
 }
 
 class OrientadorTeaser extends StatelessWidget {
@@ -209,29 +175,51 @@ class OrientadorTeaser extends StatelessWidget {
     final l = AppLocalizations.of(context);
     final t = Theme.of(context).textTheme;
     return Material(
-      color: IcexColors.card,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(IcexTheme.radius),
-        side: const BorderSide(color: IcexColors.primary),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(IcexTheme.radius),
-        onTap: () => context.go(Routes.orientador),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                l.orientadorTeaserTitle,
-                style: t.titleLarge?.copyWith(color: IcexColors.primary),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                l.orientadorTeaserBody,
-                style: t.bodyMedium?.copyWith(color: IcexColors.mutedForeground),
-              ),
-            ],
+      clipBehavior: Clip.antiAlias,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(IcexTheme.radius)),
+      child: Ink(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFC50516), Color(0xFF8E0410)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
+        child: InkWell(
+          onTap: () => StatefulNavigationShell.maybeOf(context)?.goBranch(AppTab.orientador.index),
+          child: Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(Icons.explore_rounded, color: IcexColors.accent),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l.orientadorTeaserTitle,
+                        style: t.titleMedium?.copyWith(color: Colors.white),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        l.orientadorTeaserBody,
+                        style: t.bodySmall?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.arrow_forward_rounded, color: Colors.white),
+              ],
+            ),
           ),
         ),
       ),
@@ -247,45 +235,37 @@ class CommunityStatsCard extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final stats = ref.watch(communityStatsProvider).value;
     final t = Theme.of(context).textTheme;
-    Widget tile(String n, String label) => Expanded(
+    Widget tile(int? n, String label) => Expanded(
       child: Semantics(
-        label: '$n $label',
+        label: '${n ?? '–'} $label',
         excludeSemantics: true,
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: IcexColors.muted,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(n, style: t.headlineSmall?.copyWith(color: IcexColors.primary)),
-              Text(label, style: t.bodySmall),
-            ],
-          ),
+        child: Column(
+          children: [
+            Text(
+              n == null ? '–' : compactNumber(n),
+              style: t.titleLarge?.copyWith(color: IcexColors.primary),
+            ),
+            const SizedBox(height: 2),
+            Text(label, style: t.bodySmall, textAlign: TextAlign.center, maxLines: 1),
+          ],
         ),
       ),
     );
     return IcexCard(
+      padding: const EdgeInsets.fromLTRB(12, 14, 12, 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Semantics(header: true, child: Text(l.communityStatsTitle, style: t.titleMedium)),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              tile('${stats?.alumni ?? '–'}', l.statsAlumni),
-              const SizedBox(width: 8),
-              tile('${stats?.activos ?? '–'}', l.statsActive),
-            ],
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 12),
+            child: Semantics(header: true, child: Text(l.communityStatsTitle, style: t.titleSmall)),
           ),
-          const SizedBox(height: 8),
           Row(
             children: [
-              tile('${stats?.paises ?? '–'}', l.statsCountries),
-              const SizedBox(width: 8),
-              tile('${stats?.promociones ?? '–'}', l.statsPromotions),
+              tile(stats?.alumni, l.statsAlumni),
+              tile(stats?.activos, l.statsActive),
+              tile(stats?.paises, l.statsCountries),
+              tile(stats?.promociones, l.statsPromotions),
             ],
           ),
         ],
@@ -294,8 +274,10 @@ class CommunityStatsCard extends ConsumerWidget {
   }
 }
 
-class SuggestionsCard extends ConsumerWidget {
-  const SuggestionsCard({super.key});
+/// «Personas que quizá conozcas» como carrusel horizontal (Instagram / LinkedIn):
+/// ocupa poco alto, se descartan con la X y Seguir no saca de la pantalla.
+class SuggestionsCarousel extends ConsumerWidget {
+  const SuggestionsCarousel({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -303,46 +285,140 @@ class SuggestionsCard extends ConsumerWidget {
     final t = Theme.of(context).textTheme;
     final people = ref.watch(suggestionsProvider).value ?? const [];
     if (people.isEmpty) return const SizedBox.shrink();
-    return IcexCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Semantics(header: true, child: Text(l.suggestionsTitle, style: t.titleMedium)),
-          for (final p in people)
+    return Material(
+      color: IcexColors.card,
+      shape: const Border.symmetric(horizontal: BorderSide(color: IcexColors.border)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Padding(
-              padding: const EdgeInsets.only(top: 12),
+              padding: const EdgeInsets.fromLTRB(16, 0, 8, 8),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  InkWell(
-                    customBorder: const CircleBorder(),
-                    onTap: () => context.push(Routes.profile(p.slug)),
-                    child: Avatar.of(p, size: 48, ring: true),
-                  ),
-                  const SizedBox(width: 10),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(p.nombre, style: t.titleSmall),
-                        if (p.empresa != null) Text(p.empresa!, style: t.bodySmall),
-                        const SizedBox(height: 4),
-                        PhasePromoRow(fase: p.fase, promocion: p.promocion),
-                        const SizedBox(height: 6),
-                        FollowButton(
-                          following: p.isFollowing,
-                          small: true,
-                          onPressed: p.isFollowing
-                              ? null
-                              : () => ref.read(suggestionsProvider.notifier).follow(p),
-                        ),
-                      ],
+                    child: Semantics(
+                      header: true,
+                      child: Text(l.suggestionsTitle, style: t.titleSmall),
                     ),
+                  ),
+                  TextButton(
+                    onPressed: () =>
+                        StatefulNavigationShell.maybeOf(context)?.goBranch(AppTab.network.index),
+                    child: Text(l.seeAll),
                   ),
                 ],
               ),
             ),
-        ],
+            SizedBox(
+              height: 246,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                itemCount: people.length,
+                separatorBuilder: (_, _) => const SizedBox(width: 10),
+                itemBuilder: (_, i) => SuggestionCard(person: people[i]),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class SuggestionCard extends ConsumerWidget {
+  const SuggestionCard({required this.person, super.key});
+
+  final ProfileCard person;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final t = Theme.of(context).textTheme;
+    final p = person;
+    final notifier = ref.read(suggestionsProvider.notifier);
+    return SizedBox(
+      width: 160,
+      child: Material(
+        color: IcexColors.card,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(IcexTheme.radius),
+          side: const BorderSide(color: IcexColors.border),
+        ),
+        child: InkWell(
+          onTap: () => context.push(Routes.profile(p.slug)),
+          child: Stack(
+            children: [
+              const Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 44,
+                child: IcexStripe(height: 44),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 14, 10, 10),
+                child: Column(
+                  children: [
+                    Avatar.of(p, size: 68, ring: true),
+                    const SizedBox(height: 8),
+                    Text(
+                      p.nombre,
+                      style: t.titleSmall?.copyWith(fontSize: 14),
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      p.headline,
+                      style: t.bodySmall,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const Spacer(),
+                    PromoBadge(p.promocion, compact: true),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      width: double.infinity,
+                      child: FollowButton(
+                        following: p.isFollowing,
+                        small: true,
+                        onPressed: () async {
+                          try {
+                            await notifier.toggleFollow(p);
+                          } on Object catch (e) {
+                            if (context.mounted) showSnack(context, ErrorView.messageFor(l, e));
+                          }
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                top: 0,
+                right: 0,
+                child: IconButton(
+                  tooltip: l.dismiss,
+                  visualDensity: VisualDensity.compact,
+                  style: IconButton.styleFrom(
+                    backgroundColor: Colors.black26,
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size(28, 28),
+                  ),
+                  iconSize: 16,
+                  onPressed: () => notifier.dismiss(p),
+                  icon: const Icon(Icons.close),
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

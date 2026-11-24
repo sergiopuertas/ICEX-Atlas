@@ -13,6 +13,7 @@ import 'package:icex_atlas/features/settings/data/account_repository.dart';
 import 'package:icex_atlas/l10n/app_localizations.dart';
 import 'package:icex_atlas/shared/widgets/avatar.dart';
 import 'package:icex_atlas/shared/widgets/common.dart';
+import 'package:icex_atlas/shared/widgets/dialogs.dart';
 import 'package:share_plus/share_plus.dart';
 
 /// Ajustes: notificaciones, privacidad, bloqueados, exportar datos, borrar cuenta, cerrar sesión.
@@ -85,40 +86,11 @@ class SettingsPage extends ConsumerWidget {
 
   Future<void> _delete(BuildContext context, WidgetRef ref) async {
     final l = AppLocalizations.of(context);
-    final controller = TextEditingController();
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (c) => StatefulBuilder(
-        builder: (c, set) => AlertDialog(
-          title: Text(l.settingsDelete),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(l.settingsDeleteBody),
-              const SizedBox(height: 12),
-              TextField(
-                controller: controller,
-                onChanged: (_) => set(() {}),
-                decoration: InputDecoration(hintText: l.settingsDeleteConfirmWord),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l.cancel)),
-            FilledButton(
-              style: FilledButton.styleFrom(backgroundColor: IcexColors.destructive),
-              onPressed: controller.text.trim() == AccountRepository.deleteConfirmation
-                  ? () => Navigator.pop(c, true)
-                  : null,
-              child: Text(l.delete),
-            ),
-          ],
-        ),
-      ),
+    final confirmation = await showDeleteAccountDialog(
+      context,
+      confirmWord: AccountRepository.deleteConfirmation,
     );
-    final confirmation = controller.text;
-    controller.dispose();
-    if (!(ok ?? false)) return;
+    if (confirmation == null) return;
     try {
       await ref.read(accountRepositoryProvider).deleteAccount(confirmation);
       await ref.read(sessionControllerProvider.notifier).signOut();
@@ -239,6 +211,10 @@ class PrivacyPage extends ConsumerStatefulWidget {
 class _PrivacyPageState extends ConsumerState<PrivacyPage> {
   ProfileDetail? _me;
 
+  /// Fuerza a recrear los desplegables tras cada guardado: `initialValue` solo se lee al
+  /// crearlos, así reflejan el valor del servidor (también si el guardado falla).
+  int _rev = 0;
+
   @override
   void initState() {
     super.initState();
@@ -255,6 +231,8 @@ class _PrivacyPageState extends ConsumerState<PrivacyPage> {
       await ref.read(sessionControllerProvider.notifier).refreshMe();
     } on Object catch (e) {
       if (mounted) showSnack(context, ErrorView.messageFor(AppLocalizations.of(context), e));
+    } finally {
+      if (mounted) setState(() => _rev++);
     }
   }
 
@@ -287,6 +265,7 @@ class _PrivacyPageState extends ConsumerState<PrivacyPage> {
             Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: DropdownButtonFormField<Visibilidad>(
+                key: ValueKey('${e.key}-$_rev'),
                 initialValue: me.visibilidad[e.key] ?? Visibilidad.socios,
                 decoration: InputDecoration(labelText: e.value),
                 items: [
@@ -333,8 +312,12 @@ class BlockedPage extends ConsumerWidget {
                       title: Text(p.nombre),
                       trailing: TextButton(
                         onPressed: () async {
-                          await ref.read(socialRepositoryProvider).unblock(p.userId);
-                          ref.invalidate(_blockedProvider);
+                          try {
+                            await ref.read(socialRepositoryProvider).unblock(p.userId);
+                            ref.invalidate(_blockedProvider);
+                          } on Object catch (e) {
+                            if (context.mounted) showSnack(context, ErrorView.messageFor(l, e));
+                          }
                         },
                         child: Text(l.profileUnblock),
                       ),

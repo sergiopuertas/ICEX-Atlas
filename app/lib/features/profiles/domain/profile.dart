@@ -182,6 +182,19 @@ class ProfileDetail {
   final bool followsMe;
   final Map<String, Visibilidad> visibilidad;
   final bool? aceptaSugerencias;
+
+  ProfileDetail withExperiences(List<Experience> experiences) => copyWith(experiences: experiences);
+
+  ProfileDetail copyWith({ProfileCard? card, List<Experience>? experiences}) => ProfileDetail(
+    card: card ?? this.card,
+    bio: bio,
+    postsCount: postsCount,
+    experiences: experiences ?? this.experiences,
+    isSelf: isSelf,
+    followsMe: followsMe,
+    visibilidad: visibilidad,
+    aceptaSugerencias: aceptaSugerencias,
+  );
 }
 
 /// Usuario de la sesión (api.me()).

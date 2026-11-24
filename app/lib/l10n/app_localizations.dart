@@ -1405,6 +1405,258 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Gracias. El equipo de moderación lo revisará.'**
   String get reportThanks;
+
+  /// No description provided for @seeMore.
+  ///
+  /// In es, this message translates to:
+  /// **'…ver más'**
+  String get seeMore;
+
+  /// No description provided for @close.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerrar'**
+  String get close;
+
+  /// No description provided for @moreOptions.
+  ///
+  /// In es, this message translates to:
+  /// **'Más opciones'**
+  String get moreOptions;
+
+  /// No description provided for @copyText.
+  ///
+  /// In es, this message translates to:
+  /// **'Copiar texto'**
+  String get copyText;
+
+  /// No description provided for @copied.
+  ///
+  /// In es, this message translates to:
+  /// **'Copiado'**
+  String get copied;
+
+  /// No description provided for @viewProfileOf.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver el perfil de {name}'**
+  String viewProfileOf(String name);
+
+  /// No description provided for @deletePostBody.
+  ///
+  /// In es, this message translates to:
+  /// **'La publicación desaparecerá de tu perfil y del feed. No se puede deshacer.'**
+  String get deletePostBody;
+
+  /// No description provided for @shareInNetworkHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Añade tu opinión (opcional)'**
+  String get shareInNetworkHint;
+
+  /// No description provided for @sharedDone.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartido en tu red'**
+  String get sharedDone;
+
+  /// No description provided for @shareDefaultText.
+  ///
+  /// In es, this message translates to:
+  /// **'Comparto esta publicación'**
+  String get shareDefaultText;
+
+  /// No description provided for @composeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear publicación'**
+  String get composeTitle;
+
+  /// No description provided for @composeHint.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Qué quieres compartir con la comunidad ICEX Alumni?'**
+  String get composeHint;
+
+  /// No description provided for @composeDiscardTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Descartar la publicación?'**
+  String get composeDiscardTitle;
+
+  /// No description provided for @composeDiscardBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Perderás lo que has escrito.'**
+  String get composeDiscardBody;
+
+  /// No description provided for @keepEditing.
+  ///
+  /// In es, this message translates to:
+  /// **'Seguir editando'**
+  String get keepEditing;
+
+  /// No description provided for @discard.
+  ///
+  /// In es, this message translates to:
+  /// **'Descartar'**
+  String get discard;
+
+  /// No description provided for @removePhoto.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar foto'**
+  String get removePhoto;
+
+  /// No description provided for @composerEvent.
+  ///
+  /// In es, this message translates to:
+  /// **'Evento'**
+  String get composerEvent;
+
+  /// No description provided for @composerPublished.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicado'**
+  String get composerPublished;
+
+  /// No description provided for @exploreNetwork.
+  ///
+  /// In es, this message translates to:
+  /// **'Explorar la red'**
+  String get exploreNetwork;
+
+  /// No description provided for @seeAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver todo'**
+  String get seeAll;
+
+  /// No description provided for @dismiss.
+  ///
+  /// In es, this message translates to:
+  /// **'Descartar'**
+  String get dismiss;
+
+  /// No description provided for @postTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicación'**
+  String get postTitle;
+
+  /// No description provided for @profileNoPosts.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no hay publicaciones.'**
+  String get profileNoPosts;
+
+  /// No description provided for @followsYou.
+  ///
+  /// In es, this message translates to:
+  /// **'Te sigue'**
+  String get followsYou;
+
+  /// No description provided for @postsLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'publicaciones'**
+  String get postsLabel;
+
+  /// No description provided for @profileBlocked.
+  ///
+  /// In es, this message translates to:
+  /// **'Has bloqueado a {name}'**
+  String profileBlocked(String name);
+
+  /// No description provided for @today.
+  ///
+  /// In es, this message translates to:
+  /// **'Hoy'**
+  String get today;
+
+  /// No description provided for @yesterday.
+  ///
+  /// In es, this message translates to:
+  /// **'Ayer'**
+  String get yesterday;
+
+  /// No description provided for @messageFailedTapRetry.
+  ///
+  /// In es, this message translates to:
+  /// **'No enviado · toca para reintentar'**
+  String get messageFailedTapRetry;
+
+  /// No description provided for @noConversationsFilter.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay conversaciones en esta categoría.'**
+  String get noConversationsFilter;
+
+  /// No description provided for @clearSearch.
+  ///
+  /// In es, this message translates to:
+  /// **'Borrar búsqueda'**
+  String get clearSearch;
+
+  /// No description provided for @filters.
+  ///
+  /// In es, this message translates to:
+  /// **'Filtros'**
+  String get filters;
+
+  /// No description provided for @directoryGroups.
+  ///
+  /// In es, this message translates to:
+  /// **'Grupos de alumni'**
+  String get directoryGroups;
+
+  /// No description provided for @clearFilters.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar filtros'**
+  String get clearFilters;
+
+  /// No description provided for @showResults.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver resultados'**
+  String get showResults;
+
+  /// No description provided for @notificationsNew.
+  ///
+  /// In es, this message translates to:
+  /// **'Nuevas'**
+  String get notificationsNew;
+
+  /// No description provided for @notificationsEarlier.
+  ///
+  /// In es, this message translates to:
+  /// **'Anteriores'**
+  String get notificationsEarlier;
+
+  /// No description provided for @change.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar'**
+  String get change;
+
+  /// No description provided for @unsavedChangesTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Descartar los cambios?'**
+  String get unsavedChangesTitle;
+
+  /// No description provided for @unsavedChangesBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Tienes cambios sin guardar en tu perfil.'**
+  String get unsavedChangesBody;
+
+  /// No description provided for @orientadorIdeas.
+  ///
+  /// In es, this message translates to:
+  /// **'Ideas para empezar'**
+  String get orientadorIdeas;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

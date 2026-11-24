@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,6 +11,7 @@ import 'package:icex_atlas/core/theme/icex_theme.dart';
 import 'package:icex_atlas/features/orientador/domain/orientador.dart';
 import 'package:icex_atlas/features/profiles/domain/profile.dart';
 import 'package:icex_atlas/l10n/app_localizations.dart';
+import 'package:icex_atlas/shared/widgets/app_shell.dart';
 import 'package:icex_atlas/shared/widgets/badges.dart';
 import 'package:icex_atlas/shared/widgets/common.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
@@ -63,13 +66,14 @@ class OrientadorController extends _$OrientadorController {
     state = state.copyWith(loading: true, error: () => null);
     try {
       final r = await ref.read(orientadorRepositoryProvider).ask(state.query);
+      if (!ref.mounted) return;
       state = state.copyWith(
         history: [r, ...state.history],
         loading: false,
         query: state.query.copyWith(consulta: ''),
       );
     } on Object catch (e) {
-      state = state.copyWith(loading: false, error: () => e);
+      if (ref.mounted) state = state.copyWith(loading: false, error: () => e);
     }
   }
 }
@@ -83,10 +87,15 @@ class OrientadorPage extends ConsumerStatefulWidget {
 }
 
 class _OrientadorPageState extends ConsumerState<OrientadorPage> {
-  final _text = TextEditingController();
+  late final TextEditingController _text = TextEditingController(
+    text: ref.read(orientadorControllerProvider).query.consulta,
+  );
+
+  final _scroll = ScrollController();
 
   @override
   void dispose() {
+    _scroll.dispose();
     _text.dispose();
     super.dispose();
   }
@@ -97,7 +106,18 @@ class _OrientadorPageState extends ConsumerState<OrientadorPage> {
     final t = Theme.of(context).textTheme;
     final s = ref.watch(orientadorControllerProvider);
     final c = ref.read(orientadorControllerProvider.notifier);
-    if (_text.text != s.query.consulta) _text.text = s.query.consulta;
+    listenScrollToTop(ref, AppTab.orientador, _scroll);
+    // Sincroniza el campo cuando la consulta cambia desde fuera (atajos o tras enviar).
+    // Antes se asignaba `_text.text` dentro de build: notificaba durante la construcción y
+    // mandaba el cursor al principio.
+    ref.listen(orientadorControllerProvider.select((x) => x.query.consulta), (_, v) {
+      if (_text.text != v) {
+        _text.value = TextEditingValue(
+          text: v,
+          selection: TextSelection.collapsed(offset: v.length),
+        );
+      }
+    });
 
     Widget select<T>(
       String label,
@@ -108,6 +128,10 @@ class _OrientadorPageState extends ConsumerState<OrientadorPage> {
     ) => Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: DropdownButtonFormField<T>(
+        // `initialValue` solo se lee al crear el campo: la clave lo recrea cuando un atajo
+        // cambia la fase, el país o el sector (antes el desplegable seguía mostrando el
+        // valor anterior aunque la consulta ya era otra).
+        key: ValueKey('$label|$value'),
         initialValue: value,
         isExpanded: true,
         decoration: InputDecoration(labelText: label),
@@ -117,6 +141,7 @@ class _OrientadorPageState extends ConsumerState<OrientadorPage> {
     );
 
     return ListView(
+      controller: _scroll,
       padding: const EdgeInsets.only(bottom: 24),
       children: [
         if (ref.watch(appEnvProvider).showDemoBanner) const DemoBanner(),
@@ -131,6 +156,21 @@ class _OrientadorPageState extends ConsumerState<OrientadorPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Text(l.orientadorIdeas, style: t.titleSmall),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final a in OrientadorCatalog.atajos)
+                      ActionChip(
+                        avatar: const Icon(Icons.auto_awesome_outlined, color: IcexColors.primary),
+                        label: Text(a.$1),
+                        onPressed: () => c.applyShortcut(a),
+                      ),
+                  ],
+                ),
+                const Padding(padding: EdgeInsets.symmetric(vertical: 16), child: Divider()),
                 select<Fase>(
                   l.orientadorPhase,
                   s.query.fase,
@@ -160,14 +200,20 @@ class _OrientadorPageState extends ConsumerState<OrientadorPage> {
                   maxLength: 2000,
                   buildCounter: (_, {required currentLength, required isFocused, maxLength}) =>
                       null,
-                  onChanged: (v) => c.update(s.query.copyWith(consulta: v)),
+                  onChanged: (v) =>
+                      c.update(ref.read(orientadorControllerProvider).query.copyWith(consulta: v)),
                   decoration: InputDecoration(hintText: l.orientadorHint),
                 ),
                 const SizedBox(height: 12),
                 Align(
                   alignment: Alignment.centerLeft,
                   child: FilledButton.icon(
-                    onPressed: s.loading ? null : c.ask,
+                    onPressed: s.loading
+                        ? null
+                        : () {
+                            FocusScope.of(context).unfocus();
+                            unawaited(c.ask());
+                          },
                     icon: s.loading
                         ? const SizedBox.square(
                             dimension: 16,
@@ -176,15 +222,6 @@ class _OrientadorPageState extends ConsumerState<OrientadorPage> {
                         : const Icon(Icons.send),
                     label: Text(s.loading ? l.orientadorLoading : l.orientadorSubmit),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final a in OrientadorCatalog.atajos)
-                      ActionChip(label: Text(a.$1), onPressed: () => c.applyShortcut(a)),
-                  ],
                 ),
               ],
             ),

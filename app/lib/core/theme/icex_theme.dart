@@ -153,12 +153,22 @@ abstract final class IcexTheme {
           minimumSize: const Size(48, 44),
         ),
       ),
-      chipTheme: const ChipThemeData(
-        shape: StadiumBorder(side: BorderSide(color: IcexColors.border)),
+      chipTheme: ChipThemeData(
+        shape: const StadiumBorder(side: BorderSide(color: IcexColors.border)),
         backgroundColor: IcexColors.card,
         selectedColor: IcexColors.foreground,
-        labelStyle: TextStyle(fontFamily: body, fontSize: 13, fontWeight: FontWeight.w500),
-        secondaryLabelStyle: TextStyle(color: Colors.white),
+        // Color según estado: texto oscuro normal y blanco cuando el chip está seleccionado
+        // (fondo oscuro). Sin color explícito, ActionChip pintaba la etiqueta invisible.
+        labelStyle: TextStyle(
+          fontFamily: body,
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: WidgetStateColor.resolveWith(
+            (s) => s.contains(WidgetState.selected) ? Colors.white : IcexColors.foreground,
+          ),
+        ),
+        secondaryLabelStyle: const TextStyle(color: Colors.white),
+        iconTheme: const IconThemeData(color: IcexColors.mutedForeground, size: 16),
         showCheckmark: false,
       ),
       inputDecorationTheme: InputDecorationTheme(
