@@ -175,3 +175,47 @@ latencia percibida y es estable en CI. Cambios que derivan de ellos: el total de
 varios avatares iguales las soliciten a la vez; las imágenes se decodifican al tamaño en pantalla; el
 desvanecido de «Leer más» es un degradado en lugar de un `ShaderMask`. La fluidez real se mide en un móvil en modo
 profile (`scripts/perf-app.sh`, `integration_test/`).
+
+## D-029 · Concurrencia: lo que no puede depender del orden de llegada
+Pruebas con decenas de conexiones reales (`supabase/stress/concurrency.py`). Reglas que salen de ellas:
+- **Id de mensaje = UUID v7 con fecha no futura** (±5 min de reloj). Ordena la conversación y los no leídos; un id
+  aleatorio o del futuro quedaba «siempre el último». Se admiten ids antiguos: reintentos de mensajes escritos sin
+  cobertura.
+- **Lo que avanza no retrocede:** el «último mensaje» de la conversación y el puntero de leído del remitente solo
+  avanzan. Un mensaje que llega tarde cuenta como no leído para el destinatario (para él es nuevo).
+- **`mark_read` bloquea su fila antes de contar.** Antes, un envío simultáneo podía sumar +1 y el recuento lo pisaba
+  (un mensaje sin aviso).
+- **Objetos que desaparecen:** seguir, escribir, recomendar, comentar, compartir o unirse a algo que otro borra en
+  ese instante devolvía la violación de clave ajena en crudo. Ahora se bloquea (`FOR KEY SHARE`) y responde
+  «no encontrado» (P0002). La app también traduce 23503 a «no encontrado».
+- **Orden de bloqueo único** (socio → conversación → mensajes) en `send_message` y `delete_my_account`.
+- **Notificaciones agrupadas con `INSERT … ON CONFLICT`**: atómico, sin depender de bloqueos indirectos.
+
+## D-030 · Mantenimiento de particiones sin cortar envíos
+`ensure_partitions` crea las particiones fuera de línea, mueve las filas que hubieran caído en la partición por
+defecto y las adjunta. Pide todos los bloqueos al principio con `lock_timeout` de 100 ms (menor que
+`deadlock_timeout`): si choca con envíos en curso, cede el mantenimiento y reintenta; nunca aborta un mensaje.
+
+## D-031 · RLS y funciones `SECURITY DEFINER` por rendimiento
+Con RLS activo, Postgres no usa índices con operadores no «leakproof» (PostGIS `&&`/`<->`, `LIKE` de trigramas).
+`alumni_near`, `map_clusters` y `search_directory` pasan a `SECURITY DEFINER`: exigen socio activo
+(`require_member`) y aplican ellas mismas los filtros (socio activo, visibilidad, bloqueos). Tests en
+`080_concurrency_rules`. La política de lectura de posts se reescribe como expresión con subconsultas iniciales
+(misma regla que `feed.can_view`, evaluada una vez por consulta en vez de por fila).
+
+## D-032 · Agregados en caché para vistas globales
+Mapa a zoom ≤ 6 y cifras de la comunidad salen de agregados que refresca pg_cron cada 10 min. Si la caché no
+existe o tiene más de 15 min, se calcula en vivo (también tras un `db reset`). Una celda con una sola persona se
+comprueba en vivo antes de mostrarla. Coste: un socio nuevo tarda hasta 10 min en aparecer en la vista mundial.
+Las sugerencias puntúan solo candidatos sacados por índice (amigos de amigos y los 300 más seguidos de cada grupo).
+
+## D-033 · Directorio: solo se busca por lo que todos pueden ver
+La columna de búsqueda incluía empresa, cargo y ciudad aunque el socio los ocultara: se le encontraba por el dato
+oculto. Ahora solo indexa los campos visibles para todos los socios. Las bajas ya no aparecen en el directorio,
+el mapa ni «cerca de ti».
+
+## D-034 · Avisos push: vaciar la cola, en paralelo y sin reenvíos
+`push-dispatcher` procesaba como mucho 200 eventos por minuto, de uno en uno, y un fallo en un lote hacía reenviar
+todo el lote. Ahora vacía la cola por lotes dentro de 45 s (el cron es cada minuto y la visibilidad en cola es de
+120 s: no se solapan), envía con 16 conexiones a FCM, aísla los fallos por token, descarta tras 5 lecturas un
+mensaje que falla siempre y pide el token OAuth de FCM una sola vez aunque haya envíos simultáneos.

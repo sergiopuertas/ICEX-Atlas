@@ -23,7 +23,14 @@ where email in (
   'laura.gil@demo.icexalumni.invalid'
 );
 
+-- Versión anterior de este fichero: Pedro usaba el MISMO email que el «pedro» del IdP de
+-- pruebas, y el login OIDC de pedro ya no pasaba por el hook de alta (before_user_created).
+delete from auth.users
+ where id = 'b0000000-0000-4000-8000-00000000dead' and email = 'pedro.nosocio@demo.icexalumni.invalid';
+
 -- Pedro: cuenta SIN membresía, para probar la pantalla «Acceso solo para socios».
+-- Email distinto del «pedro» del IdP de pruebas, que sigue sirviendo para probar el rechazo
+-- en el alta OIDC (icex_member_not_verified).
 -- No tiene fila en identity.members, así que el hook custom_access_token rechaza su
 -- token (403 icex_member_not_active) y la app muestra el acceso denegado.
 insert into auth.users (
@@ -35,14 +42,14 @@ insert into auth.users (
 )
 select
   'b0000000-0000-4000-8000-00000000dead', '00000000-0000-0000-0000-000000000000',
-  'authenticated', 'authenticated', 'pedro.nosocio@demo.icexalumni.invalid',
+  'authenticated', 'authenticated', 'pedro.sinalta@demo.icexalumni.invalid',
   extensions.crypt('atlas-dev-local', extensions.gen_salt('bf')),
   '{"provider": "email", "providers": ["email"]}',
-  '{"name": "Pedro Sin Membresía", "sub": "pedro"}',
+  '{"name": "Pedro Sin Membresía (desarrollo)"}',
   now(), now(), now(),
   '', '', '', '', '', '', '', ''
 where not exists (
-  select 1 from auth.users where email = 'pedro.nosocio@demo.icexalumni.invalid'
+  select 1 from auth.users where email = 'pedro.sinalta@demo.icexalumni.invalid'
 );
 
 -- Identidad «email» de cada cuenta de desarrollo (GoTrue la usa en el acceso con contraseña).
@@ -55,7 +62,7 @@ where u.email in (
   'ana.ortega@demo.icexalumni.invalid',
   'javier.martin@demo.icexalumni.invalid',
   'laura.gil@demo.icexalumni.invalid',
-  'pedro.nosocio@demo.icexalumni.invalid'
+  'pedro.sinalta@demo.icexalumni.invalid'
 )
 and not exists (
   select 1 from auth.identities i where i.user_id = u.id and i.provider = 'email'

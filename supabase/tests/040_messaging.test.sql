@@ -53,7 +53,7 @@ select is_empty(format($$select 1 from messaging.messages where conversation_id 
   'messages_select (negativo): un tercero no lee la conversación');
 select is_empty(format($$select 1 from messaging.conversations where id = %L$$, :'conv'),
   'conversations_select (negativo): ni la ve en su lista');
-select throws_ok(format($$select api.send_message(gen_random_uuid(), 'intrusa', %L)$$, :'conv'), '42501', null,
+select throws_ok(format($$select api.send_message(util.uuid_v7(), 'intrusa', %L)$$, :'conv'), '42501', null,
   'send_message (negativo): un tercero no escribe en la conversación');
 select ok(not messaging.is_participant(:'conv', :'carla'), 'Un tercero no se autoriza en el canal privado');
 
@@ -61,7 +61,7 @@ select ok(not messaging.is_participant(:'conv', :'carla'), 'Un tercero no se aut
 select tests.authenticate_as(:'bea');
 select api.block(:'ana');
 select tests.authenticate_as(:'ana');
-select throws_ok(format($$select api.send_message(gen_random_uuid(), '¿sigues ahí?', %L)$$, :'conv'), '42501', null,
+select throws_ok(format($$select api.send_message(util.uuid_v7(), '¿sigues ahí?', %L)$$, :'conv'), '42501', null,
   'Tras un bloqueo no se pueden enviar mensajes');
 
 select * from finish();

@@ -25,11 +25,20 @@ CA_FP="$(openssl x509 -in docker/certs/dev-ca.crt -noout -fingerprint -sha256 | 
 if ! docker exec "${AUTH_CONTAINER}" grep -q "ICEX-ATLAS-DEV-CA ${CA_FP}" /etc/ssl/certs/ca-certificates.crt; then
   { echo "# ICEX-ATLAS-DEV-CA ${CA_FP}"; cat docker/certs/dev-ca.crt; } | docker exec -i -u 0 "${AUTH_CONTAINER}" sh -c 'cat >> /etc/ssl/certs/ca-certificates.crt'
   docker restart "${AUTH_CONTAINER}" >/dev/null
-  for i in $(seq 1 30); do curl -sf --noproxy "*" --max-time 2 "${API_URL}/auth/v1/health" -H "apikey: ${SERVICE_ROLE_KEY}" >/dev/null && break; sleep 1; done
+  for _ in $(seq 1 45); do curl -sf --noproxy "*" --max-time 2 "${API_URL}/auth/v1/health" -H "apikey: ${SERVICE_ROLE_KEY}" >/dev/null && break; sleep 1; done
+  curl -sf --noproxy "*" --max-time 2 "${API_URL}/auth/v1/health" -H "apikey: ${SERVICE_ROLE_KEY}" >/dev/null \
+    || { echo "✗ Auth no vuelve tras reiniciarlo (docker logs ${AUTH_CONTAINER})"; exit 1; }
+else
+  echo "  ya confiaba"
 fi
 echo "→ IdP de pruebas (docker compose)"
 docker compose -f docker/docker-compose.yml up -d >/dev/null  # construye la imagen si no existe
-for i in $(seq 1 30); do curl -sf --noproxy "*" --max-time 2 --cacert docker/certs/dev-ca.crt "${OIDC_ISSUER}/healthz" >/dev/null && break; sleep 1; done
+for _ in $(seq 1 60); do curl -sf --noproxy "*" --max-time 2 --cacert docker/certs/dev-ca.crt "${OIDC_ISSUER}/healthz" >/dev/null && break; sleep 1; done
+curl -sf --noproxy "*" --max-time 2 --cacert docker/certs/dev-ca.crt "${OIDC_ISSUER}/healthz" >/dev/null || {
+  echo "✗ El IdP de pruebas no responde en ${OIDC_ISSUER}. Mira: docker compose -f docker/docker-compose.yml logs"
+  echo "  (¿está '127.0.0.1 idp.icex-atlas.test' en /etc/hosts? ¿el puerto 9010 lo usa otro proceso?)"
+  exit 1
+}
 
 echo "→ Auth se conecta a la red del IdP (TEST-NET-3, no privada para el filtro SSRF)"
 docker network connect icex-atlas-idpnet "${AUTH_CONTAINER}" 2>/dev/null || true

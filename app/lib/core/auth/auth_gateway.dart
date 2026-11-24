@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:icex_atlas/core/utils/ids.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 sealed class AuthEvent {
@@ -70,6 +72,9 @@ class SupabaseAuthGateway implements AuthGateway {
             e == AuthChangeEvent.tokenRefreshed ||
             e == AuthChangeEvent.userUpdated) {
           final uid = state.session?.user.id;
+          if (e == AuthChangeEvent.signedIn || e == AuthChangeEvent.tokenRefreshed) {
+            _observeServerTime(state.session?.accessToken);
+          }
           sink.add(uid == null ? const AuthSignedOut() : AuthSignedIn(uid));
         }
       },
@@ -77,6 +82,19 @@ class SupabaseAuthGateway implements AuthGateway {
           sink.add(AuthFailed(error is AuthException ? error.message : error.toString())),
     ),
   );
+
+  /// Un token recién emitido trae en `iat` la hora del servidor: corrige el reloj de los ids.
+  static void _observeServerTime(String? jwt) {
+    final parts = jwt?.split('.');
+    if (parts == null || parts.length != 3) return;
+    try {
+      final payload = jsonDecode(utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))));
+      final iat = (payload as Map<String, dynamic>)['iat'];
+      if (iat is int) ServerClock.instance.observe(DateTime.fromMillisecondsSinceEpoch(iat * 1000));
+    } on Object {
+      // Token ilegible: no corregimos nada.
+    }
+  }
 
   @override
   Future<void> signInWithPassword({required String email, required String password}) async {

@@ -11,6 +11,7 @@ sealed class AppFailure implements Exception {
       case '403':
         return ForbiddenFailure(msg);
       case 'P0002':
+      case '23503': // algo que se borró en ese mismo instante (clave ajena)
       case '404':
       case 'PGRST202':
         return NotFoundFailure(msg);

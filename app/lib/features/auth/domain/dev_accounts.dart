@@ -31,7 +31,7 @@ class DevAccount {
       role: 'Administradora',
     ),
     DevAccount(
-      email: 'pedro.nosocio@demo.icexalumni.invalid',
+      email: 'pedro.sinalta@demo.icexalumni.invalid',
       name: 'Pedro Sin Membresía',
       role: 'No socio · acceso denegado',
     ),

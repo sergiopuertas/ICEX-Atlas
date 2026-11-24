@@ -44,4 +44,4 @@ app/env/*.json
 **/android/key.properties
 
 # FVM Version Cache
-.fvm/
+.fvm/__pycache__/
