@@ -30,6 +30,8 @@
   "homeTitle": "Inicio · ICEX Alumni",
   "followers": "Seguidores",
   "following": "Siguiendo",
+  "followersEmpty": "Aún no tiene seguidores.",
+  "followingEmpty": "Aún no sigue a nadie.",
   "composerHint": "Comparte una novedad con la red ICEX Alumni…",
   "composerPhoto": "Foto",
   "composerOffer": "Oferta",
@@ -315,7 +317,7 @@
   "homeGreeting": "Hola, {name}",
   "@homeGreeting": { "placeholders": { "name": { "type": "String" } } },
   "homeSubtitle": "Lo último de tu red ICEX Alumni",
-  "orientadorIntro": "Cuéntanos qué necesitas. Te proponemos pasos concretos y alumni con quienes hablar.",
+  "orientadorIntro": "Elige tu situación y te proponemos pasos concretos y alumni con quienes hablar.",
   "orientadorQuestion": "¿En qué te podemos orientar?",
   "orientadorContext": "Tu situación",
   "newsEmpty": "Todavía no hay comunicados de la asociación."

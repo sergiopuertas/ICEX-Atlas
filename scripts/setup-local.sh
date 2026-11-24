@@ -72,6 +72,24 @@ select vault.create_secret('${SERVICE_ROLE_KEY}', 'service_role_key')
 SQL
 echo "→ Cuentas de acceso rápido para desarrollo (contraseña: atlas-dev-local)"
 psql "${DB_URL}" -v ON_ERROR_STOP=1 -q -o /dev/null -f supabase/seed_dev_accounts.sql
+# Comprobación real: entrar como Ana con email y contraseña, igual que hará la app.
+dev_login="$(curl -s --noproxy "*" --max-time 10 -X POST "${API_URL}/auth/v1/token?grant_type=password" \
+  -H "apikey: ${ANON_KEY}" -H 'Content-Type: application/json' \
+  -d '{"email":"ana.ortega@demo.icexalumni.invalid","password":"atlas-dev-local"}')"
+if grep -q '"access_token"' <<<"${dev_login}"; then
+  echo "  ok: Ana entra con email y contraseña"
+elif grep -qi 'email_provider_disabled\|logins are disabled' <<<"${dev_login}"; then
+  echo "✗ El acceso con email está desactivado en tu Supabase local (config.toml se lee solo al arrancar)."
+  echo "  Reinicia: supabase stop && ./scripts/start-local.sh"
+  exit 1
+elif grep -qi 'invalid_credentials\|invalid login' <<<"${dev_login}"; then
+  echo "✗ Las cuentas de desarrollo no existen en esta base (¿base sin datos semilla?)."
+  echo "  Ejecuta: supabase db reset && ./scripts/setup-local.sh"
+  exit 1
+else
+  echo "✗ El acceso de desarrollo no funciona: ${dev_login}"
+  exit 1
+fi
 
 echo "→ Configuración de la app (app/env/local.json)"
 cat > app/env/local.json <<JSON

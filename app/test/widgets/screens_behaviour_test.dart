@@ -67,7 +67,7 @@ void main() {
   });
 
   group('Orientador', () {
-    testWidgets('sin ideas prefabricadas; el contexto viene del perfil', (t) async {
+    testWidgets('sin texto libre ni ideas prefabricadas; el contexto viene del perfil', (t) async {
       final api = fullDemoApi()
         ..responders['orientador'] = (_) => {
           'resumen': 'Resumen',
@@ -78,11 +78,11 @@ void main() {
       await pumpApp(t, appHarness(api), location: '/orientador');
       expect(find.text('Ideas para empezar'), findsNothing);
       expect(find.byType(ActionChip), findsNothing);
-      await t.enterText(find.byKey(const Key('orientador-text')), 'Quiero preparar la Fase II');
+      expect(find.byType(TextField), findsNothing, reason: 'sin campo de texto');
       await t.tap(find.byKey(const Key('orientador-submit')));
       await settleData(t);
       final body = api.last('orientador').params['body'] as Map;
-      expect(body['consulta'], 'Quiero preparar la Fase II');
+      expect(body['consulta'], '');
       expect(body['fase'], 'activo', reason: 'la fase de Ana');
       expect(find.text('Paso uno'), findsOneWidget);
     });

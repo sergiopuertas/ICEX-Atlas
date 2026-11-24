@@ -218,6 +218,7 @@ Las plantillas que documentan cada variable (`.env.example`, `app/env/example.js
 | El orientador o la subida de fotos fallan | Mira los logs: `docker logs -f supabase_edge_runtime_icex-atlas` |
 | `setup-local.sh`: «No he podido leer la configuración de la Supabase local» | `supabase start` no terminó o la base de datos aún arranca: espera a que `supabase status` responda bien y repite |
 | `supabase start` falla por puertos ocupados | Otro proyecto Supabase está encendido: `supabase stop --project-id <otro>` |
+| «Modo desarrollo»: no entra con las cuentas de prueba | La app muestra el motivo. Si es «acceso con email desactivado»: `supabase stop && ./scripts/start-local.sh` (el script ya reinicia solo cuando cambia `supabase/config.toml`). Si faltan las cuentas: `./scripts/setup-local.sh`, que además comprueba que Ana puede entrar |
 | Al arrancar el emulador aparece la web de acceso de ICEX Alumni | Es Chrome restaurado por el arranque rápido. `start-local.sh` ya lo cierra; si lo arrancaste a mano: `adb shell am force-stop com.android.chrome` |
 | `flutter run` se queda en «Installing…» o «No supported devices connected» | Casi siempre, dos `adb` distintos (ver apartado 4) o un emulador a medio arrancar: `adb kill-server` y vuelve a lanzar `start-local.sh`; si persiste, `COLD=1` |
 | Android: el login se abre pero no carga | Falta `adb reverse` (se pierde al reiniciar el emulador o al hacer `adb root`): `./scripts/android-dev.sh` |

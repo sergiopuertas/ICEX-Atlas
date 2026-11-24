@@ -16,6 +16,8 @@ const screens = <String, String?>{
   'Chat': '/mensajes/c0',
   'Orientador': '/orientador',
   'Perfil': '/perfil/javier',
+  'Seguidores': '/perfil/javier/conexiones',
+  'Siguiendo': '/perfil/javier/conexiones?ver=siguiendo',
   'Publicación': '/post/p0',
   'Crear publicación': '/publicar',
   'Notificaciones': '/notificaciones',

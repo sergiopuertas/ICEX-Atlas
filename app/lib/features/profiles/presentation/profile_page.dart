@@ -167,18 +167,31 @@ class _Header extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final t = Theme.of(context).textTheme;
     final c = p.card;
-    Widget stat(int n, String label) => Text.rich(
-      TextSpan(
-        children: [
-          TextSpan(
-            text: compactNumber(n),
-            style: const TextStyle(fontWeight: FontWeight.w700, color: IcexColors.foreground),
-          ),
-          TextSpan(text: ' $label'),
-        ],
-      ),
-      style: t.bodyMedium?.copyWith(color: IcexColors.mutedForeground),
-    );
+    Widget stat(int n, String label, {String? opens}) {
+      final text = Text.rich(
+        TextSpan(
+          children: [
+            TextSpan(
+              text: compactNumber(n),
+              style: const TextStyle(fontWeight: FontWeight.w700, color: IcexColors.foreground),
+            ),
+            TextSpan(text: ' $label'),
+          ],
+        ),
+        style: t.bodyMedium?.copyWith(color: IcexColors.mutedForeground),
+      );
+      if (opens == null) return text;
+      // Zona táctil de 48 dp aunque el texto sea pequeño.
+      return InkWell(
+        key: Key('stat-$opens'),
+        borderRadius: BorderRadius.circular(8),
+        onTap: () => context.push('/perfil/$slug/conexiones?ver=$opens'),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 48),
+          child: Align(widthFactor: 1, child: text),
+        ),
+      );
+    }
 
     return Material(
       color: IcexColors.card,
@@ -267,9 +280,10 @@ class _Header extends ConsumerWidget {
                 Wrap(
                   spacing: 16,
                   runSpacing: 4,
+                  crossAxisAlignment: WrapCrossAlignment.center,
                   children: [
-                    stat(c.seguidoresCount, l.followers.toLowerCase()),
-                    stat(c.siguiendoCount, l.following.toLowerCase()),
+                    stat(c.seguidoresCount, l.followers.toLowerCase(), opens: 'seguidores'),
+                    stat(c.siguiendoCount, l.following.toLowerCase(), opens: 'siguiendo'),
                     if (p.postsCount > 0) stat(p.postsCount, l.postsLabel),
                   ],
                 ),

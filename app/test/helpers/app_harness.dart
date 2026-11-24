@@ -158,6 +158,22 @@ FakeApiClient fullDemoApi({int posts = 6}) => FakeApiClient({
     'next_cursor': null,
   },
   'map_clusters': (_) => {'clusters': <Object>[], 'clubs': <Object>[], 'total': 0},
+  'list_follows': (p) => {
+    'items': [
+      for (var i = 0; i < 8; i++)
+        {
+          ...cardJson(
+            id: p['p_direction'] == 'siguiendo' ? 'u-sg$i' : 'u-sd$i',
+            nombre: p['p_direction'] == 'siguiendo' ? 'Seguida Número $i' : 'Seguidor Número $i',
+            empresa: 'Indra',
+          ),
+          'is_following': i.isEven,
+        },
+    ],
+    'next_cursor': null,
+  },
+  'follow': (_) => {'is_following': true, 'seguidores_count': 1},
+  'unfollow': (_) => {'is_following': false, 'seguidores_count': 0},
 });
 
 /// La app completa, ya con sesión iniciada como Ana (u-1).

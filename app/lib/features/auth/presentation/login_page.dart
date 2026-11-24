@@ -111,7 +111,11 @@ class _LoginPageState extends ConsumerState<LoginPage> {
             Semantics(
               liveRegion: true,
               child: Text(
-                error == 'network' ? l.errorNetwork : l.loginError,
+                error == 'network'
+                    ? l.errorNetwork
+                    : env.devLogin
+                    ? devLoginErrorHelp(error)
+                    : l.loginError,
                 textAlign: TextAlign.center,
                 style: t.bodyMedium?.copyWith(color: IcexColors.destructive),
               ),
@@ -388,4 +392,22 @@ class _Feature extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// Solo en desarrollo (DEV_LOGIN): el motivo real y cómo arreglarlo, en vez de un error
+/// genérico. Nunca se muestra en producción.
+@visibleForTesting
+String devLoginErrorHelp(String error) {
+  final e = error.toLowerCase();
+  if (e.contains('email_provider_disabled') || e.contains('logins are disabled')) {
+    return 'El acceso con email está desactivado en tu Supabase local. '
+        'Reinícialo: supabase stop && ./scripts/start-local.sh';
+  }
+  if (e.contains('invalid login') || e.contains('invalid_credentials')) {
+    return 'Las cuentas de prueba no están en tu base local. Ejecuta ./scripts/setup-local.sh';
+  }
+  if (e.contains('socket') || e.contains('connection') || e.contains('failed host lookup')) {
+    return 'La app no llega a Supabase (127.0.0.1:54321). En el emulador: ./scripts/android-dev.sh';
+  }
+  return 'No se pudo entrar: $error';
 }

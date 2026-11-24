@@ -242,6 +242,18 @@ abstract class AppLocalizations {
   /// **'Siguiendo'**
   String get following;
 
+  /// No description provided for @followersEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no tiene seguidores.'**
+  String get followersEmpty;
+
+  /// No description provided for @followingEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no sigue a nadie.'**
+  String get followingEmpty;
+
   /// No description provided for @composerHint.
   ///
   /// In es, this message translates to:
@@ -1685,7 +1697,7 @@ abstract class AppLocalizations {
   /// No description provided for @orientadorIntro.
   ///
   /// In es, this message translates to:
-  /// **'Cuéntanos qué necesitas. Te proponemos pasos concretos y alumni con quienes hablar.'**
+  /// **'Elige tu situación y te proponemos pasos concretos y alumni con quienes hablar.'**
   String get orientadorIntro;
 
   /// No description provided for @orientadorQuestion.

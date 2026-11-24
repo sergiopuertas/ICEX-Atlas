@@ -219,3 +219,13 @@ el mapa ni «cerca de ti».
 todo el lote. Ahora vacía la cola por lotes dentro de 45 s (el cron es cada minuto y la visibilidad en cola es de
 120 s: no se solapan), envía con 16 conexiones a FCM, aísla los fallos por token, descarta tras 5 lecturas un
 mensaje que falla siempre y pide el token OAuth de FCM una sola vez aunque haya envíos simultáneos.
+
+## D-035 · Promoción en curso calculada
+La promoción en curso es `año − 1975` (2026 → 51ª) en la base de datos (`profiles.current_promocion()`) y en la
+app (`currentPromocion()`); la app usa el valor que envía el servidor en `community_stats`. Si cambia el
+calendario se fija sin desplegar con la clave `promociones.actual` de `config.app_config`. Quien se da de alta en
+la promoción en curso sin fase en el IdP empieza en Fase 0. El logotipo ya no lleva el sello del 50 aniversario.
+
+## D-036 · Orientador sin texto libre
+El Orientador solo pide fase, país y sector (rellenos con el perfil). La Edge Function ya admitía la consulta
+vacía y genera la pregunta a partir del contexto.

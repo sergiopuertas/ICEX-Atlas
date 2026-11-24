@@ -15,6 +15,7 @@ import 'package:icex_atlas/features/messaging/presentation/conversations_page.da
 import 'package:icex_atlas/features/notifications/presentation/notifications_page.dart';
 import 'package:icex_atlas/features/orientador/presentation/orientador_page.dart';
 import 'package:icex_atlas/features/profiles/presentation/edit_profile_page.dart';
+import 'package:icex_atlas/features/profiles/presentation/follows_page.dart';
 import 'package:icex_atlas/features/profiles/presentation/profile_page.dart';
 import 'package:icex_atlas/features/settings/presentation/settings_pages.dart';
 import 'package:icex_atlas/shared/widgets/app_shell.dart';
@@ -129,6 +130,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/perfil/:slug',
         builder: (_, s) => ProfilePage(slug: s.pathParameters['slug']!),
+        routes: [
+          GoRoute(
+            path: 'conexiones',
+            builder: (_, s) => FollowsPage(
+              slug: s.pathParameters['slug']!,
+              showFollowing: s.uri.queryParameters['ver'] == 'siguiendo',
+            ),
+          ),
+        ],
       ),
       GoRoute(
         path: '/post/:id',

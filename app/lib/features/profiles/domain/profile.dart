@@ -221,6 +221,7 @@ class CommunityStats {
     required this.activos,
     required this.paises,
     required this.promociones,
+    this.promocionActual,
   });
 
   factory CommunityStats.fromJson(Map<String, dynamic> j) => CommunityStats(
@@ -228,10 +229,20 @@ class CommunityStats {
     activos: (j['activos'] as num?)?.toInt() ?? 0,
     paises: (j['paises'] as num?)?.toInt() ?? 0,
     promociones: (j['promociones'] as num?)?.toInt() ?? 0,
+    promocionActual: (j['promocion_actual'] as num?)?.toInt(),
   );
 
   final int alumni;
   final int activos;
   final int paises;
   final int promociones;
+
+  /// Promoción en curso según el servidor (puede fijarse a mano en config).
+  final int? promocionActual;
 }
+
+/// Promoción en curso: cada año entra una nueva (2026 → 51ª, en Fase 0).
+/// Misma regla que `profiles.current_promocion()` en la base de datos; si el servidor
+/// envía otro valor (ajuste manual), manda el del servidor.
+int currentPromocion({DateTime? now, int? fromServer}) =>
+    fromServer ?? (now ?? DateTime.now()).year - 1975;

@@ -84,8 +84,8 @@ class OrientadorController extends _$OrientadorController {
   }
 }
 
-/// Orientador: una pregunta, el contexto (fase, país y sector, ya rellenos con el perfil)
-/// y un botón. Sin sugerencias prefabricadas ni adornos: se escribe y se pide.
+/// Orientador: el contexto (fase, país y sector, ya rellenos con el perfil) y un botón.
+/// Sin texto libre ni sugerencias prefabricadas: se elige y se pide.
 class OrientadorPage extends ConsumerStatefulWidget {
   const OrientadorPage({super.key});
 
@@ -94,16 +94,11 @@ class OrientadorPage extends ConsumerStatefulWidget {
 }
 
 class _OrientadorPageState extends ConsumerState<OrientadorPage> {
-  late final TextEditingController _text = TextEditingController(
-    text: ref.read(orientadorControllerProvider).query.consulta,
-  );
-
   final _scroll = ScrollController();
 
   @override
   void dispose() {
     _scroll.dispose();
-    _text.dispose();
     super.dispose();
   }
 
@@ -144,15 +139,6 @@ class _OrientadorPageState extends ConsumerState<OrientadorPage> {
     final s = ref.watch(orientadorControllerProvider);
     final c = ref.read(orientadorControllerProvider.notifier);
     listenScrollToTop(ref, AppTab.orientador, _scroll);
-    // Tras enviar, el controlador vacía la consulta: se refleja en el campo.
-    ref.listen(orientadorControllerProvider.select((x) => x.query.consulta), (_, v) {
-      if (_text.text != v) {
-        _text.value = TextEditingValue(
-          text: v,
-          selection: TextSelection.collapsed(offset: v.length),
-        );
-      }
-    });
     String faseLabel(Fase f) => f == Fase.activo ? 'Activo' : f.label;
 
     return ListView(
@@ -167,24 +153,8 @@ class _OrientadorPageState extends ConsumerState<OrientadorPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(l.orientadorQuestion, style: t.titleMedium),
+                Text(l.orientadorContext, style: t.titleMedium),
                 const SizedBox(height: 10),
-                TextField(
-                  key: const Key('orientador-text'),
-                  controller: _text,
-                  minLines: 4,
-                  maxLines: 8,
-                  maxLength: 2000,
-                  textCapitalization: TextCapitalization.sentences,
-                  buildCounter: (_, {required currentLength, required isFocused, maxLength}) =>
-                      null,
-                  onChanged: (v) =>
-                      c.update(ref.read(orientadorControllerProvider).query.copyWith(consulta: v)),
-                  decoration: InputDecoration(hintText: l.orientadorHint),
-                ),
-                const SizedBox(height: 16),
-                Text(l.orientadorContext, style: t.labelLarge),
-                const SizedBox(height: 8),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,

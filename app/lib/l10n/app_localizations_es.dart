@@ -90,6 +90,12 @@ class AppLocalizationsEs extends AppLocalizations {
   String get following => 'Siguiendo';
 
   @override
+  String get followersEmpty => 'Aún no tiene seguidores.';
+
+  @override
+  String get followingEmpty => 'Aún no sigue a nadie.';
+
+  @override
   String get composerHint => 'Comparte una novedad con la red ICEX Alumni…';
 
   @override
@@ -908,7 +914,7 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get orientadorIntro =>
-      'Cuéntanos qué necesitas. Te proponemos pasos concretos y alumni con quienes hablar.';
+      'Elige tu situación y te proponemos pasos concretos y alumni con quienes hablar.';
 
   @override
   String get orientadorQuestion => '¿En qué te podemos orientar?';

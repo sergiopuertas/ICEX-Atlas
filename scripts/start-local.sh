@@ -114,6 +114,14 @@ done_
 
 # ── 4. Supabase local ───────────────────────────────────────────────────────────
 say "Supabase local"
+# supabase/config.toml solo se lee al arrancar: si cambió (p. ej. se activó el acceso con
+# email para las cuentas de desarrollo), hay que reiniciar. Los datos se conservan.
+CONFIG_SHA="$(shasum supabase/config.toml | cut -d' ' -f1)"
+CONFIG_SHA_FILE="supabase/.temp/icex-config.sha"
+if "${SUPA[@]}" status >/dev/null 2>&1 && [[ "$(cat "$CONFIG_SHA_FILE" 2>/dev/null)" != "$CONFIG_SHA" ]]; then
+  echo "  supabase/config.toml ha cambiado desde el último arranque: reinicio Supabase (los datos se conservan)"
+  "${SUPA[@]}" stop >/dev/null 2>&1 || true
+fi
 if "${SUPA[@]}" status >/dev/null 2>&1; then
   echo "  ya estaba en marcha"
 else
@@ -128,6 +136,7 @@ else
   }
   for _ in $(seq 1 60); do "${SUPA[@]}" status >/dev/null 2>&1 && break; sleep 2; done
   "${SUPA[@]}" status >/dev/null 2>&1 || fail "Supabase no responde. Espera un minuto y vuelve a ejecutar el script."
+  mkdir -p supabase/.temp && echo "$CONFIG_SHA" > "$CONFIG_SHA_FILE"
 fi
 # Migraciones nuevas que traiga el último pull (start solo las aplica al crear la base).
 if "${SUPA[@]}" migration up >/tmp/icex-supabase-migrations.log 2>&1; then

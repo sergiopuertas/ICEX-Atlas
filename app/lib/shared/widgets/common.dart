@@ -32,9 +32,9 @@ class IcexLogo extends StatelessWidget {
 
   final double height;
 
-  /// Proporción del archivo del logotipo (568 × 88): con ancho fijo el hueco no cambia de
+  /// Proporción del archivo del logotipo (425 × 88; sin el sello del 50 aniversario): con ancho fijo el hueco no cambia de
   /// tamaño mientras la imagen se carga.
-  static const double _aspect = 568 / 88;
+  static const double _aspect = 425 / 88;
 
   @override
   Widget build(BuildContext context) => Image.asset(

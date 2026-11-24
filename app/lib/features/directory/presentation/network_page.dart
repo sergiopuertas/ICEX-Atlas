@@ -320,7 +320,13 @@ class _FiltersSheet extends ConsumerWidget {
               menuMaxHeight: 360,
               items: [
                 DropdownMenuItem(child: Text(l.allPromotions)),
-                for (var p = 51; p >= 1; p--)
+                for (
+                  var p = currentPromocion(
+                    fromServer: ref.watch(communityStatsProvider).value?.promocionActual,
+                  );
+                  p >= 1;
+                  p--
+                )
                   DropdownMenuItem(value: p, child: Text(l.promotionLabel(p))),
               ],
               onChanged: c.setPromocion,
