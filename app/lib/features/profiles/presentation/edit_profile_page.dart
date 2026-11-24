@@ -205,7 +205,16 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l.profileEdit),
-        actions: [TextButton(onPressed: _saving ? null : _save, child: Text(l.save))],
+        actions: [
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white,
+              disabledForegroundColor: Colors.white60,
+            ),
+            onPressed: _saving ? null : _save,
+            child: Text(l.save),
+          ),
+        ],
       ),
       body: Form(
         key: _form,

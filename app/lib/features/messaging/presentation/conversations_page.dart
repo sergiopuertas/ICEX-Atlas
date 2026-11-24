@@ -6,9 +6,11 @@ import 'package:icex_atlas/core/theme/icex_theme.dart';
 import 'package:icex_atlas/features/messaging/application/chat_controller.dart';
 import 'package:icex_atlas/features/messaging/domain/messaging.dart';
 import 'package:icex_atlas/features/messaging/presentation/chat_page.dart';
+import 'package:icex_atlas/features/notifications/application/unread_counts.dart';
 import 'package:icex_atlas/l10n/app_localizations.dart';
 import 'package:icex_atlas/shared/widgets/app_shell.dart';
 import 'package:icex_atlas/shared/widgets/avatar.dart';
+import 'package:icex_atlas/shared/widgets/brand.dart';
 import 'package:icex_atlas/shared/widgets/common.dart';
 import 'package:intl/intl.dart';
 
@@ -45,11 +47,14 @@ class _ConversationsPageState extends ConsumerState<ConversationsPage> {
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
           SliverToBoxAdapter(
-            child: PageHeader(
+            child: HeroHeader(
               title: l.messagesTitle,
               subtitle: value == null
                   ? null
-                  : l.messagesSubtitle(value.items.length, value.totalUnread),
+                  : l.messagesSubtitle(
+                      value.items.length,
+                      ref.watch(unreadProvider).value?.mensajes ?? 0,
+                    ),
             ),
           ),
           SliverToBoxAdapter(

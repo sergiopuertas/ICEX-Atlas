@@ -7,6 +7,7 @@ import 'package:icex_atlas/core/auth/session_controller.dart';
 import 'package:icex_atlas/core/db/app_database.dart';
 import 'package:icex_atlas/core/errors/failure.dart';
 import 'package:icex_atlas/core/providers.dart';
+import 'package:icex_atlas/core/utils/debouncer.dart';
 import 'package:icex_atlas/features/directory/application/directory_controller.dart';
 import 'package:icex_atlas/features/directory/data/directory_repository.dart';
 import 'package:icex_atlas/features/feed/application/feed_controller.dart';
@@ -430,6 +431,8 @@ void main() {
       );
       await settle();
       expect(c.read(p).value!.messages, hasLength(2));
+      // «Marcar leído» se agrupa por ráfagas (realtimeBurstWindow, 400 ms).
+      await Future<void>.delayed(realtimeBurstWindow + const Duration(milliseconds: 50));
       expect(api.calls.any((x) => x.name == 'mark_read'), isTrue);
       rt.conversations['c-9']!.add(
         const MessageRead(userId: 'u-2', messageId: '01900000-0000-7000-8000-000000000001'),

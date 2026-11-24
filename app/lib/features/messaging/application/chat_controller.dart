@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:icex_atlas/core/auth/session_controller.dart';
 import 'package:icex_atlas/core/errors/failure.dart';
 import 'package:icex_atlas/core/providers.dart';
+import 'package:icex_atlas/core/utils/debouncer.dart';
 import 'package:icex_atlas/features/messaging/data/realtime_gateway.dart';
 import 'package:icex_atlas/features/messaging/domain/messaging.dart';
 import 'package:icex_atlas/features/notifications/application/unread_counts.dart';
@@ -78,11 +79,22 @@ List<Message> mergeMessages(List<Message> a, List<Message> b) {
 class ChatController extends _$ChatController {
   StreamSubscription<ConversationEvent>? _sub;
   bool _loadingOlder = false;
+
+  /// Marcar como leído una vez por ráfaga de mensajes entrantes (no una por mensaje).
+  final _readBurst = Debouncer(realtimeBurstWindow);
+
+  void _markReadSoon() => _readBurst(() {
+    final s = ref.mounted ? state.value : null;
+    if (s != null) unawaited(_markRead(s));
+  });
   String get _me => ref.read(sessionUserIdProvider) ?? '';
 
   @override
   Future<ChatState> build({String? conversationId, String? toUserId}) async {
-    ref.onDispose(() => _sub?.cancel());
+    ref.onDispose(() {
+      _readBurst.dispose();
+      unawaited(_sub?.cancel());
+    });
     final repo = ref.read(messagingRepositoryProvider);
     final outbox = ref.read(messageOutboxProvider);
 
@@ -145,7 +157,7 @@ class ChatController extends _$ChatController {
         final s = ref.mounted ? state.value : null;
         if (s == null) return;
         state = AsyncData(s.copyWith(messages: mergeMessages(s.messages, [message])));
-        if (message.remitenteId != _me) unawaited(_markRead(state.value!));
+        if (message.remitenteId != _me) _markReadSoon();
       case MessageRead(:final userId, :final messageId):
         final s = state.value!;
         if (userId != _me) state = AsyncData(s.copyWith(otherLastReadId: messageId));
@@ -301,16 +313,10 @@ class ChatController extends _$ChatController {
 }
 
 class ConversationsState {
-  const ConversationsState({
-    required this.items,
-    this.categoria,
-    this.totalUnread = 0,
-    this.nextCursor,
-  });
+  const ConversationsState({required this.items, this.categoria, this.nextCursor});
 
   final List<Conversation> items;
   final Categoria? categoria;
-  final int totalUnread;
   final String? nextCursor;
 }
 
@@ -324,25 +330,26 @@ class ConversationsController extends _$ConversationsController {
   Future<ConversationsState> build() async {
     final userId = ref.watch(sessionUserIdProvider);
     if (userId != null) {
+      // Recargar la lista una vez por ráfaga de eventos, no una por mensaje.
+      final burst = Debouncer(realtimeBurstWindow);
       final sub = ref
           .read(realtimeGatewayProvider)
           .userEvents(userId)
-          .listen((_) => ref.invalidateSelf());
-      ref.onDispose(sub.cancel);
+          .listen((_) => burst(ref.invalidateSelf));
+      ref.onDispose(() {
+        burst.dispose();
+        unawaited(sub.cancel());
+      });
     }
     return await _load(_categoria);
   }
 
   Future<ConversationsState> _load(Categoria? c) async {
     final repo = ref.read(messagingRepositoryProvider);
+    // El total de no leídos lo lleva `unreadProvider` (la pantalla lo lee de ahí): antes se
+    // pedía otra vez aquí, en serie tras la lista, en cada carga.
     final page = await repo.conversations(categoria: c);
-    final unread = await repo.totalUnread();
-    return ConversationsState(
-      items: page.items,
-      categoria: c,
-      totalUnread: unread,
-      nextCursor: page.nextCursor,
-    );
+    return ConversationsState(items: page.items, categoria: c, nextCursor: page.nextCursor);
   }
 
   Future<void> filter(Categoria? c) async {

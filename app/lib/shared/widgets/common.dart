@@ -71,40 +71,6 @@ class DemoBanner extends StatelessWidget {
   );
 }
 
-/// Cabecera de página: título Sora + subtítulo gris.
-class PageHeader extends StatelessWidget {
-  const PageHeader({required this.title, this.subtitle, this.leading, super.key});
-
-  final String title;
-  final String? subtitle;
-  final Widget? leading;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      child: Row(
-        children: [
-          if (leading != null) ...[leading!, const SizedBox(width: 12)],
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Semantics(header: true, child: Text(title, style: t.headlineMedium)),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 4),
-                  Text(subtitle!, style: t.bodyMedium?.copyWith(color: IcexColors.mutedForeground)),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class EmptyState extends StatelessWidget {
   const EmptyState({
     required this.message,

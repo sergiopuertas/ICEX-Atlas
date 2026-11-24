@@ -41,6 +41,10 @@ abstract interface class AuthGateway {
   /// cuenta no socia y era imposible probar con otra.
   Future<void> signIn({bool forceLogin = false});
 
+  /// Acceso de desarrollo con email y contraseña (cuentas de `seed_dev_accounts.sql`).
+  /// Solo se llama si `AppEnv.devLogin`; en producción el proveedor Email está desactivado.
+  Future<void> signInWithPassword({required String email, required String password});
+
   Future<void> signOut();
 }
 
@@ -73,6 +77,11 @@ class SupabaseAuthGateway implements AuthGateway {
           sink.add(AuthFailed(error is AuthException ? error.message : error.toString())),
     ),
   );
+
+  @override
+  Future<void> signInWithPassword({required String email, required String password}) async {
+    await _auth.signInWithPassword(email: email, password: password);
+  }
 
   @override
   Future<void> signIn({bool forceLogin = false}) async {

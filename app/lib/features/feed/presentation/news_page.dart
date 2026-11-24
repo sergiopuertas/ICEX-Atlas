@@ -5,6 +5,7 @@ import 'package:icex_atlas/core/utils/time_ago.dart';
 import 'package:icex_atlas/features/feed/application/feed_controller.dart';
 import 'package:icex_atlas/features/feed/domain/post.dart';
 import 'package:icex_atlas/l10n/app_localizations.dart';
+import 'package:icex_atlas/shared/widgets/brand.dart';
 import 'package:icex_atlas/shared/widgets/common.dart';
 
 /// Comunicados oficiales de la asociación (fijados primero).
@@ -16,7 +17,8 @@ class NewsPage extends ConsumerWidget {
     final l = AppLocalizations.of(context);
     final news = ref.watch(newsControllerProvider);
     return Scaffold(
-      appBar: AppBar(title: Text(l.navNews)),
+      // El título va en la cabecera roja (evita repetirlo en la barra).
+      appBar: AppBar(),
       body: switch (news) {
         AsyncData(:final value) => NotificationListener<ScrollNotification>(
           onNotification: (n) {
@@ -26,20 +28,17 @@ class NewsPage extends ConsumerWidget {
             return false;
           },
           child: ListView(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+            padding: const EdgeInsets.only(bottom: 24),
             children: [
-              PageHeader(
+              HeroHeader(
                 title: l.newsTitle,
                 subtitle: l.newsCount(value.destacadas.length + value.posts.length),
-                leading: const CircleAvatar(
-                  backgroundColor: IcexColors.primary,
-                  foregroundColor: Colors.white,
-                  child: Icon(Icons.campaign_outlined),
-                ),
               ),
+              if (value.destacadas.isEmpty && value.posts.isEmpty)
+                EmptyState(message: l.newsEmpty, icon: Icons.campaign_outlined),
               for (final p in [...value.destacadas, ...value.posts])
                 Padding(
-                  padding: const EdgeInsets.only(top: 12),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: NewsCard(post: p),
                 ),
             ],

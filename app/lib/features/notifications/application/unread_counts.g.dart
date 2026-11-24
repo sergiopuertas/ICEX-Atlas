@@ -39,7 +39,7 @@ final class UnreadProvider
   Unread create() => Unread();
 }
 
-String _$unreadHash() => r'3522217cda273df05b85c7e16831e20b92d95efd';
+String _$unreadHash() => r'0dbc0eabdaf5a7426ceda22eb3d1ec65e86d73d3';
 
 /// No leídos (mensajes y notificaciones) para los badges. Se refresca con los eventos
 /// del canal privado `user:<id>` de Realtime.

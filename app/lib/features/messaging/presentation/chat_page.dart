@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -160,6 +161,8 @@ class _ChatPageState extends ConsumerState<ChatPage> {
               ),
             Expanded(
               child: GestureDetector(
+                // Solo para cerrar el teclado: no es un control para el lector de pantalla.
+                excludeFromSemantics: true,
                 onTap: () => FocusScope.of(context).unfocus(),
                 child: value.messages.isEmpty
                     ? _EmptyChat(state: value)
@@ -307,7 +310,8 @@ class _CategoryStrip extends StatelessWidget {
           height: 40,
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: const BoxDecoration(
-            border: Border(top: BorderSide(color: IcexColors.border)),
+            color: IcexColors.card,
+            border: Border(bottom: BorderSide(color: IcexColors.border)),
           ),
           child: Row(
             children: [
@@ -459,11 +463,15 @@ class _ChatHeader extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(o.nombre, style: t.titleSmall, overflow: TextOverflow.ellipsis),
+                  Text(
+                    o.nombre,
+                    style: t.titleSmall?.copyWith(color: Colors.white),
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      PhaseBadge(o.fase, compact: true),
+                      PhaseBadge(o.fase, compact: true, onDark: true),
                       const SizedBox(width: 4),
                       PromoBadge(o.promocion, compact: true),
                       if (o.empresa != null) ...[
@@ -471,7 +479,9 @@ class _ChatHeader extends StatelessWidget {
                         Flexible(
                           child: Text(
                             o.empresa!,
-                            style: t.bodySmall,
+                            style: t.bodySmall?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.85),
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -563,27 +573,36 @@ class MessageBubble extends StatelessWidget {
       ),
     );
     final failed = status == DeliveryStatus.error;
+    Future<void> copy() async {
+      await Clipboard.setData(ClipboardData(text: message.cuerpo));
+      if (context.mounted) showSnack(context, l.copied);
+    }
+
     return Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
-      child: GestureDetector(
+      // Copiar (pulsación larga) llega al lector de pantalla como acción «Copiar» del
+      // mensaje; el gesto en sí no se anuncia como un botón diminuto.
+      child: Semantics(
+        customSemanticsActions: {CustomSemanticsAction(label: l.copyText): copy},
         onTap: failed ? onRetry : null,
-        onLongPress: () async {
-          await Clipboard.setData(ClipboardData(text: message.cuerpo));
-          if (context.mounted) showSnack(context, l.copied);
-        },
-        child: Column(
-          crossAxisAlignment: mine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-          children: [
-            Opacity(opacity: failed ? 0.7 : 1, child: bubble),
-            if (failed)
-              Padding(
-                padding: const EdgeInsets.only(top: 2, right: 4),
-                child: Text(
-                  l.messageFailedTapRetry,
-                  style: const TextStyle(color: IcexColors.destructive, fontSize: 12),
+        child: GestureDetector(
+          excludeFromSemantics: true,
+          onTap: failed ? onRetry : null,
+          onLongPress: copy,
+          child: Column(
+            crossAxisAlignment: mine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+            children: [
+              Opacity(opacity: failed ? 0.7 : 1, child: bubble),
+              if (failed)
+                Padding(
+                  padding: const EdgeInsets.only(top: 2, right: 4),
+                  child: Text(
+                    l.messageFailedTapRetry,
+                    style: const TextStyle(color: IcexColors.destructive, fontSize: 12),
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );

@@ -131,7 +131,12 @@ class _PostDetailPageState extends ConsumerState<PostDetailPage> {
                         child: NewsCard(post: value),
                       )
                     else
-                      ConnectedPostCard(post: value, flat: true, onComment: _focus.requestFocus),
+                      ConnectedPostCard(
+                        post: value,
+                        flat: true,
+                        fullText: true,
+                        onComment: _focus.requestFocus,
+                      ),
                     Padding(
                       padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
                       child: Semantics(
@@ -228,7 +233,9 @@ class _CommentInput extends ConsumerWidget {
                   decoration: InputDecoration(
                     hintText: l.commentHint,
                     isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                    // 48 dp de alto mínimo (zona táctil recomendada).
+                    constraints: const BoxConstraints(minHeight: 48),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     border: const OutlineInputBorder(
                       borderRadius: BorderRadius.all(Radius.circular(22)),
                       borderSide: BorderSide(color: IcexColors.border),

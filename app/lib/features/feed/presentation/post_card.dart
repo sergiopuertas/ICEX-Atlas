@@ -32,8 +32,12 @@ class PostCard extends StatefulWidget {
     this.onSend,
     this.now,
     this.flat = false,
+    this.fullText = false,
     super.key,
   });
+
+  /// Texto completo, sin «Leer más» (pantalla de detalle).
+  final bool fullText;
 
   final Post post;
   final VoidCallback onRecommend;
@@ -159,7 +163,12 @@ class _PostCardState extends State<PostCard> with SingleTickerProviderStateMixin
         if (post.texto.isNotEmpty)
           Padding(
             padding: EdgeInsets.fromLTRB(16, post.titulo == null ? 12 : 6, 16, 0),
-            child: ExpandableText(post.texto, style: t.bodyLarge?.copyWith(fontSize: 15)),
+            child: widget.fullText
+                ? Text(post.texto, style: t.bodyLarge?.copyWith(fontSize: 15.5, height: 1.45))
+                : ExpandableText(
+                    post.texto,
+                    style: t.bodyLarge?.copyWith(fontSize: 15.5, height: 1.45),
+                  ),
           ),
         if (post.compartido != null)
           Padding(padding: hPad, child: _SharedPreview(post.compartido!)),
@@ -226,27 +235,68 @@ class _Counts extends StatelessWidget {
     final recos = post.recomendacionesCount;
     final comments = post.comentariosCount;
     if (recos == 0 && comments == 0) return const SizedBox(height: 10);
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
-      child: Row(
-        children: [
-          if (recos > 0) ...[
-            Container(
-              width: 18,
-              height: 18,
-              decoration: const BoxDecoration(color: IcexColors.primary, shape: BoxShape.circle),
-              child: const Icon(Icons.favorite_rounded, size: 11, color: Colors.white),
-            ),
-            const SizedBox(width: 6),
-            Text(l.recommendationsCount(recos), style: t.bodySmall),
+    // Nodo propio para el lector de pantalla: «76 recomendaciones, 18 comentarios».
+    // Sin él, el recuento se fundía con la publicación entera en un único nodo.
+    return Semantics(
+      container: true,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
+        // spaceBetween en lugar de Spacer: con Spacer cada lado solo recibía un tercio del
+        // ancho y «76 recomendaciones» se cortaba aunque hubiera sitio.
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            if (recos > 0)
+              Flexible(
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 18,
+                      height: 18,
+                      decoration: const BoxDecoration(
+                        color: IcexColors.primary,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.favorite_rounded, size: 11, color: Colors.white),
+                    ),
+                    const SizedBox(width: 6),
+                    Flexible(
+                      child: Text(
+                        l.recommendationsCount(recos),
+                        style: t.bodySmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              const SizedBox.shrink(),
+            if (comments > 0)
+              Flexible(
+                child: InkWell(
+                  onTap: onComments,
+                  borderRadius: BorderRadius.circular(8),
+                  // Zona táctil de 48 dp de alto sin cambiar el aspecto de la línea.
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(minHeight: 48, minWidth: 48),
+                    child: Align(
+                      alignment: Alignment.centerRight,
+                      widthFactor: 1,
+                      child: Text(
+                        l.commentsCount(comments),
+                        style: t.bodySmall,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
           ],
-          const Spacer(),
-          if (comments > 0)
-            InkWell(
-              onTap: onComments,
-              child: Text(l.commentsCount(comments), style: t.bodySmall),
-            ),
-        ],
+        ),
       ),
     );
   }
@@ -391,6 +441,12 @@ class _PostImage extends ConsumerWidget {
                 imageUrl: url,
                 cacheKey: cacheKey,
                 fit: BoxFit.cover,
+                // Decodificar al tamaño en pantalla, no al del archivo: decodificar fotos
+                // grandes en el hilo de interfaz era una de las causas de tirones al hacer
+                // scroll.
+                memCacheWidth:
+                    (MediaQuery.sizeOf(context).width * MediaQuery.devicePixelRatioOf(context))
+                        .round(),
                 fadeInDuration: const Duration(milliseconds: 150),
                 placeholder: (_, _) => const ColoredBox(color: IcexColors.muted),
                 errorWidget: (_, _, _) => const ColoredBox(

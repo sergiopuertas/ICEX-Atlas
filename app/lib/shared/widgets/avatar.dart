@@ -85,6 +85,8 @@ class Avatar extends ConsumerWidget {
             fit: BoxFit.cover,
             width: size,
             height: size,
+            memCacheWidth: px,
+            memCacheHeight: px,
             errorWidget: (_, _, _) => fallback,
             placeholder: (_, _) => fallback,
           ),

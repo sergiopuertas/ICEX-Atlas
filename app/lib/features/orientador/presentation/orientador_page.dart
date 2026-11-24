@@ -13,6 +13,7 @@ import 'package:icex_atlas/features/profiles/domain/profile.dart';
 import 'package:icex_atlas/l10n/app_localizations.dart';
 import 'package:icex_atlas/shared/widgets/app_shell.dart';
 import 'package:icex_atlas/shared/widgets/badges.dart';
+import 'package:icex_atlas/shared/widgets/brand.dart';
 import 'package:icex_atlas/shared/widgets/common.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -48,18 +49,23 @@ class OrientadorState {
 class OrientadorController extends _$OrientadorController {
   @override
   OrientadorState build() {
+    // Contexto inicial tomado del propio perfil (fase, país y sector), si encaja en el
+    // catálogo. Se puede cambiar, pero en la mayoría de consultas no hace falta.
     final s = ref.read(sessionControllerProvider);
-    final fase = s is SignedIn ? s.me.profile.card.fase : Fase.fase1;
+    final me = s is SignedIn ? s.me.profile.card : null;
+    String pick(String? v, List<String> options, String fallback) =>
+        options.contains(v) ? v! : fallback;
     return OrientadorState(
-      query: OrientadorQuery(fase: fase, pais: 'Alemania', sector: 'Energía', consulta: ''),
+      query: OrientadorQuery(
+        fase: me?.fase ?? Fase.fase1,
+        pais: pick(me?.pais, OrientadorCatalog.paises, 'España'),
+        sector: pick(me?.sector, OrientadorCatalog.sectores, 'Consultoría'),
+        consulta: '',
+      ),
     );
   }
 
   void update(OrientadorQuery q) => state = state.copyWith(query: q);
-
-  void applyShortcut((String, Fase, String, String, String) a) => state = state.copyWith(
-    query: OrientadorQuery(fase: a.$2, pais: a.$3, sector: a.$4, consulta: a.$5),
-  );
 
   Future<void> ask() async {
     if (state.loading) return;
@@ -78,7 +84,8 @@ class OrientadorController extends _$OrientadorController {
   }
 }
 
-/// Orientador con IA: fase, país, sector, consulta libre, atajos y pasos + alumni sugeridos.
+/// Orientador: una pregunta, el contexto (fase, país y sector, ya rellenos con el perfil)
+/// y un botón. Sin sugerencias prefabricadas ni adornos: se escribe y se pide.
 class OrientadorPage extends ConsumerStatefulWidget {
   const OrientadorPage({super.key});
 
@@ -100,6 +107,36 @@ class _OrientadorPageState extends ConsumerState<OrientadorPage> {
     super.dispose();
   }
 
+  Future<T?> _pick<T>(String title, List<T> options, T current, String Function(T) label) =>
+      showModalBottomSheet<T>(
+        context: context,
+        showDragHandle: true,
+        useRootNavigator: true,
+        isScrollControlled: true,
+        builder: (c) => SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(c).height * 0.7),
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                  child: Text(title, style: Theme.of(c).textTheme.titleMedium),
+                ),
+                for (final o in options)
+                  ListTile(
+                    title: Text(label(o)),
+                    trailing: o == current
+                        ? const Icon(Icons.check, color: IcexColors.primary)
+                        : null,
+                    onTap: () => Navigator.pop(c, o),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      );
+
   @override
   Widget build(BuildContext context) {
     final l = AppLocalizations.of(context);
@@ -107,9 +144,7 @@ class _OrientadorPageState extends ConsumerState<OrientadorPage> {
     final s = ref.watch(orientadorControllerProvider);
     final c = ref.read(orientadorControllerProvider.notifier);
     listenScrollToTop(ref, AppTab.orientador, _scroll);
-    // Sincroniza el campo cuando la consulta cambia desde fuera (atajos o tras enviar).
-    // Antes se asignaba `_text.text` dentro de build: notificaba durante la construcción y
-    // mandaba el cursor al principio.
+    // Tras enviar, el controlador vacía la consulta: se refleja en el campo.
     ref.listen(orientadorControllerProvider.select((x) => x.query.consulta), (_, v) {
       if (_text.text != v) {
         _text.value = TextEditingValue(
@@ -118,110 +153,106 @@ class _OrientadorPageState extends ConsumerState<OrientadorPage> {
         );
       }
     });
-
-    Widget select<T>(
-      String label,
-      T value,
-      List<T> items,
-      String Function(T) text,
-      void Function(T) onChanged,
-    ) => Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: DropdownButtonFormField<T>(
-        // `initialValue` solo se lee al crear el campo: la clave lo recrea cuando un atajo
-        // cambia la fase, el país o el sector (antes el desplegable seguía mostrando el
-        // valor anterior aunque la consulta ya era otra).
-        key: ValueKey('$label|$value'),
-        initialValue: value,
-        isExpanded: true,
-        decoration: InputDecoration(labelText: label),
-        items: [for (final i in items) DropdownMenuItem(value: i, child: Text(text(i)))],
-        onChanged: (v) => v == null ? null : onChanged(v),
-      ),
-    );
+    String faseLabel(Fase f) => f == Fase.activo ? 'Activo' : f.label;
 
     return ListView(
       controller: _scroll,
       padding: const EdgeInsets.only(bottom: 24),
       children: [
+        HeroHeader(title: l.orientadorTitle, subtitle: l.orientadorIntro),
         if (ref.watch(appEnvProvider).showDemoBanner) const DemoBanner(),
-        PageHeader(
-          title: l.orientadorTitle,
-          subtitle: l.orientadorSubtitle(s.history.length),
-          leading: const Icon(Icons.explore_outlined, color: IcexColors.primary, size: 28),
-        ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
           child: IcexCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Text(l.orientadorIdeas, style: t.titleSmall),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final a in OrientadorCatalog.atajos)
-                      ActionChip(
-                        avatar: const Icon(Icons.auto_awesome_outlined, color: IcexColors.primary),
-                        label: Text(a.$1),
-                        onPressed: () => c.applyShortcut(a),
-                      ),
-                  ],
-                ),
-                const Padding(padding: EdgeInsets.symmetric(vertical: 16), child: Divider()),
-                select<Fase>(
-                  l.orientadorPhase,
-                  s.query.fase,
-                  Fase.values,
-                  (f) => f == Fase.activo ? 'Activo' : f.label,
-                  (f) => c.update(s.query.copyWith(fase: f)),
-                ),
-                select<String>(
-                  l.orientadorCountry,
-                  s.query.pais,
-                  OrientadorCatalog.paises,
-                  (p) => p,
-                  (p) => c.update(s.query.copyWith(pais: p)),
-                ),
-                select<String>(
-                  l.orientadorSector,
-                  s.query.sector,
-                  OrientadorCatalog.sectores,
-                  (p) => p,
-                  (p) => c.update(s.query.copyWith(sector: p)),
-                ),
+                Text(l.orientadorQuestion, style: t.titleMedium),
+                const SizedBox(height: 10),
                 TextField(
                   key: const Key('orientador-text'),
                   controller: _text,
-                  minLines: 3,
-                  maxLines: 6,
+                  minLines: 4,
+                  maxLines: 8,
                   maxLength: 2000,
+                  textCapitalization: TextCapitalization.sentences,
                   buildCounter: (_, {required currentLength, required isFocused, maxLength}) =>
                       null,
                   onChanged: (v) =>
                       c.update(ref.read(orientadorControllerProvider).query.copyWith(consulta: v)),
                   decoration: InputDecoration(hintText: l.orientadorHint),
                 ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: FilledButton.icon(
-                    onPressed: s.loading
-                        ? null
-                        : () {
-                            FocusScope.of(context).unfocus();
-                            unawaited(c.ask());
-                          },
-                    icon: s.loading
-                        ? const SizedBox.square(
-                            dimension: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Icon(Icons.send),
-                    label: Text(s.loading ? l.orientadorLoading : l.orientadorSubmit),
-                  ),
+                const SizedBox(height: 16),
+                Text(l.orientadorContext, style: t.labelLarge),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    _ContextPill(
+                      label: l.orientadorPhase,
+                      value: faseLabel(s.query.fase),
+                      onTap: () async {
+                        final f = await _pick(
+                          l.orientadorPhase,
+                          Fase.values,
+                          s.query.fase,
+                          faseLabel,
+                        );
+                        if (f != null) c.update(s.query.copyWith(fase: f));
+                      },
+                    ),
+                    _ContextPill(
+                      label: l.orientadorCountry,
+                      value: s.query.pais,
+                      onTap: () async {
+                        final p = await _pick(
+                          l.orientadorCountry,
+                          OrientadorCatalog.paises,
+                          s.query.pais,
+                          (x) => x,
+                        );
+                        if (p != null) c.update(s.query.copyWith(pais: p));
+                      },
+                    ),
+                    _ContextPill(
+                      label: l.orientadorSector,
+                      value: s.query.sector,
+                      onTap: () async {
+                        final p = await _pick(
+                          l.orientadorSector,
+                          OrientadorCatalog.sectores,
+                          s.query.sector,
+                          (x) => x,
+                        );
+                        if (p != null) c.update(s.query.copyWith(sector: p));
+                      },
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 20),
+                FilledButton(
+                  key: const Key('orientador-submit'),
+                  style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+                  onPressed: s.loading
+                      ? null
+                      : () {
+                          FocusScope.of(context).unfocus();
+                          unawaited(c.ask());
+                        },
+                  child: s.loading
+                      ? Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox.square(
+                              dimension: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(l.orientadorLoading),
+                          ],
+                        )
+                      : Text(l.orientadorSubmit),
                 ),
               ],
             ),
@@ -243,6 +274,58 @@ class _OrientadorPageState extends ConsumerState<OrientadorPage> {
             child: OrientadorResultCard(result: r),
           ),
       ],
+    );
+  }
+}
+
+/// Selector compacto del contexto: «País · Alemania ▾».
+class _ContextPill extends StatelessWidget {
+  const _ContextPill({required this.label, required this.value, required this.onTap});
+
+  final String label;
+  final String value;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    return Semantics(
+      button: true,
+      label: '$label: $value',
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 44),
+          padding: const EdgeInsets.fromLTRB(14, 6, 8, 6),
+          decoration: BoxDecoration(
+            color: IcexColors.muted,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(text: '$label · ', style: t.bodySmall),
+                      TextSpan(
+                        text: value,
+                        style: t.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const Icon(Icons.arrow_drop_down, size: 20),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -270,12 +353,11 @@ class OrientadorResultCard extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    radius: 12,
-                    backgroundColor: IcexColors.primary,
+                  SizedBox(
+                    width: 24,
                     child: Text(
-                      '${i + 1}',
-                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                      '${i + 1}.',
+                      style: t.titleSmall?.copyWith(color: IcexColors.primary),
                     ),
                   ),
                   const SizedBox(width: 10),

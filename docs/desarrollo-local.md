@@ -97,7 +97,14 @@ de nuevo si borras el simulador o creas otro.
 1. En la barra de estado (abajo a la derecha), elige el dispositivo: el iPhone del simulador o el emulador.
 2. Abre la vista *Run and Debug* (`⇧⌘D`), elige **«App · local»** y pulsa **F5**.
    Es equivalente a ejecutar `cd app && flutter run --dart-define-from-file=env/local.json`.
-3. Pulsa «Entrar con mi cuenta ICEX Alumni». Se abre la web simulada: elige un usuario.
+3. **Acceso rápido (recomendado):** en la portada, bajo «Modo desarrollo», toca una cuenta de prueba
+   (Ana, Javier, Laura o Pedro). Entra al momento, sin navegador. Si no ves el panel, vuelve a ejecutar
+   `./scripts/setup-local.sh` (añade `"DEV_LOGIN": true` a `app/env/local.json`) y, si acabas de actualizar el
+   repositorio, reinicia Supabase con `supabase stop && supabase start`, porque `config.toml` activa el acceso
+   por contraseña. Detalle y diferencias con producción en `docs/autenticacion.md`.
+4. **Flujo real (OIDC):** pulsa «Entrar con mi cuenta ICEX Alumni». Se abre la web simulada: elige un usuario.
+   En un emulador recién creado, Chrome enseña antes sus pantallas de bienvenida y de cuenta de Google. Son de
+   Chrome, no de la app: pásalas una vez.
 
 | Usuario | Qué ver |
 |---|---|
@@ -106,6 +113,10 @@ de nuevo si borras el simulador o creas otro.
 | **Laura Gil** | Administradora (también entra en el panel admin) |
 | **Nuria Becaria Nueva** | Socia que entra por primera vez: se crea su cuenta al vuelo |
 | **Pedro Sin Membresía** | **No socio**: ve la pantalla «acceso solo para socios» y no puede leer nada |
+
+Sobre la velocidad: en **debug** la app va mucho más lenta que la versión real (el código no está compilado), y
+en el emulador aún más. Avisos como «Skipped N frames» o «La app no responde» en debug no indican cómo irá en un
+móvil. Para juzgar la fluidez, usa un móvil real con `flutter run --profile` o `./scripts/perf-app.sh`.
 
 Durante la depuración:
 - **Hot reload:** guarda el fichero, o `r` en la consola de depuración.
@@ -154,7 +165,14 @@ Las plantillas que documentan cada variable (`.env.example`, `app/env/example.js
   SUPABASE_ANON_KEY=$ANON_KEY SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY \
     NODE_EXTRA_CA_CERTS=../../docker/certs/dev-ca.crt node --test --test-concurrency=1 ./*.test.mjs
   ```
-- **Rendimiento:** `./scripts/perf.sh`.
+- **Diseño en todos los tamaños:** `flutter test test/usability/layout_matrix_test.dart`. Cada pantalla en 4
+  tamaños (de 320 pt a tableta) con texto al 100 %, 130 % y 200 %; falla si algo se desborda.
+- **Accesibilidad:** `flutter test test/usability/accessibility_test.dart`. Zonas táctiles de 48 dp y 44 pt,
+  etiquetas para el lector de pantalla y contraste de texto.
+- **Presupuestos de latencia:** `flutter test test/performance`. Cuántas peticiones hace cada flujo (arranque,
+  cambio de pestaña, ráfagas de Realtime, búsqueda) y que recomendar no reconstruya otras tarjetas.
+- **Rendimiento de la base de datos:** `./scripts/perf.sh` (p95 de feed y directorio < 200 ms).
+- **Fluidez en un móvil real:** `./scripts/perf-app.sh` (modo profile; percentil 90 de frame < 16 ms).
 
 ## 9. Día a día
 

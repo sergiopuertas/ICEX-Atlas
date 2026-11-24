@@ -37,6 +37,10 @@ class SupabaseApiClient implements ApiClient {
   final SupabaseClient _client;
   final _signed = <String, ({String url, DateTime expires})>{};
 
+  /// Peticiones en curso por clave: si diez avatares de la misma persona aparecen a la vez
+  /// (feed, comentarios, sugerencias), se firma la URL una sola vez.
+  final _signing = <String, Future<String>>{};
+
   @override
   Future<Object?> rpc(String function, [Json? params]) => _guard(() async {
     final Object? res = await _client.rpc<dynamic>(function, params: params);
@@ -65,6 +69,18 @@ class SupabaseApiClient implements ApiClient {
     final key = '$bucket/$path/$width/$height';
     final hit = _signed[key];
     if (hit != null && hit.expires.isAfter(DateTime.now())) return hit.url;
+    final pending = _signing[key];
+    if (pending != null) return await pending;
+    final future = _sign(key, bucket, path, width: width, height: height);
+    _signing[key] = future;
+    try {
+      return await future;
+    } finally {
+      unawaited(_signing.remove(key));
+    }
+  }
+
+  Future<String> _sign(String key, String bucket, String path, {int? width, int? height}) async {
     final url = await _guard(
       () => _client.storage
           .from(bucket)

@@ -147,3 +147,31 @@ Si no, el usuario tendría que cerrar sesión en la web para cambiar de cuenta.
 La web de la asociación es `icex-alumni.com` (antes la app apuntaba a `icex-alumni.es`, que no existe), y a quien
 no es socio se le envía a `MEMBERSHIP_URL` (`/hazte-alumni/`). Si el usuario vuelve a la app sin completar el acceso,
 el botón se reactiva a los pocos segundos.
+
+## D-025 · Acceso rápido de desarrollo
+En local, la portada muestra «Modo desarrollo» con cuentas de prueba (ana, javier, laura y pedro sin membresía) que
+entran con email y contraseña, sin navegador. Las cuentas están en `supabase/seed_dev_accounts.sql`, aplicado por
+`setup-local.sh` y por `supabase db reset`. El proveedor Email está activo solo en `config.toml` (local), y
+`identity.before_user_created` sigue rechazando cualquier alta que no venga de OIDC. La app solo muestra el panel con
+`DEV_LOGIN=true` y `AppEnv.devLogin` lo ignora en producción (lo comprueba un test). Ver `docs/autenticacion.md`.
+
+## D-026 · Estilo de marca en toda la app
+La estética de la portada se lleva a todas las pantallas (`shared/widgets/brand.dart`): barra superior roja, logo
+sobre una pastilla blanca, cabecera `HeroHeader` con degradado rojo, globo de puntos, barra amarilla, título en
+blanco y borde de «hoja» donde empieza el contenido. Los contadores sobre rojo son amarillos y la fase sobre rojo
+va en una pastilla blanca. El gris secundario se oscurece a `#57504D` (7,9:1 sobre blanco).
+
+## D-027 · Feed para leer y Orientador sencillo
+En el feed solo se intercala, una vez, el carrusel de sugerencias de personas. Se quitan el anuncio del Orientador y
+«La comunidad en cifras». Los textos largos se recortan a 6 líneas con un botón «Leer más» / «Mostrar menos», y el
+detalle de la publicación muestra el texto completo. El Orientador queda en una pregunta, el contexto (fase, país y
+sector, rellenado con el perfil) y un botón, sin sugerencias prefabricadas ni iconos «mágicos».
+
+## D-028 · Rendimiento: medir con presupuestos, no con relojes
+Los tests de latencia cuentan peticiones y reconstrucciones (`test/performance`), que es lo que determina la
+latencia percibida y es estable en CI. Cambios que derivan de ellos: el total de no leídos ya no se pide dos veces
+(la lista de conversaciones reutiliza `unreadProvider`); las ráfagas de Realtime se agrupan en una consulta
+(`Debouncer`, 400 ms) para contadores, conversaciones y «marcar leído»; las URL firmadas se piden una vez aunque
+varios avatares iguales las soliciten a la vez; las imágenes se decodifican al tamaño en pantalla; el
+desvanecido de «Leer más» es un degradado en lugar de un `ShaderMask`. La fluidez real se mide en un móvil en modo
+profile (`scripts/perf-app.sh`, `integration_test/`).

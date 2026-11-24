@@ -5,5 +5,6 @@
   "AUTH_REDIRECT": "es.icexalumni.atlas://login-callback",
   "APP_ENV": "local",
   "SENTRY_DSN": "",
-  "SHOW_DEMO_BANNER": true
+  "SHOW_DEMO_BANNER": true,
+  "DEV_LOGIN": true
 }

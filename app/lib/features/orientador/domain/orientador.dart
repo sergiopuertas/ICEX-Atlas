@@ -101,34 +101,4 @@ abstract final class OrientadorCatalog {
   ];
 
   /// Atajos: (etiqueta, fase, país, sector, consulta)
-  static const atajos = <(String, Fase, String, String, String)>[
-    (
-      'Preparar la entrevista de Fase II',
-      Fase.fase1,
-      'Alemania',
-      'Consultoría',
-      'Termino la Fase I y quiero preparar las entrevistas de Fase II.',
-    ),
-    (
-      'Primer empleo tras ICEX',
-      Fase.fase2,
-      'España',
-      'Tecnología',
-      'Acabo la Fase II y busco mi primer empleo.',
-    ),
-    (
-      'Cambiar de sector',
-      Fase.activo,
-      'Reino Unido',
-      'Energía',
-      'Quiero cambiar de sector aprovechando mi experiencia internacional.',
-    ),
-    (
-      'Elegir destino de beca',
-      Fase.fase0,
-      'Singapur',
-      'Industria',
-      'Estoy en Fase 0 y tengo que elegir destino de beca.',
-    ),
-  ];
 }

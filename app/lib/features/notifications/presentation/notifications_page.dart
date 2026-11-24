@@ -109,8 +109,12 @@ class NotificationsPage extends ConsumerWidget {
       appBar: AppBar(
         title: Text(l.notificationsTitle),
         actions: [
+          // Icono con descripción: el texto «Marcar todo como leído» no cabía junto al
+          // título en móviles pequeños o con letra grande.
           if (hasUnread)
-            TextButton(
+            IconButton(
+              tooltip: l.markAllRead,
+              icon: const Icon(Icons.done_all_rounded),
               onPressed: () async {
                 try {
                   await c.markAllRead();
@@ -118,7 +122,6 @@ class NotificationsPage extends ConsumerWidget {
                   if (context.mounted) showSnack(context, ErrorView.messageFor(l, e));
                 }
               },
-              child: Text(l.markAllRead),
             ),
         ],
       ),

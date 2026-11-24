@@ -14,9 +14,12 @@ import 'package:icex_atlas/shared/widgets/common.dart';
 /// «Comparte una novedad…» con accesos a Foto, Oferta y Evento (mockup), como el
 /// «Empieza una publicación» de LinkedIn: al tocarlo se abre el compositor a pantalla completa.
 class Composer extends StatelessWidget {
-  const Composer({required this.me, super.key});
+  const Composer({required this.me, this.floating = false, super.key});
 
   final ProfileCard me;
+
+  /// Tarjeta redondeada sobre la cabecera roja (Inicio), en vez de banda a todo el ancho.
+  final bool floating;
 
   Future<void> _open(BuildContext context, [ComposeArgs args = const ComposeArgs()]) async {
     final l = AppLocalizations.of(context);
@@ -42,7 +45,11 @@ class Composer extends StatelessWidget {
 
     return Material(
       color: IcexColors.card,
-      shape: const Border.symmetric(horizontal: BorderSide(color: IcexColors.border)),
+      elevation: floating ? 6 : 0,
+      shadowColor: const Color(0x55000000),
+      shape: floating
+          ? RoundedRectangleBorder(borderRadius: BorderRadius.circular(20))
+          : const Border.symmetric(horizontal: BorderSide(color: IcexColors.border)),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
         child: Column(
@@ -52,9 +59,12 @@ class Composer extends StatelessWidget {
                 InkWell(
                   customBorder: const CircleBorder(),
                   onTap: () => context.push(Routes.profile(me.slug)),
-                  child: Avatar.of(me, size: 42, ring: true),
+                  child: SizedBox.square(
+                    dimension: 48,
+                    child: Center(child: Avatar.of(me, size: 42, ring: true)),
+                  ),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: 6),
                 Expanded(
                   child: Semantics(
                     button: true,
@@ -63,7 +73,7 @@ class Composer extends StatelessWidget {
                       borderRadius: BorderRadius.circular(999),
                       onTap: () => unawaited(_open(context)),
                       child: Container(
-                        height: 44,
+                        height: 48,
                         alignment: Alignment.centerLeft,
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         decoration: BoxDecoration(

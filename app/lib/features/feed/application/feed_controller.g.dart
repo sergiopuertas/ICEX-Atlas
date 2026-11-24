@@ -42,7 +42,7 @@ final class FeedControllerProvider
   FeedController create() => FeedController();
 }
 
-String _$feedControllerHash() => r'6b23e3937fcd0ea211525933c1e4f987ea795703';
+String _$feedControllerHash() => r'a3b3203f69ae328002782a584ad9184581233048';
 
 /// Feed de Inicio. Se mantiene vivo mientras dura la sesión (no se recarga ni pierde la
 /// paginación al cambiar de pestaña, como en LinkedIn o Instagram) y se descarta al cambiar

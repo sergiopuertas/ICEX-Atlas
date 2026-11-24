@@ -20,10 +20,17 @@ import 'package:share_plus/share_plus.dart';
 /// PostCard conectada al estado compartido de publicaciones (Inicio, perfil y detalle ven
 /// siempre la misma versión: recomendaciones, comentarios y borrados).
 class ConnectedPostCard extends ConsumerWidget {
-  const ConnectedPostCard({required this.post, this.flat = false, this.onComment, super.key});
+  const ConnectedPostCard({
+    required this.post,
+    this.flat = false,
+    this.onComment,
+    this.fullText = false,
+    super.key,
+  });
 
   final Post post;
   final bool flat;
+  final bool fullText;
 
   /// Por defecto abre el detalle con comentarios. En el propio detalle, enfoca el campo.
   final VoidCallback? onComment;
@@ -39,6 +46,7 @@ class ConnectedPostCard extends ConsumerWidget {
       post: p,
       isOwn: isOwn,
       flat: flat,
+      fullText: fullText,
       onRecommend: () =>
           _guard(context, l, ref.read(postOverridesProvider.notifier).toggleRecommend(p)),
       onComment: onComment ?? () => context.push(Routes.post(p.id)),

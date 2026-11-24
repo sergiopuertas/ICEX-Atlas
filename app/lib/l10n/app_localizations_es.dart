@@ -207,13 +207,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get suggestionsTitle => 'Personas que quizá conozcas';
 
   @override
-  String get orientadorTeaserTitle => 'Orientador Alumni';
-
-  @override
-  String get orientadorTeaserBody =>
-      'Cuéntanos tu situación y recibe pasos concretos y alumni con quien hablar.';
-
-  @override
   String get newsTitle => 'Novedades de la asociación';
 
   @override
@@ -423,18 +416,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get catColaboracionEmpresarial => 'Colaboración empresarial';
 
   @override
-  String get orientadorTitle => 'Orientador Alumni';
-
-  @override
-  String orientadorSubtitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count consultas en este hilo',
-      one: '1 consulta en este hilo',
-    );
-    return 'Tu próximo paso profesional · $_temp0';
-  }
+  String get orientadorTitle => 'Orientador';
 
   @override
   String get orientadorPhase => 'Fase';
@@ -450,22 +432,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Ej.: Termino la beca en Berlín y quiero preparar las entrevistas de Fase II…';
 
   @override
-  String get orientadorSubmit => 'Obtener recomendaciones';
+  String get orientadorSubmit => 'Pedir orientación';
 
   @override
-  String get orientadorLoading => 'Preparando tus recomendaciones…';
-
-  @override
-  String get orientadorShortcut1 => 'Preparar la entrevista de Fase II';
-
-  @override
-  String get orientadorShortcut2 => 'Primer empleo tras ICEX';
-
-  @override
-  String get orientadorShortcut3 => 'Cambiar de sector';
-
-  @override
-  String get orientadorShortcut4 => 'Elegir destino de beca';
+  String get orientadorLoading => 'Buscando…';
 
   @override
   String get orientadorSteps => 'Pasos recomendados';
@@ -768,9 +738,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get reportThanks => 'Gracias. El equipo de moderación lo revisará.';
 
   @override
-  String get seeMore => '…ver más';
-
-  @override
   String get close => 'Cerrar';
 
   @override
@@ -896,9 +863,6 @@ class AppLocalizationsEs extends AppLocalizations {
   String get unsavedChangesBody => 'Tienes cambios sin guardar en tu perfil.';
 
   @override
-  String get orientadorIdeas => 'Ideas para empezar';
-
-  @override
   String get loginFeatureWorld => 'Encuentra alumni en cualquier país';
 
   @override
@@ -920,4 +884,38 @@ class AppLocalizationsEs extends AppLocalizations {
   String linkOpenError(String url) {
     return 'No se pudo abrir $url';
   }
+
+  @override
+  String get devLoginTitle => 'Modo desarrollo';
+
+  @override
+  String get devLoginHint =>
+      'Entra directamente como una cuenta de prueba, sin navegador. No aparece en producción.';
+
+  @override
+  String get readMore => 'Leer más';
+
+  @override
+  String get showLess => 'Mostrar menos';
+
+  @override
+  String homeGreeting(String name) {
+    return 'Hola, $name';
+  }
+
+  @override
+  String get homeSubtitle => 'Lo último de tu red ICEX Alumni';
+
+  @override
+  String get orientadorIntro =>
+      'Cuéntanos qué necesitas. Te proponemos pasos concretos y alumni con quienes hablar.';
+
+  @override
+  String get orientadorQuestion => '¿En qué te podemos orientar?';
+
+  @override
+  String get orientadorContext => 'Tu situación';
+
+  @override
+  String get newsEmpty => 'Todavía no hay comunicados de la asociación.';
 }

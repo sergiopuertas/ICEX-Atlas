@@ -11,7 +11,7 @@ import 'package:icex_atlas/features/notifications/application/unread_counts.dart
 import 'package:icex_atlas/l10n/app_localizations.dart';
 import 'package:icex_atlas/shared/widgets/avatar.dart';
 import 'package:icex_atlas/shared/widgets/badges.dart';
-import 'package:icex_atlas/shared/widgets/common.dart';
+import 'package:icex_atlas/shared/widgets/brand.dart';
 
 /// Pestañas de la navegación inferior (orden de las ramas del router).
 enum AppTab { home, network, map, messages, orientador }
@@ -74,11 +74,19 @@ class AppShell extends ConsumerWidget {
         title: Semantics(
           button: true,
           label: l.navHome,
-          child: GestureDetector(onTap: () => _select(ref, 0), child: const IcexLogo()),
-        ),
-        bottom: const PreferredSize(
-          preferredSize: Size.fromHeight(3),
-          child: IcexStripe(height: 3),
+          child: GestureDetector(
+            onTap: () => _select(ref, 0),
+            behavior: HitTestBehavior.opaque,
+            // Zona táctil de 48 dp aunque el logo mida menos.
+            child: const SizedBox(
+              height: 48,
+              child: Align(
+                alignment: Alignment.centerLeft,
+                widthFactor: 1,
+                child: LogoBadge(height: 20, shadow: false),
+              ),
+            ),
+          ),
         ),
         actions: [
           IconButton(
@@ -92,21 +100,25 @@ class AppShell extends ConsumerWidget {
                 : l.navNotifications,
             icon: CountBadge(
               count: unread.notificaciones,
+              onDark: true,
               child: const Icon(Icons.notifications_none_rounded),
             ),
             onPressed: () => context.push(Routes.notifications),
           ),
           if (me != null)
             Padding(
-              padding: const EdgeInsets.only(right: 12, left: 4),
+              padding: const EdgeInsets.only(right: 8),
               child: Semantics(
                 button: true,
                 label: '${l.navProfile}: ${me.profile.card.nombre}',
                 excludeSemantics: true,
                 child: InkResponse(
-                  radius: 22,
+                  radius: 24,
                   onTap: () => context.push(Routes.profile(me.profile.card.slug)),
-                  child: Avatar.of(me.profile.card, size: 32, ring: true),
+                  child: SizedBox.square(
+                    dimension: 48,
+                    child: Center(child: Avatar.of(me.profile.card, size: 32, ring: true)),
+                  ),
                 ),
               ),
             ),

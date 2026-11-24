@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -7,8 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:icex_atlas/core/auth/session_controller.dart';
 import 'package:icex_atlas/core/providers.dart';
 import 'package:icex_atlas/core/theme/icex_theme.dart';
+import 'package:icex_atlas/features/auth/domain/dev_accounts.dart';
 import 'package:icex_atlas/l10n/app_localizations.dart';
-import 'package:icex_atlas/shared/widgets/common.dart';
+import 'package:icex_atlas/shared/widgets/brand.dart';
 import 'package:icex_atlas/shared/widgets/links.dart';
 
 /// Portada a pantalla completa (como las de LinkedIn o Instagram): arriba, una cabecera
@@ -62,7 +62,7 @@ class _LoginPageState extends ConsumerState<LoginPage> {
       hero: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _AccentBar(),
+          const AccentBar(),
           const SizedBox(height: 16),
           Semantics(
             header: true,
@@ -139,7 +139,74 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           ),
           const SizedBox(height: 4),
           Text(l.loginPrivacyNote, textAlign: TextAlign.center, style: t.bodySmall),
+          if (env.devLogin) ...[const SizedBox(height: 20), _DevLoginPanel(enabled: !busy)],
         ],
+      ),
+    );
+  }
+}
+
+/// Acceso rápido de desarrollo: entrar como una cuenta de prueba con un toque, sin pasar
+/// por el navegador ni el proveedor OIDC. Solo aparece con DEV_LOGIN=true y nunca en
+/// producción (ver `AppEnv.devLogin` y docs/autenticacion.md).
+class _DevLoginPanel extends ConsumerWidget {
+  const _DevLoginPanel({required this.enabled});
+
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l = AppLocalizations.of(context);
+    final t = Theme.of(context).textTheme;
+    return Material(
+      key: const Key('dev-login'),
+      color: IcexColors.muted,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: IcexColors.border),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(12, 12, 12, 6),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.code_rounded, size: 18, color: IcexColors.mutedForeground),
+                const SizedBox(width: 6),
+                Expanded(child: Text(l.devLoginTitle, style: t.titleSmall)),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 2, bottom: 6),
+              child: Text(l.devLoginHint, style: t.bodySmall),
+            ),
+            for (final a in DevAccount.all)
+              ListTile(
+                dense: true,
+                enabled: enabled,
+                contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                leading: CircleAvatar(
+                  radius: 16,
+                  backgroundColor: IcexColors.card,
+                  child: Text(
+                    a.name.split(' ').take(2).map((w) => w[0]).join(),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: IcexColors.primary,
+                    ),
+                  ),
+                ),
+                title: Text(a.name, style: t.bodyMedium?.copyWith(fontWeight: FontWeight.w600)),
+                subtitle: Text(a.role, style: t.bodySmall),
+                trailing: const Icon(Icons.chevron_right, size: 20),
+                onTap: () => ref
+                    .read(sessionControllerProvider.notifier)
+                    .signInWithPassword(email: a.email, password: DevAccount.password),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -244,14 +311,14 @@ class _WelcomeScaffold extends StatelessWidget {
                         child: Stack(
                           children: [
                             const Positioned.fill(
-                              child: ExcludeSemantics(child: CustomPaint(painter: _GlobePainter())),
+                              child: ExcludeSemantics(child: CustomPaint(painter: GlobePainter())),
                             ),
                             Padding(
                               padding: EdgeInsets.fromLTRB(28, padding.top + 20, 28, 48),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  const _LogoBadge(),
+                                  const LogoBadge(),
                                   const Spacer(),
                                   const SizedBox(height: 32),
                                   hero,
@@ -290,32 +357,6 @@ class _WelcomeScaffold extends StatelessWidget {
   }
 }
 
-class _LogoBadge extends StatelessWidget {
-  const _LogoBadge();
-
-  @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-    decoration: BoxDecoration(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(14),
-      boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 16, offset: Offset(0, 6))],
-    ),
-    child: const IcexLogo(),
-  );
-}
-
-class _AccentBar extends StatelessWidget {
-  const _AccentBar();
-
-  @override
-  Widget build(BuildContext context) => Container(
-    width: 44,
-    height: 5,
-    decoration: BoxDecoration(color: IcexColors.accent, borderRadius: BorderRadius.circular(4)),
-  );
-}
-
 class _Feature extends StatelessWidget {
   const _Feature({required this.icon, required this.text});
 
@@ -347,86 +388,4 @@ class _Feature extends StatelessWidget {
       ],
     ),
   );
-}
-
-/// Globo de puntos con arcos de conexión (dibujo propio, decorativo): la red repartida por
-/// el mundo. Se dibuja en la esquina superior derecha, parcialmente fuera de la pantalla.
-class _GlobePainter extends CustomPainter {
-  const _GlobePainter();
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final r = math.max<double>(size.width * 0.62, 220);
-    final center = Offset(size.width * 0.92, size.height * 0.30);
-    final line = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1
-      ..color = Colors.white.withValues(alpha: 0.12);
-
-    // Contorno, meridianos y paralelos.
-    canvas.drawCircle(center, r, line);
-    for (var i = 1; i <= 4; i++) {
-      final w = r * 2 * math.cos(i * math.pi / 10);
-      canvas.drawOval(Rect.fromCenter(center: center, width: w, height: r * 2), line);
-    }
-    for (var i = -3; i <= 3; i++) {
-      final y = center.dy + r * math.sin(i * math.pi / 8);
-      final half = r * math.cos(i * math.pi / 8);
-      canvas.drawLine(Offset(center.dx - half, y), Offset(center.dx + half, y), line);
-    }
-
-    // Puntos (alumni) sobre la esfera, deterministas.
-    final dot = Paint()..color = Colors.white.withValues(alpha: 0.35);
-    final rnd = math.Random(51);
-    final points = <Offset>[];
-    for (var i = 0; i < 70; i++) {
-      final lat = (rnd.nextDouble() - 0.5) * math.pi * 0.9;
-      final lon = (rnd.nextDouble() - 0.5) * math.pi;
-      final p = Offset(
-        center.dx + r * math.cos(lat) * math.sin(lon),
-        center.dy - r * math.sin(lat),
-      );
-      points.add(p);
-      canvas.drawCircle(p, 1.6 + rnd.nextDouble() * 1.4, dot);
-    }
-
-    // Arcos de conexión entre algunos puntos, con el destino en amarillo ICEX.
-    final arc = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4
-      ..strokeCap = StrokeCap.round
-      ..color = IcexColors.accent.withValues(alpha: 0.6);
-    final hub = Paint()..color = IcexColors.accent;
-    // Solo entre puntos relativamente cercanos y visibles: arcos cortos, como rutas.
-    var drawn = 0;
-    for (var i = 0; i < points.length && drawn < 7; i++) {
-      final a = points[i];
-      if (a.dx < 0 || a.dy < 0) continue;
-      for (var j = i + 1; j < points.length; j++) {
-        final b = points[j];
-        final d = (b - a).distance;
-        if (b.dx < 0 || b.dy < 0 || d < r * 0.25 || d > r * 0.55) continue;
-        final mid = Offset.lerp(a, b, 0.5)!;
-        // Curva hacia «arriba» del tramo (normal con componente y negativa).
-        var normal = Offset(-(b.dy - a.dy), b.dx - a.dx) / d;
-        if (normal.dy > 0) normal = -normal;
-        final ctrl = mid + normal * (d * 0.35);
-        canvas
-          ..drawPath(
-            Path()
-              ..moveTo(a.dx, a.dy)
-              ..quadraticBezierTo(ctrl.dx, ctrl.dy, b.dx, b.dy),
-            arc,
-          )
-          ..drawCircle(a, 2.5, hub)
-          ..drawCircle(b, 2.5, hub);
-        drawn++;
-        i += 4; // reparte los arcos por el globo
-        break;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant _GlobePainter oldDelegate) => false;
 }

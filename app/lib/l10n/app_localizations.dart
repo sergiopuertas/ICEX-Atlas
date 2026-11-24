@@ -440,18 +440,6 @@ abstract class AppLocalizations {
   /// **'Personas que quizá conozcas'**
   String get suggestionsTitle;
 
-  /// No description provided for @orientadorTeaserTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Orientador Alumni'**
-  String get orientadorTeaserTitle;
-
-  /// No description provided for @orientadorTeaserBody.
-  ///
-  /// In es, this message translates to:
-  /// **'Cuéntanos tu situación y recibe pasos concretos y alumni con quien hablar.'**
-  String get orientadorTeaserBody;
-
   /// No description provided for @newsTitle.
   ///
   /// In es, this message translates to:
@@ -803,14 +791,8 @@ abstract class AppLocalizations {
   /// No description provided for @orientadorTitle.
   ///
   /// In es, this message translates to:
-  /// **'Orientador Alumni'**
+  /// **'Orientador'**
   String get orientadorTitle;
-
-  /// No description provided for @orientadorSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Tu próximo paso profesional · {count, plural, =1{1 consulta en este hilo} other{{count} consultas en este hilo}}'**
-  String orientadorSubtitle(int count);
 
   /// No description provided for @orientadorPhase.
   ///
@@ -839,38 +821,14 @@ abstract class AppLocalizations {
   /// No description provided for @orientadorSubmit.
   ///
   /// In es, this message translates to:
-  /// **'Obtener recomendaciones'**
+  /// **'Pedir orientación'**
   String get orientadorSubmit;
 
   /// No description provided for @orientadorLoading.
   ///
   /// In es, this message translates to:
-  /// **'Preparando tus recomendaciones…'**
+  /// **'Buscando…'**
   String get orientadorLoading;
-
-  /// No description provided for @orientadorShortcut1.
-  ///
-  /// In es, this message translates to:
-  /// **'Preparar la entrevista de Fase II'**
-  String get orientadorShortcut1;
-
-  /// No description provided for @orientadorShortcut2.
-  ///
-  /// In es, this message translates to:
-  /// **'Primer empleo tras ICEX'**
-  String get orientadorShortcut2;
-
-  /// No description provided for @orientadorShortcut3.
-  ///
-  /// In es, this message translates to:
-  /// **'Cambiar de sector'**
-  String get orientadorShortcut3;
-
-  /// No description provided for @orientadorShortcut4.
-  ///
-  /// In es, this message translates to:
-  /// **'Elegir destino de beca'**
-  String get orientadorShortcut4;
 
   /// No description provided for @orientadorSteps.
   ///
@@ -1406,12 +1364,6 @@ abstract class AppLocalizations {
   /// **'Gracias. El equipo de moderación lo revisará.'**
   String get reportThanks;
 
-  /// No description provided for @seeMore.
-  ///
-  /// In es, this message translates to:
-  /// **'…ver más'**
-  String get seeMore;
-
   /// No description provided for @close.
   ///
   /// In es, this message translates to:
@@ -1652,12 +1604,6 @@ abstract class AppLocalizations {
   /// **'Tienes cambios sin guardar en tu perfil.'**
   String get unsavedChangesBody;
 
-  /// No description provided for @orientadorIdeas.
-  ///
-  /// In es, this message translates to:
-  /// **'Ideas para empezar'**
-  String get orientadorIdeas;
-
   /// No description provided for @loginFeatureWorld.
   ///
   /// In es, this message translates to:
@@ -1699,6 +1645,66 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'No se pudo abrir {url}'**
   String linkOpenError(String url);
+
+  /// No description provided for @devLoginTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Modo desarrollo'**
+  String get devLoginTitle;
+
+  /// No description provided for @devLoginHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Entra directamente como una cuenta de prueba, sin navegador. No aparece en producción.'**
+  String get devLoginHint;
+
+  /// No description provided for @readMore.
+  ///
+  /// In es, this message translates to:
+  /// **'Leer más'**
+  String get readMore;
+
+  /// No description provided for @showLess.
+  ///
+  /// In es, this message translates to:
+  /// **'Mostrar menos'**
+  String get showLess;
+
+  /// No description provided for @homeGreeting.
+  ///
+  /// In es, this message translates to:
+  /// **'Hola, {name}'**
+  String homeGreeting(String name);
+
+  /// No description provided for @homeSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Lo último de tu red ICEX Alumni'**
+  String get homeSubtitle;
+
+  /// No description provided for @orientadorIntro.
+  ///
+  /// In es, this message translates to:
+  /// **'Cuéntanos qué necesitas. Te proponemos pasos concretos y alumni con quienes hablar.'**
+  String get orientadorIntro;
+
+  /// No description provided for @orientadorQuestion.
+  ///
+  /// In es, this message translates to:
+  /// **'¿En qué te podemos orientar?'**
+  String get orientadorQuestion;
+
+  /// No description provided for @orientadorContext.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu situación'**
+  String get orientadorContext;
+
+  /// No description provided for @newsEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no hay comunicados de la asociación.'**
+  String get newsEmpty;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

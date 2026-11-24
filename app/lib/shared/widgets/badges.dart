@@ -5,12 +5,16 @@ import 'package:icex_atlas/features/profiles/domain/profile.dart';
 
 /// Badge redondeado de fase: Fase 0 · Fase I · Fase II · ACTIVO.
 class PhaseBadge extends StatelessWidget {
-  const PhaseBadge(this.fase, {this.compact = false, super.key});
+  const PhaseBadge(this.fase, {this.compact = false, this.onDark = false, super.key});
 
   final Fase fase;
 
   /// Versión pequeña para líneas de metadatos (tarjeta de publicación, chat).
   final bool compact;
+
+  /// Sobre fondo rojo (cabecera del chat): pastilla blanca con el texto del color de la
+  /// fase. Si no, «Activo» (rojo) desaparecería sobre la barra roja.
+  final bool onDark;
 
   @override
   Widget build(BuildContext context) => Semantics(
@@ -19,13 +23,15 @@ class PhaseBadge extends StatelessWidget {
     child: Container(
       padding: EdgeInsets.symmetric(horizontal: compact ? 7 : 10, vertical: compact ? 1 : 2),
       decoration: BoxDecoration(
-        color: IcexColors.phase(fase),
+        color: onDark ? Colors.white : IcexColors.phase(fase),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         fase.label,
         style: TextStyle(
-          color: IcexColors.onPhase(fase),
+          color: onDark
+              ? (fase == Fase.fase1 ? IcexColors.onAccent : IcexColors.phase(fase))
+              : IcexColors.onPhase(fase),
           fontSize: compact ? 10 : 11,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.4,
@@ -76,13 +82,19 @@ class PostTypeBadge extends StatelessWidget {
   Widget build(BuildContext context) {
     final (icon, label) = describe(tipo);
     final official = tipo == PostTipo.novedadOficial;
-    final text = Text(
-      official ? label.toUpperCase() : label,
-      style: const TextStyle(
-        color: IcexColors.primary,
-        fontSize: 12,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.3,
+    // Flexible + elipsis: en móviles pequeños o con texto grande la etiqueta se recorta en
+    // lugar de desbordar la fila.
+    final text = Flexible(
+      child: Text(
+        official ? label.toUpperCase() : label,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: const TextStyle(
+          color: IcexColors.primary,
+          fontSize: 12,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.3,
+        ),
       ),
     );
     // Los comunicados oficiales van sin pastilla (ya están sobre un fondo tintado).
@@ -144,16 +156,22 @@ class PhasePromoRow extends StatelessWidget {
 
 /// Contador de no leídos (rojo, como en la barra de navegación del mockup).
 class CountBadge extends StatelessWidget {
-  const CountBadge({required this.count, required this.child, super.key});
+  const CountBadge({required this.count, required this.child, this.onDark = false, super.key});
 
   final int count;
   final Widget child;
 
+  /// Sobre la barra roja: amarillo ICEX con texto oscuro (el rojo no se distinguiría).
+  final bool onDark;
+
   @override
   Widget build(BuildContext context) => Badge(
     isLabelVisible: count > 0,
-    label: Text(count > 99 ? '99+' : '$count'),
-    backgroundColor: IcexColors.primary,
+    // La cifra ya la anuncia el tooltip/etiqueta del botón; se excluye para no leerla dos
+    // veces (y para no mezclar su color con el del icono al medir contraste).
+    label: ExcludeSemantics(child: Text(count > 99 ? '99+' : '$count')),
+    backgroundColor: onDark ? IcexColors.accent : IcexColors.primary,
+    textColor: onDark ? IcexColors.onAccent : Colors.white,
     child: child,
   );
 }

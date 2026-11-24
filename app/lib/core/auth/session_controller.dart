@@ -70,6 +70,23 @@ class SessionController extends _$SessionController {
     }
   }
 
+  /// Acceso rápido de desarrollo (sin navegador). Los errores se tratan igual que los del
+  /// flujo OIDC: una cuenta sin membresía termina en «Acceso solo para socios».
+  Future<void> signInWithPassword({required String email, required String password}) async {
+    state = const SigningIn();
+    try {
+      await ref.read(authGatewayProvider).signInWithPassword(email: email, password: password);
+    } on Object catch (e) {
+      if (!ref.mounted) return;
+      final msg = e.toString();
+      if (msg.contains('icex_member')) {
+        _denied();
+      } else {
+        state = SignedOut(error: msg);
+      }
+    }
+  }
+
   /// La app vuelve al primer plano sin respuesta del proveedor: el usuario cerró el
   /// navegador o volvió atrás sin completar el acceso. Antes la pantalla se quedaba en
   /// «Conectando…» con el botón desactivado para siempre.

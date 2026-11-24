@@ -61,6 +61,9 @@ select vault.create_secret('http://supabase_kong_${PROJECT_ID}:8000', 'project_u
 select vault.create_secret('${SERVICE_ROLE_KEY}', 'service_role_key')
  where not exists (select 1 from vault.secrets where name = 'service_role_key');
 SQL
+echo "→ Cuentas de acceso rápido para desarrollo (contraseña: atlas-dev-local)"
+psql "${DB_URL}" -v ON_ERROR_STOP=1 -q -o /dev/null -f supabase/seed_dev_accounts.sql
+
 echo "→ Configuración de la app (app/env/local.json)"
 cat > app/env/local.json <<JSON
 {
@@ -69,7 +72,9 @@ cat > app/env/local.json <<JSON
   "OIDC_PROVIDER": "custom:icex-alumni",
   "AUTH_REDIRECT": "es.icexalumni.atlas://login-callback",
   "APP_ENV": "local",
-  "SHOW_DEMO_BANNER": true
+  "SHOW_DEMO_BANNER": true,
+  "DEV_LOGIN": true
 }
 JSON
 echo "✓ Entorno local listo. Usuarios OIDC de prueba: ana, javier, laura (admin), nueva (alta nueva), pedro (no socio)."
+echo "  Acceso rápido sin navegador: botones «Modo desarrollo» en la portada (DEV_LOGIN=true)."

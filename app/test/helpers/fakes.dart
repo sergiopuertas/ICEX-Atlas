@@ -84,6 +84,16 @@ class FakeAuthGateway implements AuthGateway {
     lastForceLogin = forceLogin;
   }
 
+  /// Respuesta configurable del acceso con contraseña (por defecto, éxito sin evento).
+  Future<void> Function(String email)? onPasswordSignIn;
+  String? lastPasswordEmail;
+
+  @override
+  Future<void> signInWithPassword({required String email, required String password}) async {
+    lastPasswordEmail = email;
+    await onPasswordSignIn?.call(email);
+  }
+
   @override
   Future<void> signOut() async {
     signOutCalls++;

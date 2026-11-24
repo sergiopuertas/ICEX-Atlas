@@ -19,6 +19,7 @@ class AppEnv {
     this.associationWebUrl = defaultAssociationWebUrl,
     this.membershipUrl = defaultMembershipUrl,
     this.showDemoBanner = false,
+    this.devLoginRequested = false,
   });
 
   factory AppEnv.fromEnvironment() => const AppEnv(
@@ -42,6 +43,7 @@ class AppEnv {
     ),
     membershipUrl: String.fromEnvironment('MEMBERSHIP_URL', defaultValue: defaultMembershipUrl),
     showDemoBanner: bool.fromEnvironment('SHOW_DEMO_BANNER', defaultValue: true),
+    devLoginRequested: bool.fromEnvironment('DEV_LOGIN'),
   );
 
   /// Web de la asociación (antes `icex-alumni.es`, un dominio que no existe: el botón
@@ -66,6 +68,13 @@ class AppEnv {
   final String membershipUrl;
   final bool showDemoBanner;
 
+  /// Valor de DEV_LOGIN tal cual llega; usa [devLogin], que lo ignora en producción.
+  final bool devLoginRequested;
+
   bool get isProduction => environment == 'production';
+
+  /// Acceso rápido de desarrollo (cuentas de prueba con contraseña, sin navegador).
+  /// Solo con `DEV_LOGIN=true` y NUNCA en un build de producción, aunque se pase el define.
+  bool get devLogin => devLoginRequested && !isProduction;
   bool get hasSentry => sentryDsn.isNotEmpty;
 }

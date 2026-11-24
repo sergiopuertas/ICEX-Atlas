@@ -174,16 +174,19 @@ class _ComposePageState extends ConsumerState<ComposePage> {
               child: FilledButton(
                 key: const Key('composer-publish'),
                 onPressed: _canPublish ? _publish : null,
+                // Sobre la barra roja: botón blanco con texto rojo.
                 style: FilledButton.styleFrom(
                   minimumSize: const Size(0, 36),
                   padding: const EdgeInsets.symmetric(horizontal: 18),
-                  disabledBackgroundColor: IcexColors.primary.withValues(alpha: 0.3),
+                  backgroundColor: Colors.white,
+                  foregroundColor: IcexColors.primary,
+                  disabledBackgroundColor: Colors.white.withValues(alpha: 0.35),
                   disabledForegroundColor: Colors.white,
                 ),
                 child: _busy
                     ? const SizedBox.square(
                         dimension: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        child: CircularProgressIndicator(strokeWidth: 2, color: IcexColors.primary),
                       )
                     : Text(l.composerPublish),
               ),

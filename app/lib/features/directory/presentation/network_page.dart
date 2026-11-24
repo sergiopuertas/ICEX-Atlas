@@ -13,6 +13,7 @@ import 'package:icex_atlas/l10n/app_localizations.dart';
 import 'package:icex_atlas/shared/widgets/app_shell.dart';
 import 'package:icex_atlas/shared/widgets/avatar.dart';
 import 'package:icex_atlas/shared/widgets/badges.dart';
+import 'package:icex_atlas/shared/widgets/brand.dart';
 import 'package:icex_atlas/shared/widgets/common.dart';
 import 'package:icex_atlas/shared/widgets/follow_button.dart';
 
@@ -78,20 +79,13 @@ class _NetworkPageState extends ConsumerState<NetworkPage> {
           controller: _scroll,
           physics: const AlwaysScrollableScrollPhysics(),
           slivers: [
-            if (ref.watch(appEnvProvider).showDemoBanner)
-              const SliverToBoxAdapter(child: DemoBanner()),
             SliverToBoxAdapter(
-              child: PageHeader(
+              child: HeroHeader(
                 title: l.networkTitle,
                 subtitle: stats == null
                     ? null
                     : l.networkSubtitle(stats.alumni, stats.paises, stats.promociones),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                child: Row(
+                bottom: Row(
                   children: [
                     Expanded(
                       child: ValueListenableBuilder<TextEditingValue>(
@@ -117,7 +111,7 @@ class _NetworkPageState extends ConsumerState<NetworkPage> {
                             hintText: l.searchDirectoryHint,
                             labelText: l.searchDirectoryLabel,
                             floatingLabelBehavior: FloatingLabelBehavior.never,
-                            fillColor: IcexColors.muted,
+                            fillColor: Colors.white,
                             enabledBorder: const OutlineInputBorder(
                               borderRadius: BorderRadius.all(Radius.circular(999)),
                               borderSide: BorderSide.none,
@@ -138,13 +132,13 @@ class _NetworkPageState extends ConsumerState<NetworkPage> {
                     Badge(
                       isLabelVisible: activeFilters > 0,
                       label: Text('$activeFilters'),
-                      backgroundColor: IcexColors.primary,
-                      child: IconButton.outlined(
+                      backgroundColor: IcexColors.accent,
+                      textColor: IcexColors.onAccent,
+                      child: IconButton.filled(
                         tooltip: l.filters,
                         style: IconButton.styleFrom(
-                          side: BorderSide(
-                            color: activeFilters > 0 ? IcexColors.primary : IcexColors.border,
-                          ),
+                          backgroundColor: Colors.white,
+                          foregroundColor: IcexColors.primary,
                           minimumSize: const Size(48, 48),
                         ),
                         onPressed: _openFilters,
@@ -155,6 +149,8 @@ class _NetworkPageState extends ConsumerState<NetworkPage> {
                 ),
               ),
             ),
+            if (ref.watch(appEnvProvider).showDemoBanner)
+              const SliverToBoxAdapter(child: DemoBanner()),
             SliverToBoxAdapter(
               child: SizedBox(
                 height: 44,
@@ -214,26 +210,27 @@ class _NetworkPageState extends ConsumerState<NetworkPage> {
               ),
             SliverPadding(
               padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              sliver: SliverGrid.builder(
-                gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
-                  maxCrossAxisExtent: 240,
-                  // Crece con el tamaño de texto del sistema (accesibilidad) sin desbordar.
-                  mainAxisExtent: 268 * MediaQuery.textScalerOf(context).scale(1).clamp(1, 1.8),
-                  crossAxisSpacing: 10,
-                  mainAxisSpacing: 10,
-                ),
-                itemCount: s.items.length,
-                itemBuilder: (_, i) => MemberCard(
-                  key: ValueKey(s.items[i].userId),
-                  profile: s.items[i],
-                  isMe: s.items[i].userId == myId,
-                  onFollow: () async {
-                    try {
-                      await c.toggleFollow(s.items[i]);
-                    } on Object catch (e) {
-                      if (context.mounted) showSnack(context, ErrorView.messageFor(l, e));
-                    }
-                  },
+              sliver: SliverLayoutBuilder(
+                builder: (context, constraints) => SliverGrid.builder(
+                  gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
+                    maxCrossAxisExtent: 240,
+                    mainAxisExtent: memberCardHeight(context, constraints.crossAxisExtent),
+                    crossAxisSpacing: 10,
+                    mainAxisSpacing: 10,
+                  ),
+                  itemCount: s.items.length,
+                  itemBuilder: (_, i) => MemberCard(
+                    key: ValueKey(s.items[i].userId),
+                    profile: s.items[i],
+                    isMe: s.items[i].userId == myId,
+                    onFollow: () async {
+                      try {
+                        await c.toggleFollow(s.items[i]);
+                      } on Object catch (e) {
+                        if (context.mounted) showSnack(context, ErrorView.messageFor(l, e));
+                      }
+                    },
+                  ),
                 ),
               ),
             ),
@@ -337,6 +334,17 @@ class _FiltersSheet extends ConsumerWidget {
   }
 }
 
+/// Alto de [MemberCard]: crece con el tamaño de texto del sistema y en tarjetas estrechas
+/// (móviles de 320 pt, donde nombre y cargo ocupan más líneas). Sin esto, la tarjeta se
+/// desbordaba por abajo.
+double memberCardHeight(BuildContext context, double availableWidth) {
+  final width = availableWidth;
+  final columns = (width / 250).ceil().clamp(1, 8);
+  final cardWidth = (width - 10 * (columns - 1)) / columns;
+  final narrow = cardWidth < 160 ? 28.0 : 0.0;
+  return (268 + narrow) * MediaQuery.textScalerOf(context).scale(1).clamp(1, 2.5);
+}
+
 /// Tarjeta de miembro: portada con los colores ICEX, avatar con anillo de fase, nombre,
 /// titular, promoción y Seguir.
 class MemberCard extends StatelessWidget {
@@ -372,7 +380,7 @@ class MemberCard extends StatelessWidget {
                     left: 0,
                     right: 0,
                     height: 44,
-                    child: IcexStripe(height: 44),
+                    child: DecoratedBox(decoration: BoxDecoration(gradient: icexHeroGradient)),
                   ),
                   Avatar.of(p, size: 72, ring: true),
                 ],

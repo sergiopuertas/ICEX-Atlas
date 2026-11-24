@@ -10,6 +10,7 @@ import 'package:icex_atlas/features/social/data/social_repository.dart';
 import 'package:icex_atlas/l10n/app_localizations.dart';
 import 'package:icex_atlas/shared/widgets/avatar.dart';
 import 'package:icex_atlas/shared/widgets/badges.dart';
+import 'package:icex_atlas/shared/widgets/brand.dart';
 import 'package:icex_atlas/shared/widgets/common.dart';
 import 'package:icex_atlas/shared/widgets/expandable_text.dart';
 import 'package:icex_atlas/shared/widgets/follow_button.dart';
@@ -195,14 +196,8 @@ class _Header extends ConsumerWidget {
                   top: 0,
                   height: _cover,
                   child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [IcexColors.primary, Color(0xFFE23B2E), IcexColors.accent],
-                        stops: [0, 0.55, 1],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                    ),
+                    decoration: BoxDecoration(gradient: icexHeroGradient),
+                    child: ExcludeSemantics(child: CustomPaint(painter: GlobePainter.header())),
                   ),
                 ),
                 Positioned(

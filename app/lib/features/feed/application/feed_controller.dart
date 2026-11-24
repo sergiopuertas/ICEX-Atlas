@@ -95,7 +95,6 @@ class FeedController extends _$FeedController {
   Future<void> refresh() async {
     ref.read(postOverridesProvider.notifier).clear();
     ref
-      ..invalidate(communityStatsProvider)
       ..invalidate(suggestionsProvider)
       ..invalidateSelf();
     await future;
