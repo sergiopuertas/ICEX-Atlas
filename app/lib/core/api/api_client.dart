@@ -96,9 +96,13 @@ class SupabaseApiClient implements ApiClient {
     return url;
   }
 
+  /// Límite por petición. Sin él, si el servidor acepta la conexión pero no responde
+  /// (backend local a medio arrancar, red mala), la pantalla esperaba para siempre.
+  static const requestTimeout = Duration(seconds: 30);
+
   Future<T> _guard<T>(Future<T> Function() run) async {
     try {
-      return await run();
+      return await run().timeout(requestTimeout);
     } on PostgrestException catch (e) {
       throw AppFailure.fromCode(e.code, e.message, hint: e.hint);
     } on FunctionsFetchException {
