@@ -143,19 +143,19 @@ abstract class AppLocalizations {
   /// No description provided for @accessDeniedBody.
   ///
   /// In es, this message translates to:
-  /// **'Tu cuenta no figura como socio verificado de ICEX Alumni. Si crees que es un error, revisa tu alta en la web de la asociación o escríbenos.'**
+  /// **'La cuenta con la que has entrado no figura como socia de ICEX Alumni. Hazte socio en la web de la asociación o entra con otra cuenta.'**
   String get accessDeniedBody;
 
   /// No description provided for @accessDeniedWeb.
   ///
   /// In es, this message translates to:
-  /// **'Ir a la web de ICEX Alumni'**
+  /// **'Hacerme socio de ICEX Alumni'**
   String get accessDeniedWeb;
 
   /// No description provided for @accessDeniedRetry.
   ///
   /// In es, this message translates to:
-  /// **'Volver a intentarlo'**
+  /// **'Volver al inicio'**
   String get accessDeniedRetry;
 
   /// No description provided for @navHome.
@@ -1657,6 +1657,48 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Ideas para empezar'**
   String get orientadorIdeas;
+
+  /// No description provided for @loginFeatureWorld.
+  ///
+  /// In es, this message translates to:
+  /// **'Encuentra alumni en cualquier país'**
+  String get loginFeatureWorld;
+
+  /// No description provided for @loginFeaturePromo.
+  ///
+  /// In es, this message translates to:
+  /// **'Conecta con tu promoción y tu club'**
+  String get loginFeaturePromo;
+
+  /// No description provided for @loginFeatureOpportunities.
+  ///
+  /// In es, this message translates to:
+  /// **'Descubre ofertas, mentorías y eventos'**
+  String get loginFeatureOpportunities;
+
+  /// No description provided for @loginNotMember.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Aún no eres socio?'**
+  String get loginNotMember;
+
+  /// No description provided for @loginJoin.
+  ///
+  /// In es, this message translates to:
+  /// **'Hazte socio'**
+  String get loginJoin;
+
+  /// No description provided for @accessDeniedOtherAccount.
+  ///
+  /// In es, this message translates to:
+  /// **'Entrar con otra cuenta'**
+  String get accessDeniedOtherAccount;
+
+  /// No description provided for @linkOpenError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo abrir {url}'**
+  String linkOpenError(String url);
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

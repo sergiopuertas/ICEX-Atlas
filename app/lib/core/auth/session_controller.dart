@@ -43,6 +43,10 @@ class SessionController extends _$SessionController {
   StreamSubscription<AuthEvent>? _sub;
   String? _loadedFor;
 
+  /// El próximo acceso debe pedir usuario de nuevo: tras «acceso solo para socios» o tras
+  /// cerrar sesión (para poder entrar con otra cuenta).
+  bool _forceLogin = false;
+
   @override
   SessionState build() {
     final gateway = ref.watch(authGatewayProvider);
@@ -56,17 +60,31 @@ class SessionController extends _$SessionController {
     return const SignedOut();
   }
 
-  Future<void> signIn() async {
+  /// [switchAccount]: entrar con otra cuenta (fuerza el formulario del proveedor).
+  Future<void> signIn({bool switchAccount = false}) async {
     state = const SigningIn();
     try {
-      await ref.read(authGatewayProvider).signIn();
+      await ref.read(authGatewayProvider).signIn(forceLogin: switchAccount || _forceLogin);
     } on Object catch (e) {
-      state = SignedOut(error: e.toString());
+      if (ref.mounted) state = SignedOut(error: e.toString());
     }
+  }
+
+  /// La app vuelve al primer plano sin respuesta del proveedor: el usuario cerró el
+  /// navegador o volvió atrás sin completar el acceso. Antes la pantalla se quedaba en
+  /// «Conectando…» con el botón desactivado para siempre.
+  void signInAbandoned() {
+    if (state is SigningIn) state = const SignedOut();
+  }
+
+  void _denied() {
+    _forceLogin = true;
+    state = const AccessDenied();
   }
 
   Future<void> signOut() async {
     _loadedFor = null;
+    _forceLogin = true;
     try {
       await ref.read(appDatabaseProvider).wipe();
     } on Object {
@@ -92,7 +110,7 @@ class SessionController extends _$SessionController {
       if (ref.mounted && state is SignedIn && _loadedFor == me.userId) state = SignedIn(me);
     } on ForbiddenFailure {
       if (!ref.mounted) return;
-      state = const AccessDenied();
+      _denied();
       await ref.read(authGatewayProvider).signOut();
     } on AppFailure {
       // Conservar el estado actual.
@@ -107,7 +125,11 @@ class SessionController extends _$SessionController {
         _loadedFor = null;
         if (state is! AccessDenied) state = const SignedOut();
       case AuthFailed(:final isNotMember, :final message):
-        state = isNotMember ? const AccessDenied() : SignedOut(error: message);
+        if (isNotMember) {
+          _denied();
+        } else {
+          state = SignedOut(error: message);
+        }
     }
   }
 
@@ -118,11 +140,12 @@ class SessionController extends _$SessionController {
     try {
       final me = await ref.read(profilesRepositoryProvider).me();
       if (stale()) return;
+      _forceLogin = false;
       state = SignedIn(me);
     } on ForbiddenFailure {
       if (stale()) return;
       // JWT válido pero sin membresía activa (baja): fuera.
-      state = const AccessDenied();
+      _denied();
       await ref.read(authGatewayProvider).signOut();
     } on NetworkFailure {
       if (stale()) return;
@@ -135,8 +158,12 @@ class SessionController extends _$SessionController {
     }
   }
 
-  /// Desde la pantalla de acceso denegado.
-  void reset() => state = const SignedOut();
+  /// Desde la pantalla de acceso denegado: vuelve al inicio y el próximo acceso pedirá
+  /// usuario de nuevo.
+  void reset() {
+    _forceLogin = true;
+    state = const SignedOut();
+  }
 }
 
 /// Id del usuario con sesión, o `null`.

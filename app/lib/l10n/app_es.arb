@@ -9,9 +9,9 @@
   "loginInProgress": "Conectando con ICEX Alumni…",
   "loginError": "No se pudo iniciar sesión. Inténtalo de nuevo.",
   "accessDeniedTitle": "Acceso solo para socios",
-  "accessDeniedBody": "Tu cuenta no figura como socio verificado de ICEX Alumni. Si crees que es un error, revisa tu alta en la web de la asociación o escríbenos.",
-  "accessDeniedWeb": "Ir a la web de ICEX Alumni",
-  "accessDeniedRetry": "Volver a intentarlo",
+  "accessDeniedBody": "La cuenta con la que has entrado no figura como socia de ICEX Alumni. Hazte socio en la web de la asociación o entra con otra cuenta.",
+  "accessDeniedWeb": "Hacerme socio de ICEX Alumni",
+  "accessDeniedRetry": "Volver al inicio",
 
   "navHome": "Inicio",
   "navNetwork": "Red",
@@ -309,5 +309,13 @@
   "change": "Cambiar",
   "unsavedChangesTitle": "¿Descartar los cambios?",
   "unsavedChangesBody": "Tienes cambios sin guardar en tu perfil.",
-  "orientadorIdeas": "Ideas para empezar"
+  "orientadorIdeas": "Ideas para empezar",
+  "loginFeatureWorld": "Encuentra alumni en cualquier país",
+  "loginFeaturePromo": "Conecta con tu promoción y tu club",
+  "loginFeatureOpportunities": "Descubre ofertas, mentorías y eventos",
+  "loginNotMember": "¿Aún no eres socio?",
+  "loginJoin": "Hazte socio",
+  "accessDeniedOtherAccount": "Entrar con otra cuenta",
+  "linkOpenError": "No se pudo abrir {url}",
+  "@linkOpenError": { "placeholders": { "url": { "type": "String" } } }
 }

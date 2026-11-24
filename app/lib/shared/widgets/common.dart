@@ -32,10 +32,15 @@ class IcexLogo extends StatelessWidget {
 
   final double height;
 
+  /// Proporción del archivo del logotipo (568 × 88): con ancho fijo el hueco no cambia de
+  /// tamaño mientras la imagen se carga.
+  static const double _aspect = 568 / 88;
+
   @override
   Widget build(BuildContext context) => Image.asset(
     'assets/images/icex_alumni_logo.png',
     height: height,
+    width: height * _aspect,
     semanticLabel: 'ICEX Alumni',
     errorBuilder: (_, _, _) => Text(
       'icex_alumni',

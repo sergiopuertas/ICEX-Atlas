@@ -63,7 +63,7 @@ Leyenda: ☐ pendiente · Responsable sugerido entre corchetes.
 ## C. WordPress (proveedor de identidad)
 
 ☐ **C1. Preparar una copia de pruebas de la web** [proveedor web de la asociación]
-   Debe ser una copia (*staging*) de la web de ICEX Alumni con HTTPS y dominio público (p. ej. `staging.icex-alumni.es`).
+   Debe ser una copia (*staging*) de la web de ICEX Alumni con HTTPS y dominio público (p. ej. `staging.icex-alumni.com`).
    **No instales nada en la web real** hasta validar el flujo completo en staging.
 
 ☐ **C2. Instalar el plugin y el snippet de claims en la copia de pruebas**

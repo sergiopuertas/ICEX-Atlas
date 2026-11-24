@@ -136,3 +136,14 @@ Todo diálogo con `TextField` crea y libera su `TextEditingController` en su pro
 (`lib/shared/widgets/dialogs.dart`). Liberarlo tras `await showDialog(...)` provocaba
 «A TextEditingController was used after being disposed» durante la animación de cierre. Publicar y compartir
 en la red usan ahora una pantalla de composición completa (`/publicar`) en lugar de un diálogo.
+
+## D-024 · Cambio de cuenta con `prompt=login` y enlace a «Hazte socio»
+El proveedor de identidad (WordPress en producción, el IdP simulado en local) recuerda la sesión. Tras un
+«acceso solo para socios», volver a entrar reutilizaba en silencio la misma cuenta no socia. Ahora, tras un acceso
+denegado o un cierre de sesión, y en «Entrar con otra cuenta», la app pide `prompt=login` y `max_age=0` (OIDC
+estándar; Supabase Auth reenvía estos parámetros al proveedor). El IdP de pruebas (`oidc-provider`) los respeta;
+**hay que comprobar en la copia de pruebas de WordPress (C2) que el plugin OpenID Connect Server también lo hace**.
+Si no, el usuario tendría que cerrar sesión en la web para cambiar de cuenta.
+La web de la asociación es `icex-alumni.com` (antes la app apuntaba a `icex-alumni.es`, que no existe), y a quien
+no es socio se le envía a `MEMBERSHIP_URL` (`/hazte-alumni/`). Si el usuario vuelve a la app sin completar el acceso,
+el botón se reactiva a los pocos segundos.

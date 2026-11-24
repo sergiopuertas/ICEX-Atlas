@@ -16,7 +16,8 @@ class AppEnv {
     this.sentryDsn = '',
     this.mapTileUrl = defaultTileUrl,
     this.mapTileAttribution = defaultTileAttribution,
-    this.associationWebUrl = 'https://icex-alumni.es',
+    this.associationWebUrl = defaultAssociationWebUrl,
+    this.membershipUrl = defaultMembershipUrl,
     this.showDemoBanner = false,
   });
 
@@ -37,10 +38,18 @@ class AppEnv {
     ),
     associationWebUrl: String.fromEnvironment(
       'ASSOCIATION_WEB_URL',
-      defaultValue: 'https://icex-alumni.es',
+      defaultValue: defaultAssociationWebUrl,
     ),
+    membershipUrl: String.fromEnvironment('MEMBERSHIP_URL', defaultValue: defaultMembershipUrl),
     showDemoBanner: bool.fromEnvironment('SHOW_DEMO_BANNER', defaultValue: true),
   );
+
+  /// Web de la asociación (antes `icex-alumni.es`, un dominio que no existe: el botón
+  /// «Ir a la web de ICEX Alumni» no abría nada).
+  static const defaultAssociationWebUrl = 'https://icex-alumni.com';
+
+  /// Página para hacerse socio, a la que se envía a quien entra sin membresía.
+  static const defaultMembershipUrl = 'https://icex-alumni.com/hazte-alumni/';
 
   static const defaultTileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
   static const defaultTileAttribution = '© OpenStreetMap contributors';
@@ -54,6 +63,7 @@ class AppEnv {
   final String mapTileUrl;
   final String mapTileAttribution;
   final String associationWebUrl;
+  final String membershipUrl;
   final bool showDemoBanner;
 
   bool get isProduction => environment == 'production';

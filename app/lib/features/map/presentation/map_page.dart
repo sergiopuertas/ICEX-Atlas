@@ -13,8 +13,8 @@ import 'package:icex_atlas/l10n/app_localizations.dart';
 import 'package:icex_atlas/shared/widgets/avatar.dart';
 import 'package:icex_atlas/shared/widgets/badges.dart';
 import 'package:icex_atlas/shared/widgets/common.dart';
+import 'package:icex_atlas/shared/widgets/links.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 /// Mapa mundial con alumni y clubs agrupados por zoom (clusters con número calculados en SQL).
 /// Teselas OpenStreetMap por defecto, configurables con MAP_TILE_URL (ver docs/runbook.md).
@@ -115,7 +115,8 @@ class _MapPageState extends ConsumerState<MapPage> {
                   attributions: [
                     TextSourceAttribution(
                       env.mapTileAttribution,
-                      onTap: () => launchUrl(Uri.parse('https://www.openstreetmap.org/copyright')),
+                      onTap: () =>
+                          openExternalUrl(context, 'https://www.openstreetmap.org/copyright'),
                     ),
                   ],
                 ),

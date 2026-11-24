@@ -71,6 +71,7 @@ class FakeAuthGateway implements AuthGateway {
   final _events = StreamController<AuthEvent>.broadcast();
   int signInCalls = 0;
   int signOutCalls = 0;
+  bool? lastForceLogin;
 
   void emit(AuthEvent e) => _events.add(e);
 
@@ -78,7 +79,10 @@ class FakeAuthGateway implements AuthGateway {
   Stream<AuthEvent> get events => _events.stream;
 
   @override
-  Future<void> signIn() async => signInCalls++;
+  Future<void> signIn({bool forceLogin = false}) async {
+    signInCalls++;
+    lastForceLogin = forceLogin;
+  }
 
   @override
   Future<void> signOut() async {

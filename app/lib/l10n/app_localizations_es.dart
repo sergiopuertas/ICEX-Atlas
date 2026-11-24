@@ -36,13 +36,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get accessDeniedBody =>
-      'Tu cuenta no figura como socio verificado de ICEX Alumni. Si crees que es un error, revisa tu alta en la web de la asociación o escríbenos.';
+      'La cuenta con la que has entrado no figura como socia de ICEX Alumni. Hazte socio en la web de la asociación o entra con otra cuenta.';
 
   @override
-  String get accessDeniedWeb => 'Ir a la web de ICEX Alumni';
+  String get accessDeniedWeb => 'Hacerme socio de ICEX Alumni';
 
   @override
-  String get accessDeniedRetry => 'Volver a intentarlo';
+  String get accessDeniedRetry => 'Volver al inicio';
 
   @override
   String get navHome => 'Inicio';
@@ -897,4 +897,27 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get orientadorIdeas => 'Ideas para empezar';
+
+  @override
+  String get loginFeatureWorld => 'Encuentra alumni en cualquier país';
+
+  @override
+  String get loginFeaturePromo => 'Conecta con tu promoción y tu club';
+
+  @override
+  String get loginFeatureOpportunities => 'Descubre ofertas, mentorías y eventos';
+
+  @override
+  String get loginNotMember => '¿Aún no eres socio?';
+
+  @override
+  String get loginJoin => 'Hazte socio';
+
+  @override
+  String get accessDeniedOtherAccount => 'Entrar con otra cuenta';
+
+  @override
+  String linkOpenError(String url) {
+    return 'No se pudo abrir $url';
+  }
 }

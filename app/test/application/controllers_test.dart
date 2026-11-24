@@ -104,6 +104,35 @@ void main() {
       expect(c.read(sessionControllerProvider), isA<SignedOut>());
     });
 
+    test('tras «solo socios», el siguiente acceso pide usuario de nuevo (prompt=login)', () async {
+      final auth = FakeAuthGateway();
+      final c = container(FakeApiClient(), auth: auth)..read(sessionControllerProvider);
+      await c.read(sessionControllerProvider.notifier).signIn();
+      expect(auth.lastForceLogin, isFalse, reason: 'primer acceso: SSO normal');
+      auth.emit(const AuthFailed('icex_member_not_verified'));
+      await settle();
+      expect(c.read(sessionControllerProvider), isA<AccessDenied>());
+      c.read(sessionControllerProvider.notifier).reset();
+      await c.read(sessionControllerProvider.notifier).signIn();
+      expect(auth.lastForceLogin, isTrue);
+    });
+
+    test('«Entrar con otra cuenta» fuerza el formulario del proveedor', () async {
+      final auth = FakeAuthGateway();
+      final c = container(FakeApiClient(), auth: auth)..read(sessionControllerProvider);
+      await c.read(sessionControllerProvider.notifier).signIn(switchAccount: true);
+      expect(auth.lastForceLogin, isTrue);
+    });
+
+    test('volver a la app sin completar el acceso reactiva el botón', () async {
+      final auth = FakeAuthGateway();
+      final c = container(FakeApiClient(), auth: auth)..read(sessionControllerProvider);
+      await c.read(sessionControllerProvider.notifier).signIn();
+      expect(c.read(sessionControllerProvider), isA<SigningIn>());
+      c.read(sessionControllerProvider.notifier).signInAbandoned();
+      expect(c.read(sessionControllerProvider), isA<SignedOut>());
+    });
+
     test('refreshMe sin red conserva la sesión (antes echaba al login)', () async {
       final auth = FakeAuthGateway(currentUserId: 'u-1');
       final api = FakeApiClient({'me': (_) => meJson()});
