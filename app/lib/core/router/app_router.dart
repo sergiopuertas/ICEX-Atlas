@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:icex_atlas/core/auth/session_controller.dart';
 import 'package:icex_atlas/features/auth/presentation/login_page.dart';
+import 'package:icex_atlas/features/auth/presentation/password_auth_pages.dart';
 import 'package:icex_atlas/features/directory/presentation/network_page.dart';
 import 'package:icex_atlas/features/feed/presentation/compose_page.dart';
 import 'package:icex_atlas/features/feed/presentation/home_page.dart';
@@ -25,6 +26,14 @@ import 'package:icex_atlas/shared/widgets/common.dart';
 abstract final class Routes {
   static const login = '/login';
   static const accessDenied = '/acceso-denegado';
+  static const signIn = '/entrar';
+  static const signUp = '/registro';
+  static const forgotPassword = '/recuperar';
+  static const checkEmail = '/revisa-tu-correo';
+  static const newPassword = '/nueva-contrasena';
+
+  /// Pantallas a las que se puede llegar sin sesión.
+  static const Set<String> signedOutPaths = {login, signIn, signUp, forgotPassword};
   static const splash = '/cargando';
   static const home = '/';
   static const network = '/red';
@@ -49,11 +58,17 @@ abstract final class Routes {
 /// Decide la ruta según el estado de sesión. Pura → testeable.
 String? redirectFor(SessionState session, Uri location) {
   final path = location.path;
-  final public = path == Routes.login || path == Routes.accessDenied;
+  final public =
+      Routes.signedOutPaths.contains(path) ||
+      path == Routes.accessDenied ||
+      path == Routes.checkEmail ||
+      path == Routes.newPassword;
   return switch (session) {
     SessionUnknown() => path == Routes.splash ? null : Routes.splash,
     AccessDenied() => path == Routes.accessDenied ? null : Routes.accessDenied,
-    SignedOut() || SigningIn() => path == Routes.login ? null : Routes.login,
+    AwaitingConfirmation() => path == Routes.checkEmail ? null : Routes.checkEmail,
+    PasswordRecovery() => path == Routes.newPassword ? null : Routes.newPassword,
+    SignedOut() || SigningIn() => Routes.signedOutPaths.contains(path) ? null : Routes.login,
     SignedIn() when public || path == Routes.splash => Routes.home,
     SignedIn() => _legacyChatRedirect(location),
   };
@@ -86,6 +101,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(path: Routes.login, builder: (_, _) => const LoginPage()),
       GoRoute(path: Routes.accessDenied, builder: (_, _) => const AccessDeniedPage()),
+      GoRoute(path: Routes.signIn, builder: (_, _) => const SignInPage()),
+      GoRoute(path: Routes.signUp, builder: (_, _) => const SignUpPage()),
+      GoRoute(
+        path: Routes.forgotPassword,
+        builder: (_, s) => ForgotPasswordPage(initialEmail: s.uri.queryParameters['email'] ?? ''),
+      ),
+      GoRoute(path: Routes.checkEmail, builder: (_, _) => const CheckEmailPage()),
+      GoRoute(path: Routes.newPassword, builder: (_, _) => const NewPasswordPage()),
       // Una rama (y un Navigator) por pestaña: al cambiar de pestaña cada una conserva su
       // estado, su scroll y sus datos, como en Instagram o LinkedIn. Con el ShellRoute
       // anterior cada cambio destruía la página: el feed se recargaba, se perdía la posición

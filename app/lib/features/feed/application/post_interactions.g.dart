@@ -12,8 +12,7 @@ part of 'post_interactions.dart';
 @ProviderFor(PostOverrides)
 final postOverridesProvider = PostOverridesProvider._();
 
-final class PostOverridesProvider
-    extends $NotifierProvider<PostOverrides, PostOverridesState> {
+final class PostOverridesProvider extends $NotifierProvider<PostOverrides, PostOverridesState> {
   PostOverridesProvider._()
     : super(
         from: null,

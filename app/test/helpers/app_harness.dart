@@ -177,7 +177,7 @@ FakeApiClient fullDemoApi({int posts = 6}) => FakeApiClient({
 });
 
 /// La app completa, ya con sesión iniciada como Ana (u-1).
-Widget appHarness(FakeApiClient api, {FakeAuthGateway? auth, FakeRealtime? realtime}) {
+Widget appHarness(FakeApiClient api, {FakeAuthGateway? auth, FakeRealtime? realtime, AppEnv? env}) {
   final db = AppDatabase(NativeDatabase.memory());
   addTearDown(db.close);
   return ProviderScope(
@@ -187,17 +187,7 @@ Widget appHarness(FakeApiClient api, {FakeAuthGateway? auth, FakeRealtime? realt
       realtimeGatewayProvider.overrideWithValue(realtime ?? FakeRealtime()),
       appDatabaseProvider.overrideWithValue(db),
       idGeneratorProvider.overrideWithValue(FakeIds()),
-      appEnvProvider.overrideWithValue(
-        const AppEnv(
-          supabaseUrl: 'http://x',
-          supabaseAnonKey: 'k',
-          oidcProvider: 'custom:icex-alumni',
-          authRedirect: 'x://y',
-          environment: 'test',
-          // Sin teselas de red en los tests.
-          mapTileUrl: '',
-        ),
-      ),
+      appEnvProvider.overrideWithValue(env ?? testEnv),
     ],
     child: Consumer(
       builder: (context, ref, _) => MaterialApp.router(
@@ -216,6 +206,27 @@ Widget appHarness(FakeApiClient api, {FakeAuthGateway? auth, FakeRealtime? realt
     ),
   );
 }
+
+/// Entorno de los tests (sin teselas de red). [betaEnv]: beta abierta con email y contraseña.
+const testEnv = AppEnv(
+  supabaseUrl: 'http://x',
+  supabaseAnonKey: 'k',
+  oidcProvider: 'custom:icex-alumni',
+  authRedirect: 'x://y',
+  environment: 'test',
+  mapTileUrl: '',
+);
+const betaEnv = AppEnv(
+  supabaseUrl: 'http://x',
+  supabaseAnonKey: 'k',
+  oidcProvider: 'custom:icex-alumni',
+  authRedirect: 'x://y',
+  environment: 'staging',
+  mapTileUrl: '',
+  authMode: 'password',
+  feedbackUrl: 'https://forms.example/beta',
+  privacyUrl: 'https://example.org/privacidad',
+);
 
 /// Bombea la app a [size] y [textScale] y espera a que carguen sesión y datos.
 Future<void> pumpApp(

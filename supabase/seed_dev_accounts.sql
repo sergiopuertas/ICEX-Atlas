@@ -67,3 +67,9 @@ where u.email in (
 and not exists (
   select 1 from auth.identities i where i.user_id = u.id and i.provider = 'email'
 );
+
+-- Beta abierta también en local: se puede probar el registro con email y contraseña
+-- (el acceso de socios por el IdP de pruebas sigue funcionando igual).
+insert into config.app_config (key, value, descripcion)
+values ('access.mode', '"open_beta"', 'alumni | open_beta (registro con email y contraseña)')
+on conflict (key) do update set value = excluded.value;

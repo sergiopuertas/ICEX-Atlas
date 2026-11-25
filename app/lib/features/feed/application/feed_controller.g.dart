@@ -18,8 +18,7 @@ final feedControllerProvider = FeedControllerProvider._();
 /// Feed de Inicio. Se mantiene vivo mientras dura la sesión (no se recarga ni pierde la
 /// paginación al cambiar de pestaña, como en LinkedIn o Instagram) y se descarta al cambiar
 /// de usuario.
-final class FeedControllerProvider
-    extends $AsyncNotifierProvider<FeedController, FeedState> {
+final class FeedControllerProvider extends $AsyncNotifierProvider<FeedController, FeedState> {
   /// Feed de Inicio. Se mantiene vivo mientras dura la sesión (no se recarga ni pierde la
   /// paginación al cambiar de pestaña, como en LinkedIn o Instagram) y se descarta al cambiar
   /// de usuario.
@@ -71,11 +70,7 @@ final communityStatsProvider = CommunityStatsProvider._();
 
 final class CommunityStatsProvider
     extends
-        $FunctionalProvider<
-          AsyncValue<CommunityStats>,
-          CommunityStats,
-          FutureOr<CommunityStats>
-        >
+        $FunctionalProvider<AsyncValue<CommunityStats>, CommunityStats, FutureOr<CommunityStats>>
     with $FutureModifier<CommunityStats>, $FutureProvider<CommunityStats> {
   CommunityStatsProvider._()
     : super(
@@ -93,9 +88,8 @@ final class CommunityStatsProvider
 
   @$internal
   @override
-  $FutureProviderElement<CommunityStats> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  $FutureProviderElement<CommunityStats> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<CommunityStats> create(Ref ref) {
@@ -108,8 +102,7 @@ String _$communityStatsHash() => r'0a37e2243639994e3060e0c5d65009c12d1d7a28';
 @ProviderFor(Suggestions)
 final suggestionsProvider = SuggestionsProvider._();
 
-final class SuggestionsProvider
-    extends $AsyncNotifierProvider<Suggestions, List<ProfileCard>> {
+final class SuggestionsProvider extends $AsyncNotifierProvider<Suggestions, List<ProfileCard>> {
   SuggestionsProvider._()
     : super(
         from: null,
@@ -136,8 +129,7 @@ abstract class _$Suggestions extends $AsyncNotifier<List<ProfileCard>> {
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref =
-        this.ref as $Ref<AsyncValue<List<ProfileCard>>, List<ProfileCard>>;
+    final ref = this.ref as $Ref<AsyncValue<List<ProfileCard>>, List<ProfileCard>>;
     final element =
         ref.element
             as $ClassProviderElement<
@@ -153,8 +145,7 @@ abstract class _$Suggestions extends $AsyncNotifier<List<ProfileCard>> {
 @ProviderFor(NewsController)
 final newsControllerProvider = NewsControllerProvider._();
 
-final class NewsControllerProvider
-    extends $AsyncNotifierProvider<NewsController, FeedState> {
+final class NewsControllerProvider extends $AsyncNotifierProvider<NewsController, FeedState> {
   NewsControllerProvider._()
     : super(
         from: null,

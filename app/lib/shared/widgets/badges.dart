@@ -41,7 +41,8 @@ class PhaseBadge extends StatelessWidget {
   );
 }
 
-/// Etiqueta amarilla "49ª promoción".
+/// Etiqueta amarilla "49ª promoción". Promoción 0 = sin promoción (cuentas de la beta):
+/// no se muestra nada.
 class PromoBadge extends StatelessWidget {
   const PromoBadge(this.promocion, {this.compact = false, super.key});
 
@@ -49,19 +50,24 @@ class PromoBadge extends StatelessWidget {
   final bool compact;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: EdgeInsets.symmetric(horizontal: compact ? 6 : 8, vertical: 1),
-    decoration: BoxDecoration(color: IcexColors.promoTag, borderRadius: BorderRadius.circular(6)),
-    child: Text(
-      compact ? '$promocionª promo' : '$promocionª promoción',
-      semanticsLabel: '$promocionª promoción',
-      style: TextStyle(
-        color: IcexColors.onAccent,
-        fontSize: compact ? 10 : 11,
-        fontWeight: FontWeight.w600,
-      ),
-    ),
-  );
+  Widget build(BuildContext context) => promocion <= 0
+      ? const SizedBox.shrink()
+      : Container(
+          padding: EdgeInsets.symmetric(horizontal: compact ? 6 : 8, vertical: 1),
+          decoration: BoxDecoration(
+            color: IcexColors.promoTag,
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Text(
+            compact ? '$promocionª promo' : '$promocionª promoción',
+            semanticsLabel: '$promocionª promoción',
+            style: TextStyle(
+              color: IcexColors.onAccent,
+              fontSize: compact ? 10 : 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        );
 }
 
 /// Badge del tipo de publicación (Evento, Oportunidad laboral, Logro, Comunicado).
@@ -149,7 +155,7 @@ class PhasePromoRow extends StatelessWidget {
     crossAxisAlignment: WrapCrossAlignment.center,
     children: [
       PhaseBadge(fase, compact: compact),
-      PromoBadge(promocion, compact: compact),
+      if (promocion > 0) PromoBadge(promocion, compact: compact),
     ],
   );
 }

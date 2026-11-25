@@ -12,8 +12,7 @@ part of 'chat_controller.dart';
 @ProviderFor(ChatController)
 final chatControllerProvider = ChatControllerFamily._();
 
-final class ChatControllerProvider
-    extends $AsyncNotifierProvider<ChatController, ChatState> {
+final class ChatControllerProvider extends $AsyncNotifierProvider<ChatController, ChatState> {
   ChatControllerProvider._({
     required ChatControllerFamily super.from,
     required ({String? conversationId, String? toUserId}) super.argument,
@@ -100,10 +99,7 @@ abstract class _$ChatController extends $AsyncNotifier<ChatState> {
             >;
     return element.handleCreate(
       ref,
-      () => build(
-        conversationId: _$args.conversationId,
-        toUserId: _$args.toUserId,
-      ),
+      () => build(conversationId: _$args.conversationId, toUserId: _$args.toUserId),
     );
   }
 }
@@ -112,8 +108,7 @@ abstract class _$ChatController extends $AsyncNotifier<ChatState> {
 final conversationsControllerProvider = ConversationsControllerProvider._();
 
 final class ConversationsControllerProvider
-    extends
-        $AsyncNotifierProvider<ConversationsController, ConversationsState> {
+    extends $AsyncNotifierProvider<ConversationsController, ConversationsState> {
   ConversationsControllerProvider._()
     : super(
         from: null,
@@ -133,17 +128,14 @@ final class ConversationsControllerProvider
   ConversationsController create() => ConversationsController();
 }
 
-String _$conversationsControllerHash() =>
-    r'daa1c0586ef7cbecf903a92246b2523e77c60818';
+String _$conversationsControllerHash() => r'daa1c0586ef7cbecf903a92246b2523e77c60818';
 
-abstract class _$ConversationsController
-    extends $AsyncNotifier<ConversationsState> {
+abstract class _$ConversationsController extends $AsyncNotifier<ConversationsState> {
   FutureOr<ConversationsState> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref =
-        this.ref as $Ref<AsyncValue<ConversationsState>, ConversationsState>;
+    final ref = this.ref as $Ref<AsyncValue<ConversationsState>, ConversationsState>;
     final element =
         ref.element
             as $ClassProviderElement<

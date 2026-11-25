@@ -12,8 +12,7 @@ part of 'session_controller.dart';
 @ProviderFor(SessionController)
 final sessionControllerProvider = SessionControllerProvider._();
 
-final class SessionControllerProvider
-    extends $NotifierProvider<SessionController, SessionState> {
+final class SessionControllerProvider extends $NotifierProvider<SessionController, SessionState> {
   SessionControllerProvider._()
     : super(
         from: null,
@@ -41,7 +40,7 @@ final class SessionControllerProvider
   }
 }
 
-String _$sessionControllerHash() => r'ee4c7fd910dca5952274a7edf29e2796d878b33b';
+String _$sessionControllerHash() => r'c97b7e0d6ab4e1074064f0d09cbdac10a398ce8e';
 
 abstract class _$SessionController extends $Notifier<SessionState> {
   SessionState build();
@@ -80,8 +79,7 @@ final sessionUserIdProvider = SessionUserIdProvider._();
 /// (que al pararse da de baja el token del dispositivo), la presencia y las suscripciones
 /// de Realtime.
 
-final class SessionUserIdProvider
-    extends $FunctionalProvider<String?, String?, String?>
+final class SessionUserIdProvider extends $FunctionalProvider<String?, String?, String?>
     with $Provider<String?> {
   /// Id del usuario con sesión, o `null`.
   ///
@@ -106,8 +104,7 @@ final class SessionUserIdProvider
 
   @$internal
   @override
-  $ProviderElement<String?> $createElement($ProviderPointer pointer) =>
-      $ProviderElement(pointer);
+  $ProviderElement<String?> $createElement($ProviderPointer pointer) => $ProviderElement(pointer);
 
   @override
   String? create(Ref ref) {
@@ -116,10 +113,7 @@ final class SessionUserIdProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(String? value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<String?>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<String?>(value));
   }
 }
 

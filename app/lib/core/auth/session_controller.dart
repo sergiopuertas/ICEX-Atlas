@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:icex_atlas/core/auth/auth_errors.dart';
 import 'package:icex_atlas/core/auth/auth_gateway.dart';
 import 'package:icex_atlas/core/errors/failure.dart';
 import 'package:icex_atlas/core/providers.dart';
@@ -33,6 +34,24 @@ final class SignedIn extends SessionState {
   final Me me;
 }
 
+/// Alta hecha: falta abrir el enlace del correo de confirmación.
+final class AwaitingConfirmation extends SessionState {
+  const AwaitingConfirmation(this.email, {this.resent = false, this.error});
+
+  final String email;
+  final bool resent;
+  final String? error;
+}
+
+/// Se abrió el enlace de recuperación: hay que elegir una contraseña nueva.
+final class PasswordRecovery extends SessionState {
+  const PasswordRecovery(this.userId, {this.busy = false, this.error});
+
+  final String userId;
+  final bool busy;
+  final String? error;
+}
+
 /// Quien no es socio verificado no ve ninguna pantalla con contenido.
 final class AccessDenied extends SessionState {
   const AccessDenied();
@@ -46,6 +65,10 @@ class SessionController extends _$SessionController {
   /// El próximo acceso debe pedir usuario de nuevo: tras «acceso solo para socios» o tras
   /// cerrar sesión (para poder entrar con otra cuenta).
   bool _forceLogin = false;
+
+  /// Solo el acceso por navegador (OIDC) puede quedar «abandonado» al volver a la app; un
+  /// formulario de email y contraseña en curso no.
+  bool _oidcStarted = false;
 
   @override
   SessionState build() {
@@ -62,6 +85,7 @@ class SessionController extends _$SessionController {
 
   /// [switchAccount]: entrar con otra cuenta (fuerza el formulario del proveedor).
   Future<void> signIn({bool switchAccount = false}) async {
+    _oidcStarted = true;
     state = const SigningIn();
     try {
       await ref.read(authGatewayProvider).signIn(forceLogin: switchAccount || _forceLogin);
@@ -70,20 +94,84 @@ class SessionController extends _$SessionController {
     }
   }
 
-  /// Acceso rápido de desarrollo (sin navegador). Los errores se tratan igual que los del
-  /// flujo OIDC: una cuenta sin membresía termina en «Acceso solo para socios».
+  /// Email y contraseña (beta abierta y acceso de desarrollo). Una cuenta sin membresía
+  /// termina en «Acceso solo para socios», igual que en el flujo OIDC.
   Future<void> signInWithPassword({required String email, required String password}) async {
+    _oidcStarted = false;
     state = const SigningIn();
     try {
-      await ref.read(authGatewayProvider).signInWithPassword(email: email, password: password);
+      await ref
+          .read(authGatewayProvider)
+          .signInWithPassword(email: email.trim(), password: password);
     } on Object catch (e) {
       if (!ref.mounted) return;
-      final msg = e.toString();
-      if (msg.contains('icex_member')) {
+      final code = authErrorCode(e);
+      if (code == AuthErrorCode.notMember) {
         _denied();
+      } else if (code == AuthErrorCode.emailNotConfirmed) {
+        state = AwaitingConfirmation(email.trim());
       } else {
-        state = SignedOut(error: msg);
+        state = SignedOut(error: code);
       }
+    }
+  }
+
+  /// Alta en la beta abierta. Si hace falta confirmar el correo, se queda esperando; si no,
+  /// llega la sesión por el flujo normal (evento de Auth).
+  Future<void> signUp({
+    required String email,
+    required String password,
+    required String name,
+    int? promocion,
+  }) async {
+    _oidcStarted = false;
+    state = const SigningIn();
+    try {
+      final needsConfirmation = await ref
+          .read(authGatewayProvider)
+          .signUp(email: email.trim(), password: password, name: name.trim(), promocion: promocion);
+      if (!ref.mounted) return;
+      if (needsConfirmation) state = AwaitingConfirmation(email.trim());
+    } on Object catch (e) {
+      if (ref.mounted) state = SignedOut(error: authErrorCode(e));
+    }
+  }
+
+  Future<void> resendConfirmation() async {
+    final s = state;
+    if (s is! AwaitingConfirmation) return;
+    try {
+      await ref.read(authGatewayProvider).resendConfirmation(s.email);
+      if (ref.mounted) state = AwaitingConfirmation(s.email, resent: true);
+    } on Object catch (e) {
+      if (ref.mounted) state = AwaitingConfirmation(s.email, error: authErrorCode(e));
+    }
+  }
+
+  /// Envía el correo de «nueva contraseña». Devuelve el código de error, o `null` si fue bien.
+  /// Por privacidad la app no distingue si el correo existe o no.
+  Future<String?> sendPasswordReset(String email) async {
+    try {
+      await ref.read(authGatewayProvider).sendPasswordReset(email.trim());
+      return null;
+    } on Object catch (e) {
+      return authErrorCode(e);
+    }
+  }
+
+  /// Guarda la contraseña nueva tras el enlace de recuperación y entra en la app.
+  Future<void> updatePassword(String newPassword) async {
+    final s = state;
+    if (s is! PasswordRecovery) return;
+    state = PasswordRecovery(s.userId, busy: true);
+    try {
+      await ref.read(authGatewayProvider).updatePassword(newPassword);
+      if (!ref.mounted) return;
+      _loadedFor = null;
+      state = const SessionUnknown();
+      await _loadMe(s.userId);
+    } on Object catch (e) {
+      if (ref.mounted) state = PasswordRecovery(s.userId, error: authErrorCode(e));
     }
   }
 
@@ -91,8 +179,11 @@ class SessionController extends _$SessionController {
   /// navegador o volvió atrás sin completar el acceso. Antes la pantalla se quedaba en
   /// «Conectando…» con el botón desactivado para siempre.
   void signInAbandoned() {
-    if (state is SigningIn) state = const SignedOut();
+    if (state is SigningIn && _oidcStarted) state = const SignedOut();
   }
+
+  /// Volver a la portada desde «Revisa tu correo».
+  void backToStart() => state = const SignedOut();
 
   void _denied() {
     _forceLogin = true;
@@ -136,7 +227,12 @@ class SessionController extends _$SessionController {
 
   void _onEvent(AuthEvent e) {
     switch (e) {
+      case AuthPasswordRecovery(:final userId):
+        _loadedFor = null;
+        state = PasswordRecovery(userId);
       case AuthSignedIn(:final userId):
+        // Durante la recuperación de contraseña no se entra hasta elegir una nueva.
+        if (state is PasswordRecovery) return;
         if (_loadedFor != userId) unawaited(_loadMe(userId));
       case AuthSignedOut():
         _loadedFor = null;
@@ -153,7 +249,7 @@ class SessionController extends _$SessionController {
   Future<void> _loadMe(String userId) async {
     _loadedFor = userId;
     // Si mientras tanto se cerró sesión o entró otro usuario, la respuesta es obsoleta.
-    bool stale() => !ref.mounted || _loadedFor != userId;
+    bool stale() => !ref.mounted || _loadedFor != userId || state is PasswordRecovery;
     try {
       final me = await ref.read(profilesRepositoryProvider).me();
       if (stale()) return;

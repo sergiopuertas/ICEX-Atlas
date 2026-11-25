@@ -12,8 +12,7 @@ part of 'map_controller.dart';
 @ProviderFor(MapViewController)
 final mapViewControllerProvider = MapViewControllerProvider._();
 
-final class MapViewControllerProvider
-    extends $NotifierProvider<MapViewController, MapState> {
+final class MapViewControllerProvider extends $NotifierProvider<MapViewController, MapState> {
   MapViewControllerProvider._()
     : super(
         from: null,
@@ -34,10 +33,7 @@ final class MapViewControllerProvider
 
   /// {@macro riverpod.override_with_value}
   Override overrideWithValue(MapState value) {
-    return $ProviderOverride(
-      origin: this,
-      providerOverride: $SyncValueProvider<MapState>(value),
-    );
+    return $ProviderOverride(origin: this, providerOverride: $SyncValueProvider<MapState>(value));
   }
 }
 
@@ -51,12 +47,7 @@ abstract class _$MapViewController extends $Notifier<MapState> {
     final ref = this.ref as $Ref<MapState, MapState>;
     final element =
         ref.element
-            as $ClassProviderElement<
-              AnyNotifier<MapState, MapState>,
-              MapState,
-              Object?,
-              Object?
-            >;
+            as $ClassProviderElement<AnyNotifier<MapState, MapState>, MapState, Object?, Object?>;
     return element.handleCreate(ref, build);
   }
 }
@@ -71,9 +62,7 @@ final class AlumniNearProvider
           List<ProfileCard>,
           FutureOr<List<ProfileCard>>
         >
-    with
-        $FutureModifier<List<ProfileCard>>,
-        $FutureProvider<List<ProfileCard>> {
+    with $FutureModifier<List<ProfileCard>>, $FutureProvider<List<ProfileCard>> {
   AlumniNearProvider._({
     required AlumniNearFamily super.from,
     required (double, double) super.argument,
@@ -97,9 +86,8 @@ final class AlumniNearProvider
 
   @$internal
   @override
-  $FutureProviderElement<List<ProfileCard>> $createElement(
-    $ProviderPointer pointer,
-  ) => $FutureProviderElement(pointer);
+  $FutureProviderElement<List<ProfileCard>> $createElement($ProviderPointer pointer) =>
+      $FutureProviderElement(pointer);
 
   @override
   FutureOr<List<ProfileCard>> create(Ref ref) {
@@ -121,11 +109,7 @@ final class AlumniNearProvider
 String _$alumniNearHash() => r'ad854ed3a522591646d37739ff5d7f5971b13d1e';
 
 final class AlumniNearFamily extends $Family
-    with
-        $FunctionalFamilyOverride<
-          FutureOr<List<ProfileCard>>,
-          (double, double)
-        > {
+    with $FunctionalFamilyOverride<FutureOr<List<ProfileCard>>, (double, double)> {
   AlumniNearFamily._()
     : super(
         retry: null,
@@ -145,8 +129,7 @@ final class AlumniNearFamily extends $Family
 @ProviderFor(ClubController)
 final clubControllerProvider = ClubControllerFamily._();
 
-final class ClubControllerProvider
-    extends $AsyncNotifierProvider<ClubController, Club> {
+final class ClubControllerProvider extends $AsyncNotifierProvider<ClubController, Club> {
   ClubControllerProvider._({
     required ClubControllerFamily super.from,
     required String super.argument,
@@ -186,14 +169,7 @@ final class ClubControllerProvider
 String _$clubControllerHash() => r'8c666fea7b1baac02ce963ba7eb4a5341b695e90';
 
 final class ClubControllerFamily extends $Family
-    with
-        $ClassFamilyOverride<
-          ClubController,
-          AsyncValue<Club>,
-          Club,
-          FutureOr<Club>,
-          String
-        > {
+    with $ClassFamilyOverride<ClubController, AsyncValue<Club>, Club, FutureOr<Club>, String> {
   ClubControllerFamily._()
     : super(
         retry: null,
@@ -203,8 +179,7 @@ final class ClubControllerFamily extends $Family
         isAutoDispose: true,
       );
 
-  ClubControllerProvider call(String id) =>
-      ClubControllerProvider._(argument: id, from: this);
+  ClubControllerProvider call(String id) => ClubControllerProvider._(argument: id, from: this);
 
   @override
   String toString() => r'clubControllerProvider';

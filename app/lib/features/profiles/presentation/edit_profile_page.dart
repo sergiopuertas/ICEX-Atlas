@@ -28,11 +28,17 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   bool _saving = false;
   ProfileDetail? _me;
 
+  /// Cuentas de la beta: pueden declarar su promoción (0 = sin promoción).
+  bool _beta = false;
+  int _promo = 0;
+  int _initialPromo = 0;
+
   @override
   void initState() {
     super.initState();
     final s = ref.read(sessionControllerProvider);
     _me = s is SignedIn ? s.me.profile : null;
+    _beta = s is SignedIn && s.me.isBetaAccount;
     final p = _me?.card;
     _c = {
       'nombre': TextEditingController(text: p?.nombre),
@@ -45,6 +51,8 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     };
     _fase = p?.fase ?? Fase.activo;
     _initialFase = _fase;
+    _promo = p?.promocion ?? 0;
+    _initialPromo = _promo;
     _initial = {for (final e in _c.entries) e.key: e.value.text};
     // Reconstruir solo cuando cambia «hay cambios sin guardar» (para PopScope).
     for (final c in _c.values) {
@@ -63,7 +71,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
   late final Fase _initialFase;
 
   bool get _dirty =>
-      _fase != _initialFase || _c.entries.any((e) => e.value.text != _initial[e.key]);
+      _fase != _initialFase ||
+      _promo != _initialPromo ||
+      _c.entries.any((e) => e.value.text != _initial[e.key]);
 
   Future<void> _confirmLeave() async {
     final l = AppLocalizations.of(context);
@@ -108,6 +118,9 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
               bio: _c['bio']!.text,
             ),
           );
+      if (_beta && _promo != _initialPromo) {
+        await ref.read(profilesRepositoryProvider).setMyPromocion(_promo);
+      }
       await ref.read(sessionControllerProvider.notifier).refreshMe();
       if (mounted) {
         showSnack(context, l.saved);
@@ -247,6 +260,22 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 onChanged: (f) => setState(() => _fase = f ?? _fase),
               ),
             ),
+            if (_beta)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: DropdownButtonFormField<int>(
+                  key: const Key('edit-promo'),
+                  initialValue: _promo,
+                  isExpanded: true,
+                  decoration: InputDecoration(labelText: l.editPromo, helperText: l.editPromoHelp),
+                  items: [
+                    DropdownMenuItem(value: 0, child: Text(l.authPromoNone)),
+                    for (var p = currentPromocion(); p >= 1; p--)
+                      DropdownMenuItem(value: p, child: Text('$pª promoción')),
+                  ],
+                  onChanged: (v) => setState(() => _promo = v ?? 0),
+                ),
+              ),
             field('pais', l.fieldCountry),
             field('ciudad', l.fieldCity),
             field('sector', l.fieldSector),

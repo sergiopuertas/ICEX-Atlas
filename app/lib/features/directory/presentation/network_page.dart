@@ -63,7 +63,7 @@ class _NetworkPageState extends ConsumerState<NetworkPage> {
 
     final tabs = {
       DirectoryTab.todos: l.tabAll,
-      DirectoryTab.miPromocion: l.tabMyPromo(myPromo),
+      if (myPromo > 0) DirectoryTab.miPromocion: l.tabMyPromo(myPromo),
       DirectoryTab.exterior: l.tabAbroad,
       DirectoryTab.activo: l.tabActive,
     };

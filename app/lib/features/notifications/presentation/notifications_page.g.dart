@@ -13,8 +13,7 @@ part of 'notifications_page.dart';
 final notificationsControllerProvider = NotificationsControllerProvider._();
 
 final class NotificationsControllerProvider
-    extends
-        $AsyncNotifierProvider<NotificationsController, NotificationsResult> {
+    extends $AsyncNotifierProvider<NotificationsController, NotificationsResult> {
   NotificationsControllerProvider._()
     : super(
         from: null,
@@ -34,17 +33,14 @@ final class NotificationsControllerProvider
   NotificationsController create() => NotificationsController();
 }
 
-String _$notificationsControllerHash() =>
-    r'dedb7d06f09c54b05d36dfd6915342b53518b9fb';
+String _$notificationsControllerHash() => r'dedb7d06f09c54b05d36dfd6915342b53518b9fb';
 
-abstract class _$NotificationsController
-    extends $AsyncNotifier<NotificationsResult> {
+abstract class _$NotificationsController extends $AsyncNotifier<NotificationsResult> {
   FutureOr<NotificationsResult> build();
   @$mustCallSuper
   @override
   WhenComplete runBuild() {
-    final ref =
-        this.ref as $Ref<AsyncValue<NotificationsResult>, NotificationsResult>;
+    final ref = this.ref as $Ref<AsyncValue<NotificationsResult>, NotificationsResult>;
     final element =
         ref.element
             as $ClassProviderElement<

@@ -18,6 +18,14 @@ final class AuthSignedOut extends AuthEvent {
   const AuthSignedOut();
 }
 
+/// Se abrió el enlace de «He olvidado mi contraseña»: hay sesión, pero hay que pedir una
+/// contraseña nueva antes de entrar.
+final class AuthPasswordRecovery extends AuthEvent {
+  const AuthPasswordRecovery(this.userId);
+
+  final String userId;
+}
+
 /// Error devuelto por el flujo OAuth (p. ej. el hook rechaza a un no socio).
 final class AuthFailed extends AuthEvent {
   const AuthFailed(this.message);
@@ -43,9 +51,26 @@ abstract interface class AuthGateway {
   /// cuenta no socia y era imposible probar con otra.
   Future<void> signIn({bool forceLogin = false});
 
-  /// Acceso de desarrollo con email y contraseña (cuentas de `seed_dev_accounts.sql`).
-  /// Solo se llama si `AppEnv.devLogin`; en producción el proveedor Email está desactivado.
+  /// Email y contraseña: beta abierta (`AUTH_MODE=password`) y acceso de desarrollo.
   Future<void> signInWithPassword({required String email, required String password});
+
+  /// Crea una cuenta con email y contraseña (beta abierta). Devuelve `true` si hace falta
+  /// confirmar el correo antes de entrar (no hay sesión todavía).
+  Future<bool> signUp({
+    required String email,
+    required String password,
+    required String name,
+    int? promocion,
+  });
+
+  /// Reenvía el correo de confirmación del alta.
+  Future<void> resendConfirmation(String email);
+
+  /// Envía el correo para elegir una contraseña nueva.
+  Future<void> sendPasswordReset(String email);
+
+  /// Cambia la contraseña de la sesión actual (tras el enlace de recuperación).
+  Future<void> updatePassword(String newPassword);
 
   Future<void> signOut();
 }
@@ -67,6 +92,8 @@ class SupabaseAuthGateway implements AuthGateway {
         final e = state.event;
         if (e == AuthChangeEvent.signedOut) {
           sink.add(const AuthSignedOut());
+        } else if (e == AuthChangeEvent.passwordRecovery && state.session != null) {
+          sink.add(AuthPasswordRecovery(state.session!.user.id));
         } else if (e == AuthChangeEvent.initialSession ||
             e == AuthChangeEvent.signedIn ||
             e == AuthChangeEvent.tokenRefreshed ||
@@ -99,6 +126,35 @@ class SupabaseAuthGateway implements AuthGateway {
   @override
   Future<void> signInWithPassword({required String email, required String password}) async {
     await _auth.signInWithPassword(email: email, password: password);
+  }
+
+  @override
+  Future<bool> signUp({
+    required String email,
+    required String password,
+    required String name,
+    int? promocion,
+  }) async {
+    final r = await _auth.signUp(
+      email: email,
+      password: password,
+      emailRedirectTo: redirectTo,
+      data: {'name': name, 'promocion': ?promocion?.toString()},
+    );
+    return r.session == null;
+  }
+
+  @override
+  Future<void> resendConfirmation(String email) =>
+      _auth.resend(type: OtpType.signup, email: email, emailRedirectTo: redirectTo);
+
+  @override
+  Future<void> sendPasswordReset(String email) =>
+      _auth.resetPasswordForEmail(email, redirectTo: redirectTo);
+
+  @override
+  Future<void> updatePassword(String newPassword) async {
+    await _auth.updateUser(UserAttributes(password: newPassword));
   }
 
   @override

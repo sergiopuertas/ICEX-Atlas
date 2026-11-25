@@ -20,6 +20,9 @@ class AppEnv {
     this.membershipUrl = defaultMembershipUrl,
     this.showDemoBanner = false,
     this.devLoginRequested = false,
+    this.authMode = 'oidc',
+    this.feedbackUrl = '',
+    this.privacyUrl = '',
   });
 
   factory AppEnv.fromEnvironment() => const AppEnv(
@@ -44,6 +47,9 @@ class AppEnv {
     membershipUrl: String.fromEnvironment('MEMBERSHIP_URL', defaultValue: defaultMembershipUrl),
     showDemoBanner: bool.fromEnvironment('SHOW_DEMO_BANNER', defaultValue: true),
     devLoginRequested: bool.fromEnvironment('DEV_LOGIN'),
+    authMode: String.fromEnvironment('AUTH_MODE', defaultValue: 'oidc'),
+    feedbackUrl: String.fromEnvironment('FEEDBACK_URL'),
+    privacyUrl: String.fromEnvironment('PRIVACY_URL'),
   );
 
   /// Web de la asociación (antes `icex-alumni.es`, un dominio que no existe: el botón
@@ -70,6 +76,18 @@ class AppEnv {
 
   /// Valor de DEV_LOGIN tal cual llega; usa [devLogin], que lo ignora en producción.
   final bool devLoginRequested;
+
+  /// `oidc`: «Entrar con mi cuenta ICEX Alumni» (socios). `password`: beta abierta con
+  /// registro por email y contraseña (ver docs/beta.md).
+  final String authMode;
+
+  /// Formulario o correo para que los probadores de la beta envíen comentarios.
+  final String feedbackUrl;
+
+  /// Política de privacidad (obligatoria para registrarse en la beta y para las tiendas).
+  final String privacyUrl;
+
+  bool get passwordAuth => authMode == 'password';
 
   bool get isProduction => environment == 'production';
 

@@ -102,23 +102,16 @@ abstract class _$ProfileController extends $AsyncNotifier<ProfileDetail> {
 final userPostsProvider = UserPostsFamily._();
 
 final class UserPostsProvider
-    extends
-        $FunctionalProvider<
-          AsyncValue<List<Post>>,
-          List<Post>,
-          FutureOr<List<Post>>
-        >
+    extends $FunctionalProvider<AsyncValue<List<Post>>, List<Post>, FutureOr<List<Post>>>
     with $FutureModifier<List<Post>>, $FutureProvider<List<Post>> {
-  UserPostsProvider._({
-    required UserPostsFamily super.from,
-    required String super.argument,
-  }) : super(
-         retry: null,
-         name: r'userPostsProvider',
-         isAutoDispose: true,
-         dependencies: null,
-         $allTransitiveDependencies: null,
-       );
+  UserPostsProvider._({required UserPostsFamily super.from, required String super.argument})
+    : super(
+        retry: null,
+        name: r'userPostsProvider',
+        isAutoDispose: true,
+        dependencies: null,
+        $allTransitiveDependencies: null,
+      );
 
   @override
   String debugGetCreateSourceHash() => _$userPostsHash();
@@ -165,8 +158,7 @@ final class UserPostsFamily extends $Family
         isAutoDispose: true,
       );
 
-  UserPostsProvider call(String userId) =>
-      UserPostsProvider._(argument: userId, from: this);
+  UserPostsProvider call(String userId) => UserPostsProvider._(argument: userId, from: this);
 
   @override
   String toString() => r'userPostsProvider';

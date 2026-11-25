@@ -3,8 +3,7 @@
 part of 'app_database.dart';
 
 // ignore_for_file: type=lint
-class $OutboxMessagesTable extends OutboxMessages
-    with TableInfo<$OutboxMessagesTable, OutboxRow> {
+class $OutboxMessagesTable extends OutboxMessages with TableInfo<$OutboxMessagesTable, OutboxRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -18,9 +17,7 @@ class $OutboxMessagesTable extends OutboxMessages
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _conversationIdMeta = const VerificationMeta(
-    'conversationId',
-  );
+  static const VerificationMeta _conversationIdMeta = const VerificationMeta('conversationId');
   @override
   late final GeneratedColumn<String> conversationId = GeneratedColumn<String>(
     'conversation_id',
@@ -29,9 +26,7 @@ class $OutboxMessagesTable extends OutboxMessages
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _toUserIdMeta = const VerificationMeta(
-    'toUserId',
-  );
+  static const VerificationMeta _toUserIdMeta = const VerificationMeta('toUserId');
   @override
   late final GeneratedColumn<String> toUserId = GeneratedColumn<String>(
     'to_user_id',
@@ -49,9 +44,7 @@ class $OutboxMessagesTable extends OutboxMessages
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _categoriaMeta = const VerificationMeta(
-    'categoria',
-  );
+  static const VerificationMeta _categoriaMeta = const VerificationMeta('categoria');
   @override
   late final GeneratedColumn<String> categoria = GeneratedColumn<String>(
     'categoria',
@@ -70,9 +63,7 @@ class $OutboxMessagesTable extends OutboxMessages
     requiredDuringInsert: false,
     defaultValue: const Constant('enviando'),
   );
-  static const VerificationMeta _attemptsMeta = const VerificationMeta(
-    'attempts',
-  );
+  static const VerificationMeta _attemptsMeta = const VerificationMeta('attempts');
   @override
   late final GeneratedColumn<int> attempts = GeneratedColumn<int>(
     'attempts',
@@ -82,9 +73,7 @@ class $OutboxMessagesTable extends OutboxMessages
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta('createdAt');
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
     'created_at',
@@ -124,10 +113,7 @@ class $OutboxMessagesTable extends OutboxMessages
     if (data.containsKey('conversation_id')) {
       context.handle(
         _conversationIdMeta,
-        conversationId.isAcceptableOrUnknown(
-          data['conversation_id']!,
-          _conversationIdMeta,
-        ),
+        conversationId.isAcceptableOrUnknown(data['conversation_id']!, _conversationIdMeta),
       );
     }
     if (data.containsKey('to_user_id')) {
@@ -137,10 +123,7 @@ class $OutboxMessagesTable extends OutboxMessages
       );
     }
     if (data.containsKey('cuerpo')) {
-      context.handle(
-        _cuerpoMeta,
-        cuerpo.isAcceptableOrUnknown(data['cuerpo']!, _cuerpoMeta),
-      );
+      context.handle(_cuerpoMeta, cuerpo.isAcceptableOrUnknown(data['cuerpo']!, _cuerpoMeta));
     } else if (isInserting) {
       context.missing(_cuerpoMeta);
     }
@@ -151,10 +134,7 @@ class $OutboxMessagesTable extends OutboxMessages
       );
     }
     if (data.containsKey('status')) {
-      context.handle(
-        _statusMeta,
-        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
-      );
+      context.handle(_statusMeta, status.isAcceptableOrUnknown(data['status']!, _statusMeta));
     }
     if (data.containsKey('attempts')) {
       context.handle(
@@ -179,10 +159,7 @@ class $OutboxMessagesTable extends OutboxMessages
   OutboxRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return OutboxRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
       conversationId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}conversation_id'],
@@ -265,23 +242,16 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
       conversationId: conversationId == null && nullToAbsent
           ? const Value.absent()
           : Value(conversationId),
-      toUserId: toUserId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(toUserId),
+      toUserId: toUserId == null && nullToAbsent ? const Value.absent() : Value(toUserId),
       cuerpo: Value(cuerpo),
-      categoria: categoria == null && nullToAbsent
-          ? const Value.absent()
-          : Value(categoria),
+      categoria: categoria == null && nullToAbsent ? const Value.absent() : Value(categoria),
       status: Value(status),
       attempts: Value(attempts),
       createdAt: Value(createdAt),
     );
   }
 
-  factory OutboxRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory OutboxRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return OutboxRow(
       id: serializer.fromJson<String>(json['id']),
@@ -320,9 +290,7 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
     DateTime? createdAt,
   }) => OutboxRow(
     id: id ?? this.id,
-    conversationId: conversationId.present
-        ? conversationId.value
-        : this.conversationId,
+    conversationId: conversationId.present ? conversationId.value : this.conversationId,
     toUserId: toUserId.present ? toUserId.value : this.toUserId,
     cuerpo: cuerpo ?? this.cuerpo,
     categoria: categoria.present ? categoria.value : this.categoria,
@@ -333,9 +301,7 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
   OutboxRow copyWithCompanion(OutboxMessagesCompanion data) {
     return OutboxRow(
       id: data.id.present ? data.id.value : this.id,
-      conversationId: data.conversationId.present
-          ? data.conversationId.value
-          : this.conversationId,
+      conversationId: data.conversationId.present ? data.conversationId.value : this.conversationId,
       toUserId: data.toUserId.present ? data.toUserId.value : this.toUserId,
       cuerpo: data.cuerpo.present ? data.cuerpo.value : this.cuerpo,
       categoria: data.categoria.present ? data.categoria.value : this.categoria,
@@ -361,16 +327,8 @@ class OutboxRow extends DataClass implements Insertable<OutboxRow> {
   }
 
   @override
-  int get hashCode => Object.hash(
-    id,
-    conversationId,
-    toUserId,
-    cuerpo,
-    categoria,
-    status,
-    attempts,
-    createdAt,
-  );
+  int get hashCode =>
+      Object.hash(id, conversationId, toUserId, cuerpo, categoria, status, attempts, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -532,9 +490,7 @@ class $CachedMessagesTable extends CachedMessages
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _conversationIdMeta = const VerificationMeta(
-    'conversationId',
-  );
+  static const VerificationMeta _conversationIdMeta = const VerificationMeta('conversationId');
   @override
   late final GeneratedColumn<String> conversationId = GeneratedColumn<String>(
     'conversation_id',
@@ -543,9 +499,7 @@ class $CachedMessagesTable extends CachedMessages
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _remitenteIdMeta = const VerificationMeta(
-    'remitenteId',
-  );
+  static const VerificationMeta _remitenteIdMeta = const VerificationMeta('remitenteId');
   @override
   late final GeneratedColumn<String> remitenteId = GeneratedColumn<String>(
     'remitente_id',
@@ -563,9 +517,7 @@ class $CachedMessagesTable extends CachedMessages
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta('createdAt');
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
     'created_at',
@@ -575,13 +527,7 @@ class $CachedMessagesTable extends CachedMessages
     requiredDuringInsert: true,
   );
   @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    conversationId,
-    remitenteId,
-    cuerpo,
-    createdAt,
-  ];
+  List<GeneratedColumn> get $columns => [id, conversationId, remitenteId, cuerpo, createdAt];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -602,10 +548,7 @@ class $CachedMessagesTable extends CachedMessages
     if (data.containsKey('conversation_id')) {
       context.handle(
         _conversationIdMeta,
-        conversationId.isAcceptableOrUnknown(
-          data['conversation_id']!,
-          _conversationIdMeta,
-        ),
+        conversationId.isAcceptableOrUnknown(data['conversation_id']!, _conversationIdMeta),
       );
     } else if (isInserting) {
       context.missing(_conversationIdMeta);
@@ -613,19 +556,13 @@ class $CachedMessagesTable extends CachedMessages
     if (data.containsKey('remitente_id')) {
       context.handle(
         _remitenteIdMeta,
-        remitenteId.isAcceptableOrUnknown(
-          data['remitente_id']!,
-          _remitenteIdMeta,
-        ),
+        remitenteId.isAcceptableOrUnknown(data['remitente_id']!, _remitenteIdMeta),
       );
     } else if (isInserting) {
       context.missing(_remitenteIdMeta);
     }
     if (data.containsKey('cuerpo')) {
-      context.handle(
-        _cuerpoMeta,
-        cuerpo.isAcceptableOrUnknown(data['cuerpo']!, _cuerpoMeta),
-      );
+      context.handle(_cuerpoMeta, cuerpo.isAcceptableOrUnknown(data['cuerpo']!, _cuerpoMeta));
     } else if (isInserting) {
       context.missing(_cuerpoMeta);
     }
@@ -646,10 +583,7 @@ class $CachedMessagesTable extends CachedMessages
   CachedMessageRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return CachedMessageRow(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}id'],
-      )!,
+      id: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}id'])!,
       conversationId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}conversation_id'],
@@ -675,8 +609,7 @@ class $CachedMessagesTable extends CachedMessages
   }
 }
 
-class CachedMessageRow extends DataClass
-    implements Insertable<CachedMessageRow> {
+class CachedMessageRow extends DataClass implements Insertable<CachedMessageRow> {
   final String id;
   final String conversationId;
   final String remitenteId;
@@ -710,10 +643,7 @@ class CachedMessageRow extends DataClass
     );
   }
 
-  factory CachedMessageRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory CachedMessageRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return CachedMessageRow(
       id: serializer.fromJson<String>(json['id']),
@@ -751,12 +681,8 @@ class CachedMessageRow extends DataClass
   CachedMessageRow copyWithCompanion(CachedMessagesCompanion data) {
     return CachedMessageRow(
       id: data.id.present ? data.id.value : this.id,
-      conversationId: data.conversationId.present
-          ? data.conversationId.value
-          : this.conversationId,
-      remitenteId: data.remitenteId.present
-          ? data.remitenteId.value
-          : this.remitenteId,
+      conversationId: data.conversationId.present ? data.conversationId.value : this.conversationId,
+      remitenteId: data.remitenteId.present ? data.remitenteId.value : this.remitenteId,
       cuerpo: data.cuerpo.present ? data.cuerpo.value : this.cuerpo,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -775,8 +701,7 @@ class CachedMessageRow extends DataClass
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, conversationId, remitenteId, cuerpo, createdAt);
+  int get hashCode => Object.hash(id, conversationId, remitenteId, cuerpo, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -889,8 +814,7 @@ class CachedMessagesCompanion extends UpdateCompanion<CachedMessageRow> {
   }
 }
 
-class $CachedPagesTable extends CachedPages
-    with TableInfo<$CachedPagesTable, CachedPageRow> {
+class $CachedPagesTable extends CachedPages with TableInfo<$CachedPagesTable, CachedPageRow> {
   @override
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
@@ -913,9 +837,7 @@ class $CachedPagesTable extends CachedPages
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta('updatedAt');
   @override
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
     'updated_at',
@@ -939,18 +861,12 @@ class $CachedPagesTable extends CachedPages
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('key')) {
-      context.handle(
-        _keyMeta,
-        key.isAcceptableOrUnknown(data['key']!, _keyMeta),
-      );
+      context.handle(_keyMeta, key.isAcceptableOrUnknown(data['key']!, _keyMeta));
     } else if (isInserting) {
       context.missing(_keyMeta);
     }
     if (data.containsKey('json')) {
-      context.handle(
-        _jsonMeta,
-        json.isAcceptableOrUnknown(data['json']!, _jsonMeta),
-      );
+      context.handle(_jsonMeta, json.isAcceptableOrUnknown(data['json']!, _jsonMeta));
     } else if (isInserting) {
       context.missing(_jsonMeta);
     }
@@ -971,14 +887,8 @@ class $CachedPagesTable extends CachedPages
   CachedPageRow map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return CachedPageRow(
-      key: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}key'],
-      )!,
-      json: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}json'],
-      )!,
+      key: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}key'])!,
+      json: attachedDatabase.typeMapping.read(DriftSqlType.string, data['${effectivePrefix}json'])!,
       updatedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}updated_at'],
@@ -996,11 +906,7 @@ class CachedPageRow extends DataClass implements Insertable<CachedPageRow> {
   final String key;
   final String json;
   final DateTime updatedAt;
-  const CachedPageRow({
-    required this.key,
-    required this.json,
-    required this.updatedAt,
-  });
+  const CachedPageRow({required this.key, required this.json, required this.updatedAt});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1011,17 +917,10 @@ class CachedPageRow extends DataClass implements Insertable<CachedPageRow> {
   }
 
   CachedPagesCompanion toCompanion(bool nullToAbsent) {
-    return CachedPagesCompanion(
-      key: Value(key),
-      json: Value(json),
-      updatedAt: Value(updatedAt),
-    );
+    return CachedPagesCompanion(key: Value(key), json: Value(json), updatedAt: Value(updatedAt));
   }
 
-  factory CachedPageRow.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
+  factory CachedPageRow.fromJson(Map<String, dynamic> json, {ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return CachedPageRow(
       key: serializer.fromJson<String>(json['key']),
@@ -1039,12 +938,11 @@ class CachedPageRow extends DataClass implements Insertable<CachedPageRow> {
     };
   }
 
-  CachedPageRow copyWith({String? key, String? json, DateTime? updatedAt}) =>
-      CachedPageRow(
-        key: key ?? this.key,
-        json: json ?? this.json,
-        updatedAt: updatedAt ?? this.updatedAt,
-      );
+  CachedPageRow copyWith({String? key, String? json, DateTime? updatedAt}) => CachedPageRow(
+    key: key ?? this.key,
+    json: json ?? this.json,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
   CachedPageRow copyWithCompanion(CachedPagesCompanion data) {
     return CachedPageRow(
       key: data.key.present ? data.key.value : this.key,
@@ -1173,33 +1071,30 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   ];
 }
 
-typedef $$OutboxMessagesTableCreateCompanionBuilder =
-    OutboxMessagesCompanion Function({
-      required String id,
-      Value<String?> conversationId,
-      Value<String?> toUserId,
-      required String cuerpo,
-      Value<String?> categoria,
-      Value<String> status,
-      Value<int> attempts,
-      required DateTime createdAt,
-      Value<int> rowid,
-    });
-typedef $$OutboxMessagesTableUpdateCompanionBuilder =
-    OutboxMessagesCompanion Function({
-      Value<String> id,
-      Value<String?> conversationId,
-      Value<String?> toUserId,
-      Value<String> cuerpo,
-      Value<String?> categoria,
-      Value<String> status,
-      Value<int> attempts,
-      Value<DateTime> createdAt,
-      Value<int> rowid,
-    });
+typedef $$OutboxMessagesTableCreateCompanionBuilder = OutboxMessagesCompanion Function({
+  required String id,
+  Value<String?> conversationId,
+  Value<String?> toUserId,
+  required String cuerpo,
+  Value<String?> categoria,
+  Value<String> status,
+  Value<int> attempts,
+  required DateTime createdAt,
+  Value<int> rowid,
+});
+typedef $$OutboxMessagesTableUpdateCompanionBuilder = OutboxMessagesCompanion Function({
+  Value<String> id,
+  Value<String?> conversationId,
+  Value<String?> toUserId,
+  Value<String> cuerpo,
+  Value<String?> categoria,
+  Value<String> status,
+  Value<int> attempts,
+  Value<DateTime> createdAt,
+  Value<int> rowid,
+});
 
-class $$OutboxMessagesTableFilterComposer
-    extends Composer<_$AppDatabase, $OutboxMessagesTable> {
+class $$OutboxMessagesTableFilterComposer extends Composer<_$AppDatabase, $OutboxMessagesTable> {
   $$OutboxMessagesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -1207,49 +1102,32 @@ class $$OutboxMessagesTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get conversationId => $composableBuilder(
-    column: $table.conversationId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get conversationId =>
+      $composableBuilder(column: $table.conversationId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get toUserId => $composableBuilder(
-    column: $table.toUserId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get toUserId =>
+      $composableBuilder(column: $table.toUserId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get cuerpo => $composableBuilder(
-    column: $table.cuerpo,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get cuerpo =>
+      $composableBuilder(column: $table.cuerpo, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get categoria => $composableBuilder(
-    column: $table.categoria,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get categoria =>
+      $composableBuilder(column: $table.categoria, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get status => $composableBuilder(
-    column: $table.status,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<int> get attempts => $composableBuilder(
-    column: $table.attempts,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<int> get attempts =>
+      $composableBuilder(column: $table.attempts, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnFilters(column));
 }
 
-class $$OutboxMessagesTableOrderingComposer
-    extends Composer<_$AppDatabase, $OutboxMessagesTable> {
+class $$OutboxMessagesTableOrderingComposer extends Composer<_$AppDatabase, $OutboxMessagesTable> {
   $$OutboxMessagesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -1257,45 +1135,31 @@ class $$OutboxMessagesTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get conversationId => $composableBuilder(
     column: $table.conversationId,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get toUserId => $composableBuilder(
-    column: $table.toUserId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get toUserId =>
+      $composableBuilder(column: $table.toUserId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get cuerpo => $composableBuilder(
-    column: $table.cuerpo,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get cuerpo =>
+      $composableBuilder(column: $table.cuerpo, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get categoria => $composableBuilder(
-    column: $table.categoria,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get categoria =>
+      $composableBuilder(column: $table.categoria, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get status => $composableBuilder(
-    column: $table.status,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<int> get attempts => $composableBuilder(
-    column: $table.attempts,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<int> get attempts =>
+      $composableBuilder(column: $table.attempts, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 }
 
 class $$OutboxMessagesTableAnnotationComposer
@@ -1310,10 +1174,8 @@ class $$OutboxMessagesTableAnnotationComposer
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get conversationId => $composableBuilder(
-    column: $table.conversationId,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get conversationId =>
+      $composableBuilder(column: $table.conversationId, builder: (column) => column);
 
   GeneratedColumn<String> get toUserId =>
       $composableBuilder(column: $table.toUserId, builder: (column) => column);
@@ -1345,17 +1207,12 @@ class $$OutboxMessagesTableTableManager
           $$OutboxMessagesTableAnnotationComposer,
           $$OutboxMessagesTableCreateCompanionBuilder,
           $$OutboxMessagesTableUpdateCompanionBuilder,
-          (
-            OutboxRow,
-            BaseReferences<_$AppDatabase, $OutboxMessagesTable, OutboxRow>,
-          ),
+          (OutboxRow, BaseReferences<_$AppDatabase, $OutboxMessagesTable, OutboxRow>),
           OutboxRow,
           PrefetchHooks Function()
         > {
-  $$OutboxMessagesTableTableManager(
-    _$AppDatabase db,
-    $OutboxMessagesTable table,
-  ) : super(
+  $$OutboxMessagesTableTableManager(_$AppDatabase db, $OutboxMessagesTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
@@ -1413,11 +1270,7 @@ class $$OutboxMessagesTableTableManager
               .map(
                 (e) => (
                   e.readTable<$OutboxMessagesTable, OutboxRow>(table),
-                  BaseReferences<
-                    _$AppDatabase,
-                    $OutboxMessagesTable,
-                    OutboxRow
-                  >(db, table, e),
+                  BaseReferences<_$AppDatabase, $OutboxMessagesTable, OutboxRow>(db, table, e),
                 ),
               )
               .toList(),
@@ -1436,34 +1289,28 @@ typedef $$OutboxMessagesTableProcessedTableManager =
       $$OutboxMessagesTableAnnotationComposer,
       $$OutboxMessagesTableCreateCompanionBuilder,
       $$OutboxMessagesTableUpdateCompanionBuilder,
-      (
-        OutboxRow,
-        BaseReferences<_$AppDatabase, $OutboxMessagesTable, OutboxRow>,
-      ),
+      (OutboxRow, BaseReferences<_$AppDatabase, $OutboxMessagesTable, OutboxRow>),
       OutboxRow,
       PrefetchHooks Function()
     >;
-typedef $$CachedMessagesTableCreateCompanionBuilder =
-    CachedMessagesCompanion Function({
-      required String id,
-      required String conversationId,
-      required String remitenteId,
-      required String cuerpo,
-      required DateTime createdAt,
-      Value<int> rowid,
-    });
-typedef $$CachedMessagesTableUpdateCompanionBuilder =
-    CachedMessagesCompanion Function({
-      Value<String> id,
-      Value<String> conversationId,
-      Value<String> remitenteId,
-      Value<String> cuerpo,
-      Value<DateTime> createdAt,
-      Value<int> rowid,
-    });
+typedef $$CachedMessagesTableCreateCompanionBuilder = CachedMessagesCompanion Function({
+  required String id,
+  required String conversationId,
+  required String remitenteId,
+  required String cuerpo,
+  required DateTime createdAt,
+  Value<int> rowid,
+});
+typedef $$CachedMessagesTableUpdateCompanionBuilder = CachedMessagesCompanion Function({
+  Value<String> id,
+  Value<String> conversationId,
+  Value<String> remitenteId,
+  Value<String> cuerpo,
+  Value<DateTime> createdAt,
+  Value<int> rowid,
+});
 
-class $$CachedMessagesTableFilterComposer
-    extends Composer<_$AppDatabase, $CachedMessagesTable> {
+class $$CachedMessagesTableFilterComposer extends Composer<_$AppDatabase, $CachedMessagesTable> {
   $$CachedMessagesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -1471,34 +1318,23 @@ class $$CachedMessagesTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get conversationId => $composableBuilder(
-    column: $table.conversationId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get conversationId =>
+      $composableBuilder(column: $table.conversationId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get remitenteId => $composableBuilder(
-    column: $table.remitenteId,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get remitenteId =>
+      $composableBuilder(column: $table.remitenteId, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get cuerpo => $composableBuilder(
-    column: $table.cuerpo,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get cuerpo =>
+      $composableBuilder(column: $table.cuerpo, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnFilters(column));
 }
 
-class $$CachedMessagesTableOrderingComposer
-    extends Composer<_$AppDatabase, $CachedMessagesTable> {
+class $$CachedMessagesTableOrderingComposer extends Composer<_$AppDatabase, $CachedMessagesTable> {
   $$CachedMessagesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -1506,30 +1342,22 @@ class $$CachedMessagesTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get conversationId => $composableBuilder(
     column: $table.conversationId,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get remitenteId => $composableBuilder(
-    column: $table.remitenteId,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get remitenteId =>
+      $composableBuilder(column: $table.remitenteId, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get cuerpo => $composableBuilder(
-    column: $table.cuerpo,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get cuerpo =>
+      $composableBuilder(column: $table.cuerpo, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 }
 
 class $$CachedMessagesTableAnnotationComposer
@@ -1544,15 +1372,11 @@ class $$CachedMessagesTableAnnotationComposer
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get conversationId => $composableBuilder(
-    column: $table.conversationId,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get conversationId =>
+      $composableBuilder(column: $table.conversationId, builder: (column) => column);
 
-  GeneratedColumn<String> get remitenteId => $composableBuilder(
-    column: $table.remitenteId,
-    builder: (column) => column,
-  );
+  GeneratedColumn<String> get remitenteId =>
+      $composableBuilder(column: $table.remitenteId, builder: (column) => column);
 
   GeneratedColumn<String> get cuerpo =>
       $composableBuilder(column: $table.cuerpo, builder: (column) => column);
@@ -1572,21 +1396,12 @@ class $$CachedMessagesTableTableManager
           $$CachedMessagesTableAnnotationComposer,
           $$CachedMessagesTableCreateCompanionBuilder,
           $$CachedMessagesTableUpdateCompanionBuilder,
-          (
-            CachedMessageRow,
-            BaseReferences<
-              _$AppDatabase,
-              $CachedMessagesTable,
-              CachedMessageRow
-            >,
-          ),
+          (CachedMessageRow, BaseReferences<_$AppDatabase, $CachedMessagesTable, CachedMessageRow>),
           CachedMessageRow,
           PrefetchHooks Function()
         > {
-  $$CachedMessagesTableTableManager(
-    _$AppDatabase db,
-    $CachedMessagesTable table,
-  ) : super(
+  $$CachedMessagesTableTableManager(_$AppDatabase db, $CachedMessagesTable table)
+    : super(
         TableManagerState(
           db: db,
           table: table,
@@ -1632,11 +1447,11 @@ class $$CachedMessagesTableTableManager
               .map(
                 (e) => (
                   e.readTable<$CachedMessagesTable, CachedMessageRow>(table),
-                  BaseReferences<
-                    _$AppDatabase,
-                    $CachedMessagesTable,
-                    CachedMessageRow
-                  >(db, table, e),
+                  BaseReferences<_$AppDatabase, $CachedMessagesTable, CachedMessageRow>(
+                    db,
+                    table,
+                    e,
+                  ),
                 ),
               )
               .toList(),
@@ -1655,30 +1470,24 @@ typedef $$CachedMessagesTableProcessedTableManager =
       $$CachedMessagesTableAnnotationComposer,
       $$CachedMessagesTableCreateCompanionBuilder,
       $$CachedMessagesTableUpdateCompanionBuilder,
-      (
-        CachedMessageRow,
-        BaseReferences<_$AppDatabase, $CachedMessagesTable, CachedMessageRow>,
-      ),
+      (CachedMessageRow, BaseReferences<_$AppDatabase, $CachedMessagesTable, CachedMessageRow>),
       CachedMessageRow,
       PrefetchHooks Function()
     >;
-typedef $$CachedPagesTableCreateCompanionBuilder =
-    CachedPagesCompanion Function({
-      required String key,
-      required String json,
-      required DateTime updatedAt,
-      Value<int> rowid,
-    });
-typedef $$CachedPagesTableUpdateCompanionBuilder =
-    CachedPagesCompanion Function({
-      Value<String> key,
-      Value<String> json,
-      Value<DateTime> updatedAt,
-      Value<int> rowid,
-    });
+typedef $$CachedPagesTableCreateCompanionBuilder = CachedPagesCompanion Function({
+  required String key,
+  required String json,
+  required DateTime updatedAt,
+  Value<int> rowid,
+});
+typedef $$CachedPagesTableUpdateCompanionBuilder = CachedPagesCompanion Function({
+  Value<String> key,
+  Value<String> json,
+  Value<DateTime> updatedAt,
+  Value<int> rowid,
+});
 
-class $$CachedPagesTableFilterComposer
-    extends Composer<_$AppDatabase, $CachedPagesTable> {
+class $$CachedPagesTableFilterComposer extends Composer<_$AppDatabase, $CachedPagesTable> {
   $$CachedPagesTableFilterComposer({
     required super.$db,
     required super.$table,
@@ -1686,24 +1495,17 @@ class $$CachedPagesTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<String> get key => $composableBuilder(
-    column: $table.key,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<String> get json => $composableBuilder(
-    column: $table.json,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<String> get json =>
+      $composableBuilder(column: $table.json, builder: (column) => ColumnFilters(column));
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnFilters<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnFilters(column));
 }
 
-class $$CachedPagesTableOrderingComposer
-    extends Composer<_$AppDatabase, $CachedPagesTable> {
+class $$CachedPagesTableOrderingComposer extends Composer<_$AppDatabase, $CachedPagesTable> {
   $$CachedPagesTableOrderingComposer({
     required super.$db,
     required super.$table,
@@ -1711,24 +1513,17 @@ class $$CachedPagesTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<String> get key => $composableBuilder(
-    column: $table.key,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<String> get json => $composableBuilder(
-    column: $table.json,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<String> get json =>
+      $composableBuilder(column: $table.json, builder: (column) => ColumnOrderings(column));
 
-  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
+  ColumnOrderings<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
 }
 
-class $$CachedPagesTableAnnotationComposer
-    extends Composer<_$AppDatabase, $CachedPagesTable> {
+class $$CachedPagesTableAnnotationComposer extends Composer<_$AppDatabase, $CachedPagesTable> {
   $$CachedPagesTableAnnotationComposer({
     required super.$db,
     required super.$table,
@@ -1757,10 +1552,7 @@ class $$CachedPagesTableTableManager
           $$CachedPagesTableAnnotationComposer,
           $$CachedPagesTableCreateCompanionBuilder,
           $$CachedPagesTableUpdateCompanionBuilder,
-          (
-            CachedPageRow,
-            BaseReferences<_$AppDatabase, $CachedPagesTable, CachedPageRow>,
-          ),
+          (CachedPageRow, BaseReferences<_$AppDatabase, $CachedPagesTable, CachedPageRow>),
           CachedPageRow,
           PrefetchHooks Function()
         > {
@@ -1769,24 +1561,16 @@ class $$CachedPagesTableTableManager
         TableManagerState(
           db: db,
           table: table,
-          createFilteringComposer: () =>
-              $$CachedPagesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$CachedPagesTableOrderingComposer($db: db, $table: table),
+          createFilteringComposer: () => $$CachedPagesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () => $$CachedPagesTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$CachedPagesTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> key = const Value.absent(),
-                Value<String> json = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => CachedPagesCompanion(
-                key: key,
-                json: json,
-                updatedAt: updatedAt,
-                rowid: rowid,
-              ),
+          updateCompanionCallback: ({
+            Value<String> key = const Value.absent(),
+            Value<String> json = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) => CachedPagesCompanion(key: key, json: json, updatedAt: updatedAt, rowid: rowid),
           createCompanionCallback:
               ({
                 required String key,
@@ -1803,11 +1587,7 @@ class $$CachedPagesTableTableManager
               .map(
                 (e) => (
                   e.readTable<$CachedPagesTable, CachedPageRow>(table),
-                  BaseReferences<
-                    _$AppDatabase,
-                    $CachedPagesTable,
-                    CachedPageRow
-                  >(db, table, e),
+                  BaseReferences<_$AppDatabase, $CachedPagesTable, CachedPageRow>(db, table, e),
                 ),
               )
               .toList(),
@@ -1826,10 +1606,7 @@ typedef $$CachedPagesTableProcessedTableManager =
       $$CachedPagesTableAnnotationComposer,
       $$CachedPagesTableCreateCompanionBuilder,
       $$CachedPagesTableUpdateCompanionBuilder,
-      (
-        CachedPageRow,
-        BaseReferences<_$AppDatabase, $CachedPagesTable, CachedPageRow>,
-      ),
+      (CachedPageRow, BaseReferences<_$AppDatabase, $CachedPagesTable, CachedPageRow>),
       CachedPageRow,
       PrefetchHooks Function()
     >;
