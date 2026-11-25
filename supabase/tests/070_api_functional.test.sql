@@ -58,7 +58,7 @@ select tests.create_member('Se Va') as sevan \gset
 select tests.create_member('Se Queda') as queda \gset
 select tests.authenticate_as(:'sevan');
 select api.create_post(gen_random_uuid(), 'adiós');
-select api.send_message(gen_random_uuid(), 'mensaje a borrar', null, :'queda');
+select api.send_message(util.uuid_v7(), 'mensaje a borrar', null, :'queda');
 select api.follow(:'queda');
 select lives_ok($$select api.delete_my_account('BORRAR MI CUENTA')$$, 'Borrado completo de la cuenta');
 select tests.clear_authentication();

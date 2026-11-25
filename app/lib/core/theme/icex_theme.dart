@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:icex_atlas/features/profiles/domain/profile.dart';
 
 /// Colores del mockup (convertidos de OKLCH a sRGB). Contraste verificado WCAG 2.2 AA
@@ -10,7 +11,9 @@ abstract final class IcexColors {
   static const onAccent = Color(0xFF221811);
   static const promoTag = Color(0xFFFDEDB6); // amarillo al 30 %
   static const foreground = Color(0xFF1A1413);
-  static const mutedForeground = Color(0xFF635C59);
+  // Algo más oscuro que el mockup (antes 0xFF635C59): el texto secundario pequeño (12,5 px)
+  // es lo más difícil de leer; 7,9:1 sobre blanco (WCAG AAA).
+  static const mutedForeground = Color(0xFF57504D);
   static const muted = Color(0xFFF3EFED);
   static const border = Color(0xFFE7E4E1);
   static const page = Color(0xFFF9F6F4);
@@ -111,13 +114,23 @@ abstract final class IcexTheme {
           color: _fg,
         ),
       ),
+      // Barra superior roja, como la portada: se funde con las cabeceras (HeroHeader).
       appBarTheme: const AppBarTheme(
-        backgroundColor: IcexColors.card,
-        foregroundColor: IcexColors.foreground,
+        backgroundColor: IcexColors.primary,
+        foregroundColor: Colors.white,
         surfaceTintColor: Colors.transparent,
         elevation: 0,
-        scrolledUnderElevation: 0.5,
+        scrolledUnderElevation: 0,
         centerTitle: false,
+        systemOverlayStyle: SystemUiOverlayStyle.light,
+        iconTheme: IconThemeData(color: Colors.white),
+        actionsIconTheme: IconThemeData(color: Colors.white),
+        titleTextStyle: TextStyle(
+          fontFamily: display,
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          color: Colors.white,
+        ),
       ),
       cardTheme: const CardThemeData(
         color: IcexColors.card,
@@ -153,12 +166,22 @@ abstract final class IcexTheme {
           minimumSize: const Size(48, 44),
         ),
       ),
-      chipTheme: const ChipThemeData(
-        shape: StadiumBorder(side: BorderSide(color: IcexColors.border)),
+      chipTheme: ChipThemeData(
+        shape: const StadiumBorder(side: BorderSide(color: IcexColors.border)),
         backgroundColor: IcexColors.card,
         selectedColor: IcexColors.foreground,
-        labelStyle: TextStyle(fontFamily: body, fontSize: 13, fontWeight: FontWeight.w500),
-        secondaryLabelStyle: TextStyle(color: Colors.white),
+        // Color según estado: texto oscuro normal y blanco cuando el chip está seleccionado
+        // (fondo oscuro). Sin color explícito, ActionChip pintaba la etiqueta invisible.
+        labelStyle: TextStyle(
+          fontFamily: body,
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: WidgetStateColor.resolveWith(
+            (s) => s.contains(WidgetState.selected) ? Colors.white : IcexColors.foreground,
+          ),
+        ),
+        secondaryLabelStyle: const TextStyle(color: Colors.white),
+        iconTheme: const IconThemeData(color: IcexColors.mutedForeground, size: 16),
         showCheckmark: false,
       ),
       inputDecorationTheme: InputDecorationTheme(

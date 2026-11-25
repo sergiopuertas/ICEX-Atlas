@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,7 +11,9 @@ import 'package:icex_atlas/core/theme/icex_theme.dart';
 import 'package:icex_atlas/features/orientador/domain/orientador.dart';
 import 'package:icex_atlas/features/profiles/domain/profile.dart';
 import 'package:icex_atlas/l10n/app_localizations.dart';
+import 'package:icex_atlas/shared/widgets/app_shell.dart';
 import 'package:icex_atlas/shared/widgets/badges.dart';
+import 'package:icex_atlas/shared/widgets/brand.dart';
 import 'package:icex_atlas/shared/widgets/common.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
@@ -45,36 +49,43 @@ class OrientadorState {
 class OrientadorController extends _$OrientadorController {
   @override
   OrientadorState build() {
+    // Contexto inicial tomado del propio perfil (fase, país y sector), si encaja en el
+    // catálogo. Se puede cambiar, pero en la mayoría de consultas no hace falta.
     final s = ref.read(sessionControllerProvider);
-    final fase = s is SignedIn ? s.me.profile.card.fase : Fase.fase1;
+    final me = s is SignedIn ? s.me.profile.card : null;
+    String pick(String? v, List<String> options, String fallback) =>
+        options.contains(v) ? v! : fallback;
     return OrientadorState(
-      query: OrientadorQuery(fase: fase, pais: 'Alemania', sector: 'Energía', consulta: ''),
+      query: OrientadorQuery(
+        fase: me?.fase ?? Fase.fase1,
+        pais: pick(me?.pais, OrientadorCatalog.paises, 'España'),
+        sector: pick(me?.sector, OrientadorCatalog.sectores, 'Consultoría'),
+        consulta: '',
+      ),
     );
   }
 
   void update(OrientadorQuery q) => state = state.copyWith(query: q);
-
-  void applyShortcut((String, Fase, String, String, String) a) => state = state.copyWith(
-    query: OrientadorQuery(fase: a.$2, pais: a.$3, sector: a.$4, consulta: a.$5),
-  );
 
   Future<void> ask() async {
     if (state.loading) return;
     state = state.copyWith(loading: true, error: () => null);
     try {
       final r = await ref.read(orientadorRepositoryProvider).ask(state.query);
+      if (!ref.mounted) return;
       state = state.copyWith(
         history: [r, ...state.history],
         loading: false,
         query: state.query.copyWith(consulta: ''),
       );
     } on Object catch (e) {
-      state = state.copyWith(loading: false, error: () => e);
+      if (ref.mounted) state = state.copyWith(loading: false, error: () => e);
     }
   }
 }
 
-/// Orientador con IA: fase, país, sector, consulta libre, atajos y pasos + alumni sugeridos.
+/// Orientador: el contexto (fase, país y sector, ya rellenos con el perfil) y un botón.
+/// Sin texto libre ni sugerencias prefabricadas: se elige y se pide.
 class OrientadorPage extends ConsumerStatefulWidget {
   const OrientadorPage({super.key});
 
@@ -83,13 +94,43 @@ class OrientadorPage extends ConsumerStatefulWidget {
 }
 
 class _OrientadorPageState extends ConsumerState<OrientadorPage> {
-  final _text = TextEditingController();
+  final _scroll = ScrollController();
 
   @override
   void dispose() {
-    _text.dispose();
+    _scroll.dispose();
     super.dispose();
   }
+
+  Future<T?> _pick<T>(String title, List<T> options, T current, String Function(T) label) =>
+      showModalBottomSheet<T>(
+        context: context,
+        showDragHandle: true,
+        useRootNavigator: true,
+        isScrollControlled: true,
+        builder: (c) => SafeArea(
+          child: ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(c).height * 0.7),
+            child: ListView(
+              shrinkWrap: true,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 8),
+                  child: Text(title, style: Theme.of(c).textTheme.titleMedium),
+                ),
+                for (final o in options)
+                  ListTile(
+                    title: Text(label(o)),
+                    trailing: o == current
+                        ? const Icon(Icons.check, color: IcexColors.primary)
+                        : null,
+                    onTap: () => Navigator.pop(c, o),
+                  ),
+              ],
+            ),
+          ),
+        ),
+      );
 
   @override
   Widget build(BuildContext context) {
@@ -97,94 +138,91 @@ class _OrientadorPageState extends ConsumerState<OrientadorPage> {
     final t = Theme.of(context).textTheme;
     final s = ref.watch(orientadorControllerProvider);
     final c = ref.read(orientadorControllerProvider.notifier);
-    if (_text.text != s.query.consulta) _text.text = s.query.consulta;
-
-    Widget select<T>(
-      String label,
-      T value,
-      List<T> items,
-      String Function(T) text,
-      void Function(T) onChanged,
-    ) => Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: DropdownButtonFormField<T>(
-        initialValue: value,
-        isExpanded: true,
-        decoration: InputDecoration(labelText: label),
-        items: [for (final i in items) DropdownMenuItem(value: i, child: Text(text(i)))],
-        onChanged: (v) => v == null ? null : onChanged(v),
-      ),
-    );
+    listenScrollToTop(ref, AppTab.orientador, _scroll);
+    String faseLabel(Fase f) => f == Fase.activo ? 'Activo' : f.label;
 
     return ListView(
+      controller: _scroll,
       padding: const EdgeInsets.only(bottom: 24),
       children: [
+        HeroHeader(title: l.orientadorTitle, subtitle: l.orientadorIntro),
         if (ref.watch(appEnvProvider).showDemoBanner) const DemoBanner(),
-        PageHeader(
-          title: l.orientadorTitle,
-          subtitle: l.orientadorSubtitle(s.history.length),
-          leading: const Icon(Icons.explore_outlined, color: IcexColors.primary, size: 28),
-        ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
           child: IcexCard(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                select<Fase>(
-                  l.orientadorPhase,
-                  s.query.fase,
-                  Fase.values,
-                  (f) => f == Fase.activo ? 'Activo' : f.label,
-                  (f) => c.update(s.query.copyWith(fase: f)),
-                ),
-                select<String>(
-                  l.orientadorCountry,
-                  s.query.pais,
-                  OrientadorCatalog.paises,
-                  (p) => p,
-                  (p) => c.update(s.query.copyWith(pais: p)),
-                ),
-                select<String>(
-                  l.orientadorSector,
-                  s.query.sector,
-                  OrientadorCatalog.sectores,
-                  (p) => p,
-                  (p) => c.update(s.query.copyWith(sector: p)),
-                ),
-                TextField(
-                  key: const Key('orientador-text'),
-                  controller: _text,
-                  minLines: 3,
-                  maxLines: 6,
-                  maxLength: 2000,
-                  buildCounter: (_, {required currentLength, required isFocused, maxLength}) =>
-                      null,
-                  onChanged: (v) => c.update(s.query.copyWith(consulta: v)),
-                  decoration: InputDecoration(hintText: l.orientadorHint),
-                ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: FilledButton.icon(
-                    onPressed: s.loading ? null : c.ask,
-                    icon: s.loading
-                        ? const SizedBox.square(
-                            dimension: 16,
-                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                          )
-                        : const Icon(Icons.send),
-                    label: Text(s.loading ? l.orientadorLoading : l.orientadorSubmit),
-                  ),
-                ),
-                const SizedBox(height: 12),
+                Text(l.orientadorContext, style: t.titleMedium),
+                const SizedBox(height: 10),
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    for (final a in OrientadorCatalog.atajos)
-                      ActionChip(label: Text(a.$1), onPressed: () => c.applyShortcut(a)),
+                    _ContextPill(
+                      label: l.orientadorPhase,
+                      value: faseLabel(s.query.fase),
+                      onTap: () async {
+                        final f = await _pick(
+                          l.orientadorPhase,
+                          Fase.values,
+                          s.query.fase,
+                          faseLabel,
+                        );
+                        if (f != null) c.update(s.query.copyWith(fase: f));
+                      },
+                    ),
+                    _ContextPill(
+                      label: l.orientadorCountry,
+                      value: s.query.pais,
+                      onTap: () async {
+                        final p = await _pick(
+                          l.orientadorCountry,
+                          OrientadorCatalog.paises,
+                          s.query.pais,
+                          (x) => x,
+                        );
+                        if (p != null) c.update(s.query.copyWith(pais: p));
+                      },
+                    ),
+                    _ContextPill(
+                      label: l.orientadorSector,
+                      value: s.query.sector,
+                      onTap: () async {
+                        final p = await _pick(
+                          l.orientadorSector,
+                          OrientadorCatalog.sectores,
+                          s.query.sector,
+                          (x) => x,
+                        );
+                        if (p != null) c.update(s.query.copyWith(sector: p));
+                      },
+                    ),
                   ],
+                ),
+                const SizedBox(height: 20),
+                FilledButton(
+                  key: const Key('orientador-submit'),
+                  style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+                  onPressed: s.loading
+                      ? null
+                      : () {
+                          FocusScope.of(context).unfocus();
+                          unawaited(c.ask());
+                        },
+                  child: s.loading
+                      ? Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox.square(
+                              dimension: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(l.orientadorLoading),
+                          ],
+                        )
+                      : Text(l.orientadorSubmit),
                 ),
               ],
             ),
@@ -206,6 +244,58 @@ class _OrientadorPageState extends ConsumerState<OrientadorPage> {
             child: OrientadorResultCard(result: r),
           ),
       ],
+    );
+  }
+}
+
+/// Selector compacto del contexto: «País · Alemania ▾».
+class _ContextPill extends StatelessWidget {
+  const _ContextPill({required this.label, required this.value, required this.onTap});
+
+  final String label;
+  final String value;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = Theme.of(context).textTheme;
+    return Semantics(
+      button: true,
+      label: '$label: $value',
+      excludeSemantics: true,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 44),
+          padding: const EdgeInsets.fromLTRB(14, 6, 8, 6),
+          decoration: BoxDecoration(
+            color: IcexColors.muted,
+            borderRadius: BorderRadius.circular(999),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text.rich(
+                  TextSpan(
+                    children: [
+                      TextSpan(text: '$label · ', style: t.bodySmall),
+                      TextSpan(
+                        text: value,
+                        style: t.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
+                      ),
+                    ],
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const Icon(Icons.arrow_drop_down, size: 20),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
@@ -233,12 +323,11 @@ class OrientadorResultCard extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
-                    radius: 12,
-                    backgroundColor: IcexColors.primary,
+                  SizedBox(
+                    width: 24,
                     child: Text(
-                      '${i + 1}',
-                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                      '${i + 1}.',
+                      style: t.titleSmall?.copyWith(color: IcexColors.primary),
                     ),
                   ),
                   const SizedBox(width: 10),

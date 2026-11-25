@@ -62,7 +62,7 @@ class PushService {
 }
 
 final pushServiceProvider = Provider<PushService?>((ref) {
-  if (ref.watch(sessionControllerProvider) is! SignedIn) return null;
+  if (ref.watch(sessionUserIdProvider) == null) return null;
   final s = PushService(ref);
   unawaited(s.start());
   ref.onDispose(() => unawaited(s.stop()));

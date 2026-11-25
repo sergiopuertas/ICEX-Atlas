@@ -34,11 +34,17 @@ const b64url = (b: Uint8Array | string) =>
 export class FcmSender implements PushSender {
   readonly name = 'fcm';
   #token: { value: string; exp: number } | null = null;
+  #refreshing: Promise<string> | null = null;   // con envíos en paralelo: un único refresco a la vez
   constructor(private sa: { client_email: string; private_key: string; project_id: string }) {}
 
-  async #accessToken(): Promise<string> {
+  #accessToken(): Promise<string> {
     const now = Math.floor(Date.now() / 1000);
-    if (this.#token && this.#token.exp - 60 > now) return this.#token.value;
+    if (this.#token && this.#token.exp - 60 > now) return Promise.resolve(this.#token.value);
+    this.#refreshing ??= this.#refresh(now).finally(() => { this.#refreshing = null; });
+    return this.#refreshing;
+  }
+
+  async #refresh(now: number): Promise<string> {
     const header = b64url(JSON.stringify({ alg: 'RS256', typ: 'JWT' }));
     const claims = b64url(JSON.stringify({
       iss: this.sa.client_email, scope: 'https://www.googleapis.com/auth/firebase.messaging',

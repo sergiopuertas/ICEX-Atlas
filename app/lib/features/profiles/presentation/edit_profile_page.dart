@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -8,6 +10,7 @@ import 'package:icex_atlas/features/profiles/domain/profile.dart';
 import 'package:icex_atlas/l10n/app_localizations.dart';
 import 'package:icex_atlas/shared/widgets/avatar.dart';
 import 'package:icex_atlas/shared/widgets/common.dart';
+import 'package:icex_atlas/shared/widgets/dialogs.dart';
 import 'package:image_picker/image_picker.dart';
 
 /// Edición del perfil propio (datos, foto y trayectoria).
@@ -41,6 +44,41 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
       'bio': TextEditingController(text: _me?.bio),
     };
     _fase = p?.fase ?? Fase.activo;
+    _initialFase = _fase;
+    _initial = {for (final e in _c.entries) e.key: e.value.text};
+    // Reconstruir solo cuando cambia «hay cambios sin guardar» (para PopScope).
+    for (final c in _c.values) {
+      c.addListener(_onEdit);
+    }
+  }
+
+  bool _wasDirty = false;
+
+  void _onEdit() {
+    final d = _dirty;
+    if (d != _wasDirty) setState(() => _wasDirty = d);
+  }
+
+  late final Map<String, String> _initial;
+  late final Fase _initialFase;
+
+  bool get _dirty =>
+      _fase != _initialFase || _c.entries.any((e) => e.value.text != _initial[e.key]);
+
+  Future<void> _confirmLeave() async {
+    final l = AppLocalizations.of(context);
+    final discard = await showDialog<bool>(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: Text(l.unsavedChangesTitle),
+        content: Text(l.unsavedChangesBody),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l.keepEditing)),
+          FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(l.discard)),
+        ],
+      ),
+    );
+    if ((discard ?? false) && mounted) Navigator.of(context).pop();
   }
 
   @override
@@ -102,65 +140,38 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
 
   Future<void> _addExperience() async {
     final l = AppLocalizations.of(context);
-    final empresa = TextEditingController();
-    final cargo = TextEditingController();
-    var desde = DateTime(DateTime.now().year);
-    final ok = await showDialog<bool>(
-      context: context,
-      builder: (c) => AlertDialog(
-        title: Text(l.addExperience),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: cargo,
-              decoration: InputDecoration(labelText: l.fieldRole),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: empresa,
-              decoration: InputDecoration(labelText: l.fieldCompany),
-            ),
-            const SizedBox(height: 8),
-            StatefulBuilder(
-              builder: (c, set) => OutlinedButton(
-                onPressed: () async {
-                  final d = await showDatePicker(
-                    context: c,
-                    initialDate: desde,
-                    firstDate: DateTime(1975),
-                    lastDate: DateTime.now(),
-                  );
-                  if (d != null) set(() => desde = d);
-                },
-                child: Text('${l.fieldFrom}: ${desde.month}/${desde.year}'),
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(c, false), child: Text(l.cancel)),
-          FilledButton(onPressed: () => Navigator.pop(c, true), child: Text(l.save)),
-        ],
-      ),
-    );
-    if ((ok ?? false) && empresa.text.trim().isNotEmpty && cargo.text.trim().isNotEmpty) {
-      try {
-        final p = await ref
-            .read(profilesRepositoryProvider)
-            .upsertExperience(
-              id: ref.read(idGeneratorProvider).next(),
-              empresa: empresa.text.trim(),
-              cargo: cargo.text.trim(),
-              desde: desde,
-            );
-        if (mounted) setState(() => _me = p);
-      } on Object catch (e) {
-        if (mounted) showSnack(context, ErrorView.messageFor(l, e));
-      }
+    final e = await showAddExperienceDialog(context);
+    if (e == null || !mounted) return;
+    try {
+      final p = await ref
+          .read(profilesRepositoryProvider)
+          .upsertExperience(
+            id: ref.read(idGeneratorProvider).next(),
+            empresa: e.empresa,
+            cargo: e.cargo,
+            desde: e.desde,
+          );
+      if (mounted) setState(() => _me = p);
+      unawaited(ref.read(sessionControllerProvider.notifier).refreshMe());
+    } on Object catch (err) {
+      if (mounted) showSnack(context, ErrorView.messageFor(l, err));
     }
-    empresa.dispose();
-    cargo.dispose();
+  }
+
+  Future<void> _deleteExperience(Experience e) async {
+    final l = AppLocalizations.of(context);
+    final me = _me;
+    if (me == null) return;
+    // Optimista: desaparece al momento; si falla, se restaura.
+    setState(() => _me = me.withExperiences(me.experiences.where((x) => x.id != e.id).toList()));
+    try {
+      await ref.read(profilesRepositoryProvider).deleteExperience(e.id);
+      unawaited(ref.read(sessionControllerProvider.notifier).refreshMe());
+    } on Object catch (err) {
+      if (!mounted) return;
+      setState(() => _me = me);
+      showSnack(context, ErrorView.messageFor(l, err));
+    }
   }
 
   @override
@@ -168,6 +179,17 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     final l = AppLocalizations.of(context);
     final me = _me;
     if (me == null) return const Scaffold(body: LoadingView());
+    final scaffold = _buildScaffold(context, l, me);
+    return PopScope(
+      canPop: _saving || !_dirty,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) unawaited(_confirmLeave());
+      },
+      child: scaffold,
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context, AppLocalizations l, ProfileDetail me) {
     String? required(String? v) => (v ?? '').trim().isEmpty ? l.requiredField : null;
     Widget field(String key, String label, {int lines = 1, String? Function(String?)? validator}) =>
         Padding(
@@ -183,7 +205,16 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
     return Scaffold(
       appBar: AppBar(
         title: Text(l.profileEdit),
-        actions: [TextButton(onPressed: _saving ? null : _save, child: Text(l.save))],
+        actions: [
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Colors.white,
+              disabledForegroundColor: Colors.white60,
+            ),
+            onPressed: _saving ? null : _save,
+            child: Text(l.save),
+          ),
+        ],
       ),
       body: Form(
         key: _form,
@@ -230,13 +261,7 @@ class _EditProfilePageState extends ConsumerState<EditProfilePage> {
                 trailing: IconButton(
                   tooltip: l.delete,
                   icon: const Icon(Icons.delete_outline),
-                  onPressed: () async {
-                    await ref.read(profilesRepositoryProvider).deleteExperience(e.id);
-                    final p = await ref
-                        .read(profilesRepositoryProvider)
-                        .getProfile(userId: me.card.userId);
-                    if (mounted) setState(() => _me = p);
-                  },
+                  onPressed: () => _deleteExperience(e),
                 ),
               ),
             OutlinedButton.icon(

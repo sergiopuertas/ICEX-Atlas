@@ -14,7 +14,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final env = AppEnv.fromEnvironment();
-  await initializeDateFormatting('es');
+  // En paralelo: menos tiempo con la pantalla en blanco al abrir la app.
+  final dates = initializeDateFormatting('es');
 
   await Supabase.initialize(
     url: env.supabaseUrl,
@@ -25,6 +26,7 @@ Future<void> main() async {
     ),
     postgrestOptions: const PostgrestClientOptions(schema: 'api'),
   );
+  await dates;
 
   // Firebase solo si hay configuración (google-services.json / GoogleService-Info.plist).
   try {

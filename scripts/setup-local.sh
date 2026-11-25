@@ -25,11 +25,20 @@ CA_FP="$(openssl x509 -in docker/certs/dev-ca.crt -noout -fingerprint -sha256 | 
 if ! docker exec "${AUTH_CONTAINER}" grep -q "ICEX-ATLAS-DEV-CA ${CA_FP}" /etc/ssl/certs/ca-certificates.crt; then
   { echo "# ICEX-ATLAS-DEV-CA ${CA_FP}"; cat docker/certs/dev-ca.crt; } | docker exec -i -u 0 "${AUTH_CONTAINER}" sh -c 'cat >> /etc/ssl/certs/ca-certificates.crt'
   docker restart "${AUTH_CONTAINER}" >/dev/null
-  for i in $(seq 1 30); do curl -sf --noproxy "*" --max-time 2 "${API_URL}/auth/v1/health" -H "apikey: ${SERVICE_ROLE_KEY}" >/dev/null && break; sleep 1; done
+  for _ in $(seq 1 45); do curl -sf --noproxy "*" --max-time 2 "${API_URL}/auth/v1/health" -H "apikey: ${SERVICE_ROLE_KEY}" >/dev/null && break; sleep 1; done
+  curl -sf --noproxy "*" --max-time 2 "${API_URL}/auth/v1/health" -H "apikey: ${SERVICE_ROLE_KEY}" >/dev/null \
+    || { echo "✗ Auth no vuelve tras reiniciarlo (docker logs ${AUTH_CONTAINER})"; exit 1; }
+else
+  echo "  ya confiaba"
 fi
 echo "→ IdP de pruebas (docker compose)"
 docker compose -f docker/docker-compose.yml up -d >/dev/null  # construye la imagen si no existe
-for i in $(seq 1 30); do curl -sf --noproxy "*" --max-time 2 --cacert docker/certs/dev-ca.crt "${OIDC_ISSUER}/healthz" >/dev/null && break; sleep 1; done
+for _ in $(seq 1 60); do curl -sf --noproxy "*" --max-time 2 --cacert docker/certs/dev-ca.crt "${OIDC_ISSUER}/healthz" >/dev/null && break; sleep 1; done
+curl -sf --noproxy "*" --max-time 2 --cacert docker/certs/dev-ca.crt "${OIDC_ISSUER}/healthz" >/dev/null || {
+  echo "✗ El IdP de pruebas no responde en ${OIDC_ISSUER}. Mira: docker compose -f docker/docker-compose.yml logs"
+  echo "  (¿está '127.0.0.1 idp.icex-atlas.test' en /etc/hosts? ¿el puerto 9010 lo usa otro proceso?)"
+  exit 1
+}
 
 echo "→ Auth se conecta a la red del IdP (TEST-NET-3, no privada para el filtro SSRF)"
 docker network connect icex-atlas-idpnet "${AUTH_CONTAINER}" 2>/dev/null || true
@@ -61,6 +70,27 @@ select vault.create_secret('http://supabase_kong_${PROJECT_ID}:8000', 'project_u
 select vault.create_secret('${SERVICE_ROLE_KEY}', 'service_role_key')
  where not exists (select 1 from vault.secrets where name = 'service_role_key');
 SQL
+echo "→ Cuentas de acceso rápido para desarrollo (contraseña: atlas-dev-local)"
+psql "${DB_URL}" -v ON_ERROR_STOP=1 -q -o /dev/null -f supabase/seed_dev_accounts.sql
+# Comprobación real: entrar como Ana con email y contraseña, igual que hará la app.
+dev_login="$(curl -s --noproxy "*" --max-time 10 -X POST "${API_URL}/auth/v1/token?grant_type=password" \
+  -H "apikey: ${ANON_KEY}" -H 'Content-Type: application/json' \
+  -d '{"email":"ana.ortega@demo.icexalumni.invalid","password":"atlas-dev-local"}')"
+if grep -q '"access_token"' <<<"${dev_login}"; then
+  echo "  ok: Ana entra con email y contraseña"
+elif grep -qi 'email_provider_disabled\|logins are disabled' <<<"${dev_login}"; then
+  echo "✗ El acceso con email está desactivado en tu Supabase local (config.toml se lee solo al arrancar)."
+  echo "  Reinicia: supabase stop && ./scripts/start-local.sh"
+  exit 1
+elif grep -qi 'invalid_credentials\|invalid login' <<<"${dev_login}"; then
+  echo "✗ Las cuentas de desarrollo no existen en esta base (¿base sin datos semilla?)."
+  echo "  Ejecuta: supabase db reset && ./scripts/setup-local.sh"
+  exit 1
+else
+  echo "✗ El acceso de desarrollo no funciona: ${dev_login}"
+  exit 1
+fi
+
 echo "→ Configuración de la app (app/env/local.json)"
 cat > app/env/local.json <<JSON
 {
@@ -69,7 +99,9 @@ cat > app/env/local.json <<JSON
   "OIDC_PROVIDER": "custom:icex-alumni",
   "AUTH_REDIRECT": "es.icexalumni.atlas://login-callback",
   "APP_ENV": "local",
-  "SHOW_DEMO_BANNER": true
+  "SHOW_DEMO_BANNER": true,
+  "DEV_LOGIN": true
 }
 JSON
 echo "✓ Entorno local listo. Usuarios OIDC de prueba: ana, javier, laura (admin), nueva (alta nueva), pedro (no socio)."
+echo "  Acceso rápido sin navegador: botones «Modo desarrollo» en la portada (DEV_LOGIN=true)."

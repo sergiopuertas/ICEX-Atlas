@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:icex_atlas/core/auth/session_controller.dart';
 import 'package:icex_atlas/core/errors/failure.dart';
 import 'package:icex_atlas/core/providers.dart';
+import 'package:icex_atlas/core/utils/debouncer.dart';
 import 'package:icex_atlas/features/messaging/data/realtime_gateway.dart';
 import 'package:icex_atlas/features/messaging/domain/messaging.dart';
 import 'package:icex_atlas/features/notifications/application/unread_counts.dart';
@@ -77,11 +78,23 @@ List<Message> mergeMessages(List<Message> a, List<Message> b) {
 @riverpod
 class ChatController extends _$ChatController {
   StreamSubscription<ConversationEvent>? _sub;
-  String get _me => (ref.read(sessionControllerProvider) as SignedIn).me.userId;
+  bool _loadingOlder = false;
+
+  /// Marcar como leído una vez por ráfaga de mensajes entrantes (no una por mensaje).
+  final _readBurst = Debouncer(realtimeBurstWindow);
+
+  void _markReadSoon() => _readBurst(() {
+    final s = ref.mounted ? state.value : null;
+    if (s != null) unawaited(_markRead(s));
+  });
+  String get _me => ref.read(sessionUserIdProvider) ?? '';
 
   @override
   Future<ChatState> build({String? conversationId, String? toUserId}) async {
-    ref.onDispose(() => _sub?.cancel());
+    ref.onDispose(() {
+      _readBurst.dispose();
+      unawaited(_sub?.cancel());
+    });
     final repo = ref.read(messagingRepositoryProvider);
     final outbox = ref.read(messageOutboxProvider);
 
@@ -135,17 +148,25 @@ class ChatController extends _$ChatController {
   }
 
   Future<void> _onEvent(ConversationEvent e) async {
-    final s = state.value;
-    if (s == null) return;
+    if (state.value == null) return;
     switch (e) {
       case MessageCreated(:final message):
         await ref.read(messageOutboxProvider).cache([message]);
+        // Releer el estado DESPUÉS del await: si llegan dos mensajes seguidos, usar el estado
+        // capturado antes perdía el primero.
+        final s = ref.mounted ? state.value : null;
+        if (s == null) return;
         state = AsyncData(s.copyWith(messages: mergeMessages(s.messages, [message])));
-        if (message.remitenteId != _me) unawaited(_markRead(state.value!));
+        if (message.remitenteId != _me) _markReadSoon();
       case MessageRead(:final userId, :final messageId):
+        final s = state.value!;
         if (userId != _me) state = AsyncData(s.copyWith(otherLastReadId: messageId));
       case Resubscribed():
-        await catchUp();
+        try {
+          await catchUp();
+        } on Object {
+          // Se reintentará en el siguiente evento o al reabrir.
+        }
     }
   }
 
@@ -157,20 +178,33 @@ class ChatController extends _$ChatController {
     final last = s.messages.where((m) => m.status != DeliveryStatus.enviando).lastOrNull?.id;
     final batch = await ref.read(messagingRepositoryProvider).messages(convId, after: last);
     await ref.read(messageOutboxProvider).cache(batch.items);
-    state = AsyncData(s.copyWith(messages: mergeMessages(s.messages, batch.items), offline: false));
+    final now = ref.mounted ? state.value : null;
+    if (now == null) return;
+    state = AsyncData(
+      now.copyWith(messages: mergeMessages(now.messages, batch.items), offline: false),
+    );
     unawaited(_markRead(state.value!));
   }
 
+  /// Página anterior. Solo una petición a la vez: el listener de scroll la pide en cada
+  /// píxel cerca del final y antes se lanzaban decenas de consultas iguales.
   Future<void> loadOlder() async {
     final s = state.value;
     final convId = s?.conversationId;
-    if (s == null || convId == null || !s.hasMore || s.messages.isEmpty) return;
-    final batch = await ref
-        .read(messagingRepositoryProvider)
-        .messages(convId, before: s.messages.first.id);
-    state = AsyncData(
-      s.copyWith(messages: mergeMessages(batch.items, s.messages), hasMore: batch.hasMore),
-    );
+    if (_loadingOlder || s == null || convId == null || !s.hasMore || s.messages.isEmpty) return;
+    _loadingOlder = true;
+    try {
+      final batch = await ref
+          .read(messagingRepositoryProvider)
+          .messages(convId, before: s.messages.first.id);
+      final now = ref.mounted ? state.value : null;
+      if (now == null) return;
+      state = AsyncData(
+        now.copyWith(messages: mergeMessages(batch.items, now.messages), hasMore: batch.hasMore),
+      );
+    } finally {
+      _loadingOlder = false;
+    }
   }
 
   /// Envío: UUIDv7 → Drift «enviando» → api.send_message → «enviado».
@@ -188,13 +222,16 @@ class ChatController extends _$ChatController {
       toUserId: s.isNew ? s.other.userId : null,
       categoria: s.isNew ? s.categoria : null,
     );
-    state = AsyncData(s.copyWith(messages: mergeMessages(s.messages, [local])));
+    if (!ref.mounted) return;
+    final now = state.value ?? s;
+    state = AsyncData(now.copyWith(messages: mergeMessages(now.messages, [local])));
     await _deliver(id);
   }
 
   Future<void> retry(String messageId) async {
     await ref.read(messageOutboxProvider).markForRetry(messageId);
-    final s = state.value!;
+    final s = ref.mounted ? state.value : null;
+    if (s == null) return;
     state = AsyncData(
       s.copyWith(
         messages: [
@@ -214,7 +251,11 @@ class ChatController extends _$ChatController {
     } on AppFailure {
       failed = true;
     }
-    final s = state.value!;
+    // Si se salió del chat durante el envío, el outbox ya guardó el resultado: nada que pintar.
+    // (Antes: «Cannot use the Ref after it has been disposed».)
+    if (!ref.mounted) return;
+    final s = state.value;
+    if (s == null) return;
     if (sent != null) {
       final first = s.isNew;
       state = AsyncData(
@@ -244,10 +285,15 @@ class ChatController extends _$ChatController {
 
   Future<void> setCategory(Categoria c) async {
     final s = state.value;
-    if (s == null) return;
+    if (s == null || s.categoria == c) return;
     state = AsyncData(s.copyWith(categoria: c));
-    if (s.conversationId != null) {
+    if (s.conversationId == null) return;
+    try {
       await ref.read(messagingRepositoryProvider).setCategory(s.conversationId!, c);
+      if (ref.mounted) ref.invalidate(conversationsControllerProvider);
+    } on Object {
+      if (ref.mounted) state = AsyncData(state.value!.copyWith(categoria: s.categoria));
+      rethrow;
     }
   }
 
@@ -258,6 +304,7 @@ class ChatController extends _$ChatController {
     if (last == null || s.conversationId == null) return;
     try {
       await ref.read(messagingRepositoryProvider).markRead(s.conversationId!, last.id);
+      if (!ref.mounted) return;
       unawaited(ref.read(unreadProvider.notifier).refresh());
     } on Object {
       // se marcará en la próxima apertura
@@ -266,48 +313,49 @@ class ChatController extends _$ChatController {
 }
 
 class ConversationsState {
-  const ConversationsState({
-    required this.items,
-    this.categoria,
-    this.totalUnread = 0,
-    this.nextCursor,
-  });
+  const ConversationsState({required this.items, this.categoria, this.nextCursor});
 
   final List<Conversation> items;
   final Categoria? categoria;
-  final int totalUnread;
   final String? nextCursor;
 }
 
 @riverpod
 class ConversationsController extends _$ConversationsController {
+  /// Filtro elegido. Vive fuera del estado para sobrevivir a `invalidateSelf()`: antes, cada
+  /// mensaje entrante (evento Realtime) recargaba la lista y borraba el filtro de categoría.
+  Categoria? _categoria;
+
   @override
   Future<ConversationsState> build() async {
-    final session = ref.watch(sessionControllerProvider);
-    if (session is SignedIn) {
+    final userId = ref.watch(sessionUserIdProvider);
+    if (userId != null) {
+      // Recargar la lista una vez por ráfaga de eventos, no una por mensaje.
+      final burst = Debouncer(realtimeBurstWindow);
       final sub = ref
           .read(realtimeGatewayProvider)
-          .userEvents(session.me.userId)
-          .listen((_) => ref.invalidateSelf());
-      ref.onDispose(sub.cancel);
+          .userEvents(userId)
+          .listen((_) => burst(ref.invalidateSelf));
+      ref.onDispose(() {
+        burst.dispose();
+        unawaited(sub.cancel());
+      });
     }
-    return await _load(null);
+    return await _load(_categoria);
   }
 
   Future<ConversationsState> _load(Categoria? c) async {
     final repo = ref.read(messagingRepositoryProvider);
+    // El total de no leídos lo lleva `unreadProvider` (la pantalla lo lee de ahí): antes se
+    // pedía otra vez aquí, en serie tras la lista, en cada carga.
     final page = await repo.conversations(categoria: c);
-    final unread = await repo.totalUnread();
-    return ConversationsState(
-      items: page.items,
-      categoria: c,
-      totalUnread: unread,
-      nextCursor: page.nextCursor,
-    );
+    return ConversationsState(items: page.items, categoria: c, nextCursor: page.nextCursor);
   }
 
   Future<void> filter(Categoria? c) async {
-    state = const AsyncLoading<ConversationsState>();
-    state = await AsyncValue.guard(() => _load(c));
+    _categoria = c;
+    // Se mantiene la lista anterior visible mientras carga (sin parpadeo a «cargando»).
+    final next = await AsyncValue.guard(() => _load(c));
+    if (ref.mounted && _categoria == c) state = next;
   }
 }

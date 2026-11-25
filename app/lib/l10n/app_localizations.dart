@@ -143,19 +143,19 @@ abstract class AppLocalizations {
   /// No description provided for @accessDeniedBody.
   ///
   /// In es, this message translates to:
-  /// **'Tu cuenta no figura como socio verificado de ICEX Alumni. Si crees que es un error, revisa tu alta en la web de la asociación o escríbenos.'**
+  /// **'La cuenta con la que has entrado no figura como socia de ICEX Alumni. Hazte socio en la web de la asociación o entra con otra cuenta.'**
   String get accessDeniedBody;
 
   /// No description provided for @accessDeniedWeb.
   ///
   /// In es, this message translates to:
-  /// **'Ir a la web de ICEX Alumni'**
+  /// **'Hacerme socio de ICEX Alumni'**
   String get accessDeniedWeb;
 
   /// No description provided for @accessDeniedRetry.
   ///
   /// In es, this message translates to:
-  /// **'Volver a intentarlo'**
+  /// **'Volver al inicio'**
   String get accessDeniedRetry;
 
   /// No description provided for @navHome.
@@ -241,6 +241,18 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Siguiendo'**
   String get following;
+
+  /// No description provided for @followersEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no tiene seguidores.'**
+  String get followersEmpty;
+
+  /// No description provided for @followingEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no sigue a nadie.'**
+  String get followingEmpty;
 
   /// No description provided for @composerHint.
   ///
@@ -439,18 +451,6 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Personas que quizá conozcas'**
   String get suggestionsTitle;
-
-  /// No description provided for @orientadorTeaserTitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Orientador Alumni'**
-  String get orientadorTeaserTitle;
-
-  /// No description provided for @orientadorTeaserBody.
-  ///
-  /// In es, this message translates to:
-  /// **'Cuéntanos tu situación y recibe pasos concretos y alumni con quien hablar.'**
-  String get orientadorTeaserBody;
 
   /// No description provided for @newsTitle.
   ///
@@ -803,14 +803,8 @@ abstract class AppLocalizations {
   /// No description provided for @orientadorTitle.
   ///
   /// In es, this message translates to:
-  /// **'Orientador Alumni'**
+  /// **'Orientador'**
   String get orientadorTitle;
-
-  /// No description provided for @orientadorSubtitle.
-  ///
-  /// In es, this message translates to:
-  /// **'Tu próximo paso profesional · {count, plural, =1{1 consulta en este hilo} other{{count} consultas en este hilo}}'**
-  String orientadorSubtitle(int count);
 
   /// No description provided for @orientadorPhase.
   ///
@@ -839,38 +833,14 @@ abstract class AppLocalizations {
   /// No description provided for @orientadorSubmit.
   ///
   /// In es, this message translates to:
-  /// **'Obtener recomendaciones'**
+  /// **'Pedir orientación'**
   String get orientadorSubmit;
 
   /// No description provided for @orientadorLoading.
   ///
   /// In es, this message translates to:
-  /// **'Preparando tus recomendaciones…'**
+  /// **'Buscando…'**
   String get orientadorLoading;
-
-  /// No description provided for @orientadorShortcut1.
-  ///
-  /// In es, this message translates to:
-  /// **'Preparar la entrevista de Fase II'**
-  String get orientadorShortcut1;
-
-  /// No description provided for @orientadorShortcut2.
-  ///
-  /// In es, this message translates to:
-  /// **'Primer empleo tras ICEX'**
-  String get orientadorShortcut2;
-
-  /// No description provided for @orientadorShortcut3.
-  ///
-  /// In es, this message translates to:
-  /// **'Cambiar de sector'**
-  String get orientadorShortcut3;
-
-  /// No description provided for @orientadorShortcut4.
-  ///
-  /// In es, this message translates to:
-  /// **'Elegir destino de beca'**
-  String get orientadorShortcut4;
 
   /// No description provided for @orientadorSteps.
   ///
@@ -1405,6 +1375,348 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Gracias. El equipo de moderación lo revisará.'**
   String get reportThanks;
+
+  /// No description provided for @close.
+  ///
+  /// In es, this message translates to:
+  /// **'Cerrar'**
+  String get close;
+
+  /// No description provided for @moreOptions.
+  ///
+  /// In es, this message translates to:
+  /// **'Más opciones'**
+  String get moreOptions;
+
+  /// No description provided for @copyText.
+  ///
+  /// In es, this message translates to:
+  /// **'Copiar texto'**
+  String get copyText;
+
+  /// No description provided for @copied.
+  ///
+  /// In es, this message translates to:
+  /// **'Copiado'**
+  String get copied;
+
+  /// No description provided for @viewProfileOf.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver el perfil de {name}'**
+  String viewProfileOf(String name);
+
+  /// No description provided for @deletePostBody.
+  ///
+  /// In es, this message translates to:
+  /// **'La publicación desaparecerá de tu perfil y del feed. No se puede deshacer.'**
+  String get deletePostBody;
+
+  /// No description provided for @shareInNetworkHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Añade tu opinión (opcional)'**
+  String get shareInNetworkHint;
+
+  /// No description provided for @sharedDone.
+  ///
+  /// In es, this message translates to:
+  /// **'Compartido en tu red'**
+  String get sharedDone;
+
+  /// No description provided for @shareDefaultText.
+  ///
+  /// In es, this message translates to:
+  /// **'Comparto esta publicación'**
+  String get shareDefaultText;
+
+  /// No description provided for @composeTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear publicación'**
+  String get composeTitle;
+
+  /// No description provided for @composeHint.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Qué quieres compartir con la comunidad ICEX Alumni?'**
+  String get composeHint;
+
+  /// No description provided for @composeDiscardTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Descartar la publicación?'**
+  String get composeDiscardTitle;
+
+  /// No description provided for @composeDiscardBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Perderás lo que has escrito.'**
+  String get composeDiscardBody;
+
+  /// No description provided for @keepEditing.
+  ///
+  /// In es, this message translates to:
+  /// **'Seguir editando'**
+  String get keepEditing;
+
+  /// No description provided for @discard.
+  ///
+  /// In es, this message translates to:
+  /// **'Descartar'**
+  String get discard;
+
+  /// No description provided for @removePhoto.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar foto'**
+  String get removePhoto;
+
+  /// No description provided for @composerEvent.
+  ///
+  /// In es, this message translates to:
+  /// **'Evento'**
+  String get composerEvent;
+
+  /// No description provided for @composerPublished.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicado'**
+  String get composerPublished;
+
+  /// No description provided for @exploreNetwork.
+  ///
+  /// In es, this message translates to:
+  /// **'Explorar la red'**
+  String get exploreNetwork;
+
+  /// No description provided for @seeAll.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver todo'**
+  String get seeAll;
+
+  /// No description provided for @dismiss.
+  ///
+  /// In es, this message translates to:
+  /// **'Descartar'**
+  String get dismiss;
+
+  /// No description provided for @postTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Publicación'**
+  String get postTitle;
+
+  /// No description provided for @profileNoPosts.
+  ///
+  /// In es, this message translates to:
+  /// **'Aún no hay publicaciones.'**
+  String get profileNoPosts;
+
+  /// No description provided for @followsYou.
+  ///
+  /// In es, this message translates to:
+  /// **'Te sigue'**
+  String get followsYou;
+
+  /// No description provided for @postsLabel.
+  ///
+  /// In es, this message translates to:
+  /// **'publicaciones'**
+  String get postsLabel;
+
+  /// No description provided for @profileBlocked.
+  ///
+  /// In es, this message translates to:
+  /// **'Has bloqueado a {name}'**
+  String profileBlocked(String name);
+
+  /// No description provided for @today.
+  ///
+  /// In es, this message translates to:
+  /// **'Hoy'**
+  String get today;
+
+  /// No description provided for @yesterday.
+  ///
+  /// In es, this message translates to:
+  /// **'Ayer'**
+  String get yesterday;
+
+  /// No description provided for @messageFailedTapRetry.
+  ///
+  /// In es, this message translates to:
+  /// **'No enviado · toca para reintentar'**
+  String get messageFailedTapRetry;
+
+  /// No description provided for @noConversationsFilter.
+  ///
+  /// In es, this message translates to:
+  /// **'No hay conversaciones en esta categoría.'**
+  String get noConversationsFilter;
+
+  /// No description provided for @clearSearch.
+  ///
+  /// In es, this message translates to:
+  /// **'Borrar búsqueda'**
+  String get clearSearch;
+
+  /// No description provided for @filters.
+  ///
+  /// In es, this message translates to:
+  /// **'Filtros'**
+  String get filters;
+
+  /// No description provided for @directoryGroups.
+  ///
+  /// In es, this message translates to:
+  /// **'Grupos de alumni'**
+  String get directoryGroups;
+
+  /// No description provided for @clearFilters.
+  ///
+  /// In es, this message translates to:
+  /// **'Quitar filtros'**
+  String get clearFilters;
+
+  /// No description provided for @showResults.
+  ///
+  /// In es, this message translates to:
+  /// **'Ver resultados'**
+  String get showResults;
+
+  /// No description provided for @notificationsNew.
+  ///
+  /// In es, this message translates to:
+  /// **'Nuevas'**
+  String get notificationsNew;
+
+  /// No description provided for @notificationsEarlier.
+  ///
+  /// In es, this message translates to:
+  /// **'Anteriores'**
+  String get notificationsEarlier;
+
+  /// No description provided for @change.
+  ///
+  /// In es, this message translates to:
+  /// **'Cambiar'**
+  String get change;
+
+  /// No description provided for @unsavedChangesTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Descartar los cambios?'**
+  String get unsavedChangesTitle;
+
+  /// No description provided for @unsavedChangesBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Tienes cambios sin guardar en tu perfil.'**
+  String get unsavedChangesBody;
+
+  /// No description provided for @loginFeatureWorld.
+  ///
+  /// In es, this message translates to:
+  /// **'Encuentra alumni en cualquier país'**
+  String get loginFeatureWorld;
+
+  /// No description provided for @loginFeaturePromo.
+  ///
+  /// In es, this message translates to:
+  /// **'Conecta con tu promoción y tu club'**
+  String get loginFeaturePromo;
+
+  /// No description provided for @loginFeatureOpportunities.
+  ///
+  /// In es, this message translates to:
+  /// **'Descubre ofertas, mentorías y eventos'**
+  String get loginFeatureOpportunities;
+
+  /// No description provided for @loginNotMember.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Aún no eres socio?'**
+  String get loginNotMember;
+
+  /// No description provided for @loginJoin.
+  ///
+  /// In es, this message translates to:
+  /// **'Hazte socio'**
+  String get loginJoin;
+
+  /// No description provided for @accessDeniedOtherAccount.
+  ///
+  /// In es, this message translates to:
+  /// **'Entrar con otra cuenta'**
+  String get accessDeniedOtherAccount;
+
+  /// No description provided for @linkOpenError.
+  ///
+  /// In es, this message translates to:
+  /// **'No se pudo abrir {url}'**
+  String linkOpenError(String url);
+
+  /// No description provided for @devLoginTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Modo desarrollo'**
+  String get devLoginTitle;
+
+  /// No description provided for @devLoginHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Entra directamente como una cuenta de prueba, sin navegador. No aparece en producción.'**
+  String get devLoginHint;
+
+  /// No description provided for @readMore.
+  ///
+  /// In es, this message translates to:
+  /// **'Leer más'**
+  String get readMore;
+
+  /// No description provided for @showLess.
+  ///
+  /// In es, this message translates to:
+  /// **'Mostrar menos'**
+  String get showLess;
+
+  /// No description provided for @homeGreeting.
+  ///
+  /// In es, this message translates to:
+  /// **'Hola, {name}'**
+  String homeGreeting(String name);
+
+  /// No description provided for @homeSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Lo último de tu red ICEX Alumni'**
+  String get homeSubtitle;
+
+  /// No description provided for @orientadorIntro.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige tu situación y te proponemos pasos concretos y alumni con quienes hablar.'**
+  String get orientadorIntro;
+
+  /// No description provided for @orientadorQuestion.
+  ///
+  /// In es, this message translates to:
+  /// **'¿En qué te podemos orientar?'**
+  String get orientadorQuestion;
+
+  /// No description provided for @orientadorContext.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu situación'**
+  String get orientadorContext;
+
+  /// No description provided for @newsEmpty.
+  ///
+  /// In es, this message translates to:
+  /// **'Todavía no hay comunicados de la asociación.'**
+  String get newsEmpty;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

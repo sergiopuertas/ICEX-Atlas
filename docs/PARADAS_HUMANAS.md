@@ -44,6 +44,9 @@ Leyenda: ☐ pendiente · Responsable sugerido entre corchetes.
       - Genera la contraseña de la base de datos con el gestor de contraseñas y guárdala ahí.
       - Postgres 17 (lo trae por defecto).
    5. Anota de cada proyecto: *Project ref*, URL, clave publishable/anon y clave secret/service_role.
+   6. En cada proyecto, *Authentication → Providers → Email* debe quedar **desactivado**. En local está activo solo
+      para el acceso rápido de desarrollo (`docs/autenticacion.md`). En staging y producción solo se entra con
+      WordPress.
    → Desbloquea: despliegue (runbook §1).
 
 ☐ **B2. Activar PITR en producción** [responsable técnico]
@@ -63,7 +66,7 @@ Leyenda: ☐ pendiente · Responsable sugerido entre corchetes.
 ## C. WordPress (proveedor de identidad)
 
 ☐ **C1. Preparar una copia de pruebas de la web** [proveedor web de la asociación]
-   Debe ser una copia (*staging*) de la web de ICEX Alumni con HTTPS y dominio público (p. ej. `staging.icex-alumni.es`).
+   Debe ser una copia (*staging*) de la web de ICEX Alumni con HTTPS y dominio público (p. ej. `staging.icex-alumni.com`).
    **No instales nada en la web real** hasta validar el flujo completo en staging.
 
 ☐ **C2. Instalar el plugin y el snippet de claims en la copia de pruebas**

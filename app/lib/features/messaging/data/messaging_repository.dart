@@ -1,5 +1,6 @@
 import 'package:icex_atlas/core/api/api_client.dart';
 import 'package:icex_atlas/core/api/page.dart';
+import 'package:icex_atlas/core/utils/ids.dart';
 import 'package:icex_atlas/features/messaging/domain/messaging.dart';
 
 class MessagesBatch {
@@ -68,7 +69,11 @@ class MessagingRepository {
       'p_to': toUserId,
       'p_categoria': categoria?.code,
     });
-    return SendResult(message: Message.fromJson(j), duplicate: j['duplicado'] as bool? ?? false);
+    final message = Message.fromJson(j);
+    final duplicate = j['duplicado'] as bool? ?? false;
+    // `created_at` de un mensaje recién creado = hora del servidor ahora mismo.
+    if (!duplicate) ServerClock.instance.observe(message.createdAt);
+    return SendResult(message: message, duplicate: duplicate);
   }
 
   Future<void> markRead(String conversationId, String messageId) =>

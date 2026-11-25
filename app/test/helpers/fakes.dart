@@ -71,6 +71,7 @@ class FakeAuthGateway implements AuthGateway {
   final _events = StreamController<AuthEvent>.broadcast();
   int signInCalls = 0;
   int signOutCalls = 0;
+  bool? lastForceLogin;
 
   void emit(AuthEvent e) => _events.add(e);
 
@@ -78,7 +79,20 @@ class FakeAuthGateway implements AuthGateway {
   Stream<AuthEvent> get events => _events.stream;
 
   @override
-  Future<void> signIn() async => signInCalls++;
+  Future<void> signIn({bool forceLogin = false}) async {
+    signInCalls++;
+    lastForceLogin = forceLogin;
+  }
+
+  /// Respuesta configurable del acceso con contraseña (por defecto, éxito sin evento).
+  Future<void> Function(String email)? onPasswordSignIn;
+  String? lastPasswordEmail;
+
+  @override
+  Future<void> signInWithPassword({required String email, required String password}) async {
+    lastPasswordEmail = email;
+    await onPasswordSignIn?.call(email);
+  }
 
   @override
   Future<void> signOut() async {

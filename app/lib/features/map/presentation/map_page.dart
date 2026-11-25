@@ -12,9 +12,10 @@ import 'package:icex_atlas/features/profiles/domain/profile.dart';
 import 'package:icex_atlas/l10n/app_localizations.dart';
 import 'package:icex_atlas/shared/widgets/avatar.dart';
 import 'package:icex_atlas/shared/widgets/badges.dart';
+import 'package:icex_atlas/shared/widgets/brand.dart';
 import 'package:icex_atlas/shared/widgets/common.dart';
+import 'package:icex_atlas/shared/widgets/links.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 /// Mapa mundial con alumni y clubs agrupados por zoom (clusters con número calculados en SQL).
 /// Teselas OpenStreetMap por defecto, configurables con MAP_TILE_URL (ver docs/runbook.md).
@@ -45,85 +46,103 @@ class _MapPageState extends ConsumerState<MapPage> {
     final s = ref.watch(mapViewControllerProvider);
     final maxCount = s.data.clusters.fold<int>(1, (m, c) => c.count > m ? c.count : m);
 
-    return Column(
-      children: [
-        PageHeader(title: l.mapTitle, subtitle: l.mapSubtitle(s.data.total, s.data.clubs.length)),
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-          child: Align(
-            alignment: Alignment.centerLeft,
-            child: OutlinedButton.icon(
+    // Fondo rojo oscuro detrás del mapa: sus esquinas redondeadas continúan la cabecera.
+    return ColoredBox(
+      color: const Color(0xFF8A0311),
+      child: Column(
+        children: [
+          HeroHeader(
+            title: l.mapTitle,
+            subtitle: l.mapSubtitle(s.data.total, s.data.clubs.length),
+            showSheetEdge: false,
+            bottom: FilledButton.icon(
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: IcexColors.primary,
+              ),
               onPressed: () => _showFilters(context),
               icon: const Icon(Icons.tune),
               label: Text(l.mapFilters),
             ),
           ),
-        ),
-        Expanded(
-          child: Semantics(
-            label: '${l.mapTitle}. ${l.mapSubtitle(s.data.total, s.data.clubs.length)}',
-            child: FlutterMap(
-              mapController: _map,
-              options: MapOptions(
-                initialCenter: const LatLng(30, 5),
-                initialZoom: 2,
-                minZoom: 1,
-                maxZoom: 14, // ubicación a nivel de ciudad: no tiene sentido acercar más
-                onMapReady: () => _onCamera(_map.camera),
-                onPositionChanged: (camera, _) => _onCamera(camera),
-              ),
-              children: [
-                TileLayer(urlTemplate: env.mapTileUrl, userAgentPackageName: 'es.icexalumni.atlas'),
-                MarkerLayer(
-                  markers: [
-                    for (final c in s.data.clusters)
-                      Marker(
-                        point: LatLng(c.lat, c.lng),
-                        width: c.isSingle ? 40 : _size(c.count, maxCount),
-                        height: c.isSingle ? 40 : _size(c.count, maxCount),
-                        child: c.isSingle
-                            ? GestureDetector(
-                                onTap: () => context.push(Routes.profile(c.alumni!.slug)),
-                                child: Avatar.of(c.alumni!, size: 40, ring: true),
-                              )
-                            : _ClusterBubble(count: c.count, onTap: () => _openCluster(context, c)),
+          Expanded(
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+              child: Semantics(
+                label: '${l.mapTitle}. ${l.mapSubtitle(s.data.total, s.data.clubs.length)}',
+                child: FlutterMap(
+                  mapController: _map,
+                  options: MapOptions(
+                    initialCenter: const LatLng(30, 5),
+                    initialZoom: 2,
+                    minZoom: 1,
+                    maxZoom: 14, // ubicación a nivel de ciudad: no tiene sentido acercar más
+                    onMapReady: () => _onCamera(_map.camera),
+                    onPositionChanged: (camera, _) => _onCamera(camera),
+                  ),
+                  children: [
+                    // Sin URL de teselas (tests) no se carga la capa base.
+                    if (env.mapTileUrl.isNotEmpty)
+                      TileLayer(
+                        urlTemplate: env.mapTileUrl,
+                        userAgentPackageName: 'es.icexalumni.atlas',
                       ),
-                    if (s.filters.showClubs)
-                      for (final club in s.data.clubs)
-                        Marker(
-                          point: LatLng(club.lat, club.lng),
-                          width: 36,
-                          height: 36,
-                          child: Semantics(
-                            button: true,
-                            label: club.nombre,
-                            child: GestureDetector(
-                              onTap: () => context.push(Routes.club(club.id)),
-                              child: const DecoratedBox(
-                                decoration: BoxDecoration(
-                                  color: IcexColors.accent,
-                                  shape: BoxShape.circle,
+                    MarkerLayer(
+                      markers: [
+                        for (final c in s.data.clusters)
+                          Marker(
+                            point: LatLng(c.lat, c.lng),
+                            width: c.isSingle ? 40 : _size(c.count, maxCount),
+                            height: c.isSingle ? 40 : _size(c.count, maxCount),
+                            child: c.isSingle
+                                ? GestureDetector(
+                                    onTap: () => context.push(Routes.profile(c.alumni!.slug)),
+                                    child: Avatar.of(c.alumni!, size: 40, ring: true),
+                                  )
+                                : _ClusterBubble(
+                                    count: c.count,
+                                    onTap: () => _openCluster(context, c),
+                                  ),
+                          ),
+                        if (s.filters.showClubs)
+                          for (final club in s.data.clubs)
+                            Marker(
+                              point: LatLng(club.lat, club.lng),
+                              width: 36,
+                              height: 36,
+                              child: Semantics(
+                                button: true,
+                                label: club.nombre,
+                                child: GestureDetector(
+                                  onTap: () => context.push(Routes.club(club.id)),
+                                  child: const DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: IcexColors.accent,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(Icons.flag, size: 20, color: IcexColors.onAccent),
+                                  ),
                                 ),
-                                child: Icon(Icons.flag, size: 20, color: IcexColors.onAccent),
                               ),
                             ),
-                          ),
+                      ],
+                    ),
+                    RichAttributionWidget(
+                      attributions: [
+                        TextSourceAttribution(
+                          env.mapTileAttribution,
+                          onTap: () =>
+                              openExternalUrl(context, 'https://www.openstreetmap.org/copyright'),
                         ),
-                  ],
-                ),
-                RichAttributionWidget(
-                  attributions: [
-                    TextSourceAttribution(
-                      env.mapTileAttribution,
-                      onTap: () => launchUrl(Uri.parse('https://www.openstreetmap.org/copyright')),
+                      ],
                     ),
                   ],
                 ),
-              ],
+              ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -139,6 +158,7 @@ class _MapPageState extends ConsumerState<MapPage> {
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
+      useRootNavigator: true,
       builder: (_) => _ClusterSheet(cluster: c),
     );
   }
@@ -146,6 +166,7 @@ class _MapPageState extends ConsumerState<MapPage> {
   Future<void> _showFilters(BuildContext context) => showModalBottomSheet<void>(
     context: context,
     showDragHandle: true,
+    useRootNavigator: true,
     builder: (_) => Consumer(
       builder: (context, ref, _) {
         final l = AppLocalizations.of(context);

@@ -86,21 +86,27 @@ FakeApiClient demoApi() => FakeApiClient({
   },
 });
 
-Widget harness(Widget child, FakeApiClient api, {FakeAuthGateway? auth}) {
+Widget harness(Widget child, FakeApiClient api, {FakeAuthGateway? auth, AppEnv? env}) {
   final db = AppDatabase(NativeDatabase.memory());
   addTearDown(db.close);
-  return _harness(child, api, db, auth: auth);
+  return _harness(child, api, db, auth: auth, env: env);
 }
 
-Widget _harness(Widget child, FakeApiClient api, AppDatabase db, {FakeAuthGateway? auth}) =>
-    ProviderScope(
-      overrides: [
-        apiClientProvider.overrideWithValue(api),
-        authGatewayProvider.overrideWithValue(auth ?? FakeAuthGateway(currentUserId: 'u-1')),
-        realtimeGatewayProvider.overrideWithValue(FakeRealtime()),
-        appDatabaseProvider.overrideWithValue(db),
-        idGeneratorProvider.overrideWithValue(FakeIds()),
-        appEnvProvider.overrideWithValue(
+Widget _harness(
+  Widget child,
+  FakeApiClient api,
+  AppDatabase db, {
+  FakeAuthGateway? auth,
+  AppEnv? env,
+}) => ProviderScope(
+  overrides: [
+    apiClientProvider.overrideWithValue(api),
+    authGatewayProvider.overrideWithValue(auth ?? FakeAuthGateway(currentUserId: 'u-1')),
+    realtimeGatewayProvider.overrideWithValue(FakeRealtime()),
+    appDatabaseProvider.overrideWithValue(db),
+    idGeneratorProvider.overrideWithValue(FakeIds()),
+    appEnvProvider.overrideWithValue(
+      env ??
           const AppEnv(
             supabaseUrl: 'http://x',
             supabaseAnonKey: 'k',
@@ -109,30 +115,32 @@ Widget _harness(Widget child, FakeApiClient api, AppDatabase db, {FakeAuthGatewa
             environment: 'test',
             showDemoBanner: true,
           ),
-        ),
-      ],
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        theme: IcexTheme.light(),
-        locale: const Locale('es'),
-        supportedLocales: AppLocalizations.supportedLocales,
-        localizationsDelegates: const [
-          AppLocalizations.delegate,
-          GlobalMaterialLocalizations.delegate,
-          GlobalWidgetsLocalizations.delegate,
-          GlobalCupertinoLocalizations.delegate,
-        ],
-        home: child,
-      ),
-    );
+    ),
+  ],
+  child: MaterialApp(
+    debugShowCheckedModeBanner: false,
+    theme: IcexTheme.light(),
+    locale: const Locale('es'),
+    supportedLocales: AppLocalizations.supportedLocales,
+    localizationsDelegates: const [
+      AppLocalizations.delegate,
+      GlobalMaterialLocalizations.delegate,
+      GlobalWidgetsLocalizations.delegate,
+      GlobalCupertinoLocalizations.delegate,
+    ],
+    home: child,
+  ),
+);
 
 Future<void> pumpPhone(WidgetTester t, Widget w) async {
   await t.binding.setSurfaceSize(_phone);
   t.view.devicePixelRatio = 1;
   addTearDown(() => t.binding.setSurfaceSize(null));
   await t.pumpWidget(w);
-  await t.pump(const Duration(milliseconds: 50));
-  await t.pump(const Duration(milliseconds: 50));
+  // Sesión → perfil → feed: varias respuestas asíncronas encadenadas.
+  for (var i = 0; i < 6; i++) {
+    await t.pump(const Duration(milliseconds: 50));
+  }
 }
 
 void main() {
@@ -156,7 +164,7 @@ void main() {
   testWidgets('Inicio (feed)', (t) async {
     final api = demoApi();
     await pumpPhone(t, harness(const Scaffold(body: HomePage()), api));
-    expect(find.text('Ana Ortega Jiménez'), findsWidgets);
+    expect(find.text('Javier Martín Jiménez'), findsWidgets);
     expect(find.text('Comparte una novedad con la red ICEX Alumni…'), findsOneWidget);
     expect(find.textContaining('Reunión Anual'), findsOneWidget);
     await expectLater(find.byType(Scaffold).first, matchesGoldenFile('files/inicio.png'));

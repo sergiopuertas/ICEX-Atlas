@@ -52,7 +52,7 @@ AppDatabase appDatabase(Ref ref) {
 }
 
 @Riverpod(keepAlive: true)
-IdGenerator idGenerator(Ref ref) => const UuidV7Generator();
+IdGenerator idGenerator(Ref ref) => UuidV7Generator();
 
 // Repositorios.
 

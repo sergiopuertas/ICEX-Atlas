@@ -111,3 +111,121 @@ Los flujos `release-mobile.yml` suben solo a **TestFlight** y a la **pista inter
 (`skip_submission`, `release_status: draft`). Pasar a producción en las tiendas es siempre una acción humana en cada
 consola. El despliegue del backend (`deploy-backend.yml`) es manual (`workflow_dispatch`) y producción exige
 aprobación del *environment* de GitHub. El seed nunca se aplica fuera de local.
+
+## D-020 · Navegación con `StatefulShellRoute.indexedStack`
+Las cinco pestañas (Inicio, Red, Mapa, Mensajes, Orientador) son ramas de un `StatefulShellRoute.indexedStack`
+de go_router en lugar de un `ShellRoute`. Cada pestaña conserva su `Navigator`, su scroll y sus datos al cambiar
+de pestaña, como en Instagram o LinkedIn; antes cada cambio destruía la página (el feed se recargaba y el
+Orientador perdía sus respuestas). Volver a tocar la pestaña activa la lleva arriba (`tabReselectedProvider`).
+Las hojas inferiores que se abren desde una pestaña usan `useRootNavigator: true` para cubrir la barra inferior.
+
+## D-021 · Estado compartido de publicaciones (`PostOverrides`)
+Recomendar, comentar y borrar se aplican sobre un único estado (`postOverridesProvider`, keepAlive por usuario)
+que leen todas las tarjetas (`ConnectedPostCard`), en lugar de que cada lista tenga su copia. Así una publicación
+se ve igual en Inicio, en el perfil y en el detalle. El estado se limpia al refrescar el feed y al cambiar de
+usuario. Las peticiones de Recomendar en curso bloquean toques repetidos sobre la misma publicación.
+
+## D-022 · Servicios de sesión dependen de `sessionUserIdProvider`
+Push, presencia, no leídos y las suscripciones de Realtime dependen del id del usuario (`sessionUserIdProvider`,
+un `select` sobre la sesión) y no del estado de sesión completo. El estado cambia cada vez que se recarga el perfil
+(editar, cambiar foto, privacidad) y antes eso reiniciaba esos servicios; el de push, al pararse, daba de baja el
+token del dispositivo. `refreshMe()` ya no cierra la sesión ante un fallo de red.
+
+## D-023 · Diálogos con campo de texto como `StatefulWidget`
+Todo diálogo con `TextField` crea y libera su `TextEditingController` en su propio `State`
+(`lib/shared/widgets/dialogs.dart`). Liberarlo tras `await showDialog(...)` provocaba
+«A TextEditingController was used after being disposed» durante la animación de cierre. Publicar y compartir
+en la red usan ahora una pantalla de composición completa (`/publicar`) en lugar de un diálogo.
+
+## D-024 · Cambio de cuenta con `prompt=login` y enlace a «Hazte socio»
+El proveedor de identidad (WordPress en producción, el IdP simulado en local) recuerda la sesión. Tras un
+«acceso solo para socios», volver a entrar reutilizaba en silencio la misma cuenta no socia. Ahora, tras un acceso
+denegado o un cierre de sesión, y en «Entrar con otra cuenta», la app pide `prompt=login` y `max_age=0` (OIDC
+estándar; Supabase Auth reenvía estos parámetros al proveedor). El IdP de pruebas (`oidc-provider`) los respeta;
+**hay que comprobar en la copia de pruebas de WordPress (C2) que el plugin OpenID Connect Server también lo hace**.
+Si no, el usuario tendría que cerrar sesión en la web para cambiar de cuenta.
+La web de la asociación es `icex-alumni.com` (antes la app apuntaba a `icex-alumni.es`, que no existe), y a quien
+no es socio se le envía a `MEMBERSHIP_URL` (`/hazte-alumni/`). Si el usuario vuelve a la app sin completar el acceso,
+el botón se reactiva a los pocos segundos.
+
+## D-025 · Acceso rápido de desarrollo
+En local, la portada muestra «Modo desarrollo» con cuentas de prueba (ana, javier, laura y pedro sin membresía) que
+entran con email y contraseña, sin navegador. Las cuentas están en `supabase/seed_dev_accounts.sql`, aplicado por
+`setup-local.sh` y por `supabase db reset`. El proveedor Email está activo solo en `config.toml` (local), y
+`identity.before_user_created` sigue rechazando cualquier alta que no venga de OIDC. La app solo muestra el panel con
+`DEV_LOGIN=true` y `AppEnv.devLogin` lo ignora en producción (lo comprueba un test). Ver `docs/autenticacion.md`.
+
+## D-026 · Estilo de marca en toda la app
+La estética de la portada se lleva a todas las pantallas (`shared/widgets/brand.dart`): barra superior roja, logo
+sobre una pastilla blanca, cabecera `HeroHeader` con degradado rojo, globo de puntos, barra amarilla, título en
+blanco y borde de «hoja» donde empieza el contenido. Los contadores sobre rojo son amarillos y la fase sobre rojo
+va en una pastilla blanca. El gris secundario se oscurece a `#57504D` (7,9:1 sobre blanco).
+
+## D-027 · Feed para leer y Orientador sencillo
+En el feed solo se intercala, una vez, el carrusel de sugerencias de personas. Se quitan el anuncio del Orientador y
+«La comunidad en cifras». Los textos largos se recortan a 6 líneas con un botón «Leer más» / «Mostrar menos», y el
+detalle de la publicación muestra el texto completo. El Orientador queda en una pregunta, el contexto (fase, país y
+sector, rellenado con el perfil) y un botón, sin sugerencias prefabricadas ni iconos «mágicos».
+
+## D-028 · Rendimiento: medir con presupuestos, no con relojes
+Los tests de latencia cuentan peticiones y reconstrucciones (`test/performance`), que es lo que determina la
+latencia percibida y es estable en CI. Cambios que derivan de ellos: el total de no leídos ya no se pide dos veces
+(la lista de conversaciones reutiliza `unreadProvider`); las ráfagas de Realtime se agrupan en una consulta
+(`Debouncer`, 400 ms) para contadores, conversaciones y «marcar leído»; las URL firmadas se piden una vez aunque
+varios avatares iguales las soliciten a la vez; las imágenes se decodifican al tamaño en pantalla; el
+desvanecido de «Leer más» es un degradado en lugar de un `ShaderMask`. La fluidez real se mide en un móvil en modo
+profile (`scripts/perf-app.sh`, `integration_test/`).
+
+## D-029 · Concurrencia: lo que no puede depender del orden de llegada
+Pruebas con decenas de conexiones reales (`supabase/stress/concurrency.py`). Reglas que salen de ellas:
+- **Id de mensaje = UUID v7 con fecha no futura** (±5 min de reloj). Ordena la conversación y los no leídos; un id
+  aleatorio o del futuro quedaba «siempre el último». Se admiten ids antiguos: reintentos de mensajes escritos sin
+  cobertura.
+- **Lo que avanza no retrocede:** el «último mensaje» de la conversación y el puntero de leído del remitente solo
+  avanzan. Un mensaje que llega tarde cuenta como no leído para el destinatario (para él es nuevo).
+- **`mark_read` bloquea su fila antes de contar.** Antes, un envío simultáneo podía sumar +1 y el recuento lo pisaba
+  (un mensaje sin aviso).
+- **Objetos que desaparecen:** seguir, escribir, recomendar, comentar, compartir o unirse a algo que otro borra en
+  ese instante devolvía la violación de clave ajena en crudo. Ahora se bloquea (`FOR KEY SHARE`) y responde
+  «no encontrado» (P0002). La app también traduce 23503 a «no encontrado».
+- **Orden de bloqueo único** (socio → conversación → mensajes) en `send_message` y `delete_my_account`.
+- **Notificaciones agrupadas con `INSERT … ON CONFLICT`**: atómico, sin depender de bloqueos indirectos.
+
+## D-030 · Mantenimiento de particiones sin cortar envíos
+`ensure_partitions` crea las particiones fuera de línea, mueve las filas que hubieran caído en la partición por
+defecto y las adjunta. Pide todos los bloqueos al principio con `lock_timeout` de 100 ms (menor que
+`deadlock_timeout`): si choca con envíos en curso, cede el mantenimiento y reintenta; nunca aborta un mensaje.
+
+## D-031 · RLS y funciones `SECURITY DEFINER` por rendimiento
+Con RLS activo, Postgres no usa índices con operadores no «leakproof» (PostGIS `&&`/`<->`, `LIKE` de trigramas).
+`alumni_near`, `map_clusters` y `search_directory` pasan a `SECURITY DEFINER`: exigen socio activo
+(`require_member`) y aplican ellas mismas los filtros (socio activo, visibilidad, bloqueos). Tests en
+`080_concurrency_rules`. La política de lectura de posts se reescribe como expresión con subconsultas iniciales
+(misma regla que `feed.can_view`, evaluada una vez por consulta en vez de por fila).
+
+## D-032 · Agregados en caché para vistas globales
+Mapa a zoom ≤ 6 y cifras de la comunidad salen de agregados que refresca pg_cron cada 10 min. Si la caché no
+existe o tiene más de 15 min, se calcula en vivo (también tras un `db reset`). Una celda con una sola persona se
+comprueba en vivo antes de mostrarla. Coste: un socio nuevo tarda hasta 10 min en aparecer en la vista mundial.
+Las sugerencias puntúan solo candidatos sacados por índice (amigos de amigos y los 300 más seguidos de cada grupo).
+
+## D-033 · Directorio: solo se busca por lo que todos pueden ver
+La columna de búsqueda incluía empresa, cargo y ciudad aunque el socio los ocultara: se le encontraba por el dato
+oculto. Ahora solo indexa los campos visibles para todos los socios. Las bajas ya no aparecen en el directorio,
+el mapa ni «cerca de ti».
+
+## D-034 · Avisos push: vaciar la cola, en paralelo y sin reenvíos
+`push-dispatcher` procesaba como mucho 200 eventos por minuto, de uno en uno, y un fallo en un lote hacía reenviar
+todo el lote. Ahora vacía la cola por lotes dentro de 45 s (el cron es cada minuto y la visibilidad en cola es de
+120 s: no se solapan), envía con 16 conexiones a FCM, aísla los fallos por token, descarta tras 5 lecturas un
+mensaje que falla siempre y pide el token OAuth de FCM una sola vez aunque haya envíos simultáneos.
+
+## D-035 · Promoción en curso calculada
+La promoción en curso es `año − 1975` (2026 → 51ª) en la base de datos (`profiles.current_promocion()`) y en la
+app (`currentPromocion()`); la app usa el valor que envía el servidor en `community_stats`. Si cambia el
+calendario se fija sin desplegar con la clave `promociones.actual` de `config.app_config`. Quien se da de alta en
+la promoción en curso sin fase en el IdP empieza en Fase 0. El logotipo ya no lleva el sello del 50 aniversario.
+
+## D-036 · Orientador sin texto libre
+El Orientador solo pide fase, país y sector (rellenos con el perfil). La Edge Function ya admitía la consulta
+vacía y genera la pregunta a partir del contexto.

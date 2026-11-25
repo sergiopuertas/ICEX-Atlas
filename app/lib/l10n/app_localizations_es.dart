@@ -36,13 +36,13 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get accessDeniedBody =>
-      'Tu cuenta no figura como socio verificado de ICEX Alumni. Si crees que es un error, revisa tu alta en la web de la asociación o escríbenos.';
+      'La cuenta con la que has entrado no figura como socia de ICEX Alumni. Hazte socio en la web de la asociación o entra con otra cuenta.';
 
   @override
-  String get accessDeniedWeb => 'Ir a la web de ICEX Alumni';
+  String get accessDeniedWeb => 'Hacerme socio de ICEX Alumni';
 
   @override
-  String get accessDeniedRetry => 'Volver a intentarlo';
+  String get accessDeniedRetry => 'Volver al inicio';
 
   @override
   String get navHome => 'Inicio';
@@ -88,6 +88,12 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get following => 'Siguiendo';
+
+  @override
+  String get followersEmpty => 'Aún no tiene seguidores.';
+
+  @override
+  String get followingEmpty => 'Aún no sigue a nadie.';
 
   @override
   String get composerHint => 'Comparte una novedad con la red ICEX Alumni…';
@@ -205,13 +211,6 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get suggestionsTitle => 'Personas que quizá conozcas';
-
-  @override
-  String get orientadorTeaserTitle => 'Orientador Alumni';
-
-  @override
-  String get orientadorTeaserBody =>
-      'Cuéntanos tu situación y recibe pasos concretos y alumni con quien hablar.';
 
   @override
   String get newsTitle => 'Novedades de la asociación';
@@ -423,18 +422,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get catColaboracionEmpresarial => 'Colaboración empresarial';
 
   @override
-  String get orientadorTitle => 'Orientador Alumni';
-
-  @override
-  String orientadorSubtitle(int count) {
-    String _temp0 = intl.Intl.pluralLogic(
-      count,
-      locale: localeName,
-      other: '$count consultas en este hilo',
-      one: '1 consulta en este hilo',
-    );
-    return 'Tu próximo paso profesional · $_temp0';
-  }
+  String get orientadorTitle => 'Orientador';
 
   @override
   String get orientadorPhase => 'Fase';
@@ -450,22 +438,10 @@ class AppLocalizationsEs extends AppLocalizations {
       'Ej.: Termino la beca en Berlín y quiero preparar las entrevistas de Fase II…';
 
   @override
-  String get orientadorSubmit => 'Obtener recomendaciones';
+  String get orientadorSubmit => 'Pedir orientación';
 
   @override
-  String get orientadorLoading => 'Preparando tus recomendaciones…';
-
-  @override
-  String get orientadorShortcut1 => 'Preparar la entrevista de Fase II';
-
-  @override
-  String get orientadorShortcut2 => 'Primer empleo tras ICEX';
-
-  @override
-  String get orientadorShortcut3 => 'Cambiar de sector';
-
-  @override
-  String get orientadorShortcut4 => 'Elegir destino de beca';
+  String get orientadorLoading => 'Buscando…';
 
   @override
   String get orientadorSteps => 'Pasos recomendados';
@@ -766,4 +742,186 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get reportThanks => 'Gracias. El equipo de moderación lo revisará.';
+
+  @override
+  String get close => 'Cerrar';
+
+  @override
+  String get moreOptions => 'Más opciones';
+
+  @override
+  String get copyText => 'Copiar texto';
+
+  @override
+  String get copied => 'Copiado';
+
+  @override
+  String viewProfileOf(String name) {
+    return 'Ver el perfil de $name';
+  }
+
+  @override
+  String get deletePostBody =>
+      'La publicación desaparecerá de tu perfil y del feed. No se puede deshacer.';
+
+  @override
+  String get shareInNetworkHint => 'Añade tu opinión (opcional)';
+
+  @override
+  String get sharedDone => 'Compartido en tu red';
+
+  @override
+  String get shareDefaultText => 'Comparto esta publicación';
+
+  @override
+  String get composeTitle => 'Crear publicación';
+
+  @override
+  String get composeHint => '¿Qué quieres compartir con la comunidad ICEX Alumni?';
+
+  @override
+  String get composeDiscardTitle => '¿Descartar la publicación?';
+
+  @override
+  String get composeDiscardBody => 'Perderás lo que has escrito.';
+
+  @override
+  String get keepEditing => 'Seguir editando';
+
+  @override
+  String get discard => 'Descartar';
+
+  @override
+  String get removePhoto => 'Quitar foto';
+
+  @override
+  String get composerEvent => 'Evento';
+
+  @override
+  String get composerPublished => 'Publicado';
+
+  @override
+  String get exploreNetwork => 'Explorar la red';
+
+  @override
+  String get seeAll => 'Ver todo';
+
+  @override
+  String get dismiss => 'Descartar';
+
+  @override
+  String get postTitle => 'Publicación';
+
+  @override
+  String get profileNoPosts => 'Aún no hay publicaciones.';
+
+  @override
+  String get followsYou => 'Te sigue';
+
+  @override
+  String get postsLabel => 'publicaciones';
+
+  @override
+  String profileBlocked(String name) {
+    return 'Has bloqueado a $name';
+  }
+
+  @override
+  String get today => 'Hoy';
+
+  @override
+  String get yesterday => 'Ayer';
+
+  @override
+  String get messageFailedTapRetry => 'No enviado · toca para reintentar';
+
+  @override
+  String get noConversationsFilter => 'No hay conversaciones en esta categoría.';
+
+  @override
+  String get clearSearch => 'Borrar búsqueda';
+
+  @override
+  String get filters => 'Filtros';
+
+  @override
+  String get directoryGroups => 'Grupos de alumni';
+
+  @override
+  String get clearFilters => 'Quitar filtros';
+
+  @override
+  String get showResults => 'Ver resultados';
+
+  @override
+  String get notificationsNew => 'Nuevas';
+
+  @override
+  String get notificationsEarlier => 'Anteriores';
+
+  @override
+  String get change => 'Cambiar';
+
+  @override
+  String get unsavedChangesTitle => '¿Descartar los cambios?';
+
+  @override
+  String get unsavedChangesBody => 'Tienes cambios sin guardar en tu perfil.';
+
+  @override
+  String get loginFeatureWorld => 'Encuentra alumni en cualquier país';
+
+  @override
+  String get loginFeaturePromo => 'Conecta con tu promoción y tu club';
+
+  @override
+  String get loginFeatureOpportunities => 'Descubre ofertas, mentorías y eventos';
+
+  @override
+  String get loginNotMember => '¿Aún no eres socio?';
+
+  @override
+  String get loginJoin => 'Hazte socio';
+
+  @override
+  String get accessDeniedOtherAccount => 'Entrar con otra cuenta';
+
+  @override
+  String linkOpenError(String url) {
+    return 'No se pudo abrir $url';
+  }
+
+  @override
+  String get devLoginTitle => 'Modo desarrollo';
+
+  @override
+  String get devLoginHint =>
+      'Entra directamente como una cuenta de prueba, sin navegador. No aparece en producción.';
+
+  @override
+  String get readMore => 'Leer más';
+
+  @override
+  String get showLess => 'Mostrar menos';
+
+  @override
+  String homeGreeting(String name) {
+    return 'Hola, $name';
+  }
+
+  @override
+  String get homeSubtitle => 'Lo último de tu red ICEX Alumni';
+
+  @override
+  String get orientadorIntro =>
+      'Elige tu situación y te proponemos pasos concretos y alumni con quienes hablar.';
+
+  @override
+  String get orientadorQuestion => '¿En qué te podemos orientar?';
+
+  @override
+  String get orientadorContext => 'Tu situación';
+
+  @override
+  String get newsEmpty => 'Todavía no hay comunicados de la asociación.';
 }

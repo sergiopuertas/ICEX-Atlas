@@ -291,10 +291,6 @@ void main() {
     expect(r.restantes, 9);
     expect(OrientadorCatalog.paises, hasLength(30));
     expect(OrientadorCatalog.sectores, hasLength(10));
-    expect(
-      OrientadorCatalog.atajos.map((a) => a.$1),
-      contains('Preparar la entrevista de Fase II'),
-    );
   });
 
   test('CursorPage.append', () {

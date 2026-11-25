@@ -74,30 +74,54 @@ xcrun simctl keychain booted add-root-cert docker/certs/dev-ca.crt
 El simulador comparte la red y el `/etc/hosts` de tu Mac, así que no hace falta nada más. La CA hay que instalarla
 de nuevo si borras el simulador o creas otro.
 
-### Opción B: emulador de Android
+### Opción B: emulador de Android (recomendado: todo con un comando)
 
-1. En Android Studio → *Device Manager*, crea un dispositivo con imagen **«Google APIs»**. Las imágenes
-   «Google Play» no permiten root y no sirven para esto.
-2. Arráncalo desde la terminal con el sistema escribible:
-   ```bash
-   ~/Library/Android/sdk/emulator/emulator -list-avds
-   ~/Library/Android/sdk/emulator/emulator -avd <nombre> -writable-system
-   ```
-   En Linux, la ruta del SDK suele ser `~/Android/Sdk`.
-3. Con el emulador encendido:
-   ```bash
-   ./scripts/android-dev.sh
-   ```
-   El script redirige los puertos 54321 y 9010 a tu máquina, añade `idp.icex-atlas.test` al hosts del emulador y copia
-   la CA. Instala la CA a mano **la primera vez** siguiendo lo que indica el script. Repite el script cada vez que
-   reinicies el emulador.
+En Android Studio → *Device Manager*, crea un dispositivo con imagen **«Google APIs»**. Las imágenes «Google Play»
+no permiten root y no sirven para esto. Después, desde la raíz del repositorio:
+
+```bash
+AVD=<nombre> ./scripts/start-local.sh      # lista de nombres: ~/Library/Android/sdk/emulator/emulator -list-avds
+```
+
+El script deja todo listo y lanza la app. Va mostrando cuántos segundos tarda cada paso:
+
+1. Arranca el emulador **en segundo plano, a la vez** que Docker y Supabase (no después).
+2. Si Supabase ya estaba encendido, no lo reinicia; sí aplica las migraciones nuevas que traiga el último `git pull`.
+3. Espera a que Android haya terminado de arrancar **y** a que el gestor de paquetes responda (si no, `flutter run`
+   se queda en «Installing…»).
+4. Cierra Chrome y la app y vuelve a la pantalla de inicio: el arranque rápido del emulador restauraba la última
+   pantalla abierta (la web de acceso de ICEX Alumni del IdP de pruebas).
+5. `android-dev.sh`: nombre del IdP en el hosts del emulador, **instala la CA de desarrollo automáticamente**,
+   quita las pantallas de bienvenida de Chrome y, al final, redirige los puertos 54321 y 9010.
+6. Comprueba que los puertos siguen redirigidos y que Auth responde, y lanza `flutter run -d <emulador>`.
+
+Variantes:
+
+| Quiero… | Comando |
+|---|---|
+| Dejarlo todo listo y lanzar la app desde VS Code (F5) | `NO_RUN=1 AVD=<nombre> ./scripts/start-local.sh` |
+| Arranque en frío del emulador (si se quedó en un estado raro) | `COLD=1 AVD=<nombre> ./scripts/start-local.sh` |
+| Solo rehacer puertos/hosts/CA (tras reiniciar el emulador) | `./scripts/android-dev.sh` |
+
+**Un único `adb`.** El script usa siempre el `adb` del SDK de Android, el mismo que usa Flutter. Si tienes otro
+(por ejemplo `brew install android-platform-tools`), te avisará: dos `adb` de versiones distintas se cierran el
+servidor el uno al otro y el emulador «desaparece» («No supported devices connected») o `flutter run` se queda en
+«Installing…». Solución: `brew uninstall --cask android-platform-tools` o poner `$ANDROID_HOME/platform-tools` el
+primero en el `PATH`.
 
 ## 5. Ejecutar la app desde VS Code
 
 1. En la barra de estado (abajo a la derecha), elige el dispositivo: el iPhone del simulador o el emulador.
 2. Abre la vista *Run and Debug* (`⇧⌘D`), elige **«App · local»** y pulsa **F5**.
    Es equivalente a ejecutar `cd app && flutter run --dart-define-from-file=env/local.json`.
-3. Pulsa «Entrar con mi cuenta ICEX Alumni». Se abre la web simulada: elige un usuario.
+3. **Acceso rápido (recomendado):** en la portada, bajo «Modo desarrollo», toca una cuenta de prueba
+   (Ana, Javier, Laura o Pedro). Entra al momento, sin navegador. Si no ves el panel, vuelve a ejecutar
+   `./scripts/setup-local.sh` (añade `"DEV_LOGIN": true` a `app/env/local.json`) y, si acabas de actualizar el
+   repositorio, reinicia Supabase con `supabase stop && supabase start`, porque `config.toml` activa el acceso
+   por contraseña. Detalle y diferencias con producción en `docs/autenticacion.md`.
+4. **Flujo real (OIDC):** pulsa «Entrar con mi cuenta ICEX Alumni». Se abre la web simulada: elige un usuario.
+   En un emulador recién creado, Chrome enseña antes sus pantallas de bienvenida y de cuenta de Google. Son de
+   Chrome, no de la app: pásalas una vez.
 
 | Usuario | Qué ver |
 |---|---|
@@ -106,6 +130,10 @@ de nuevo si borras el simulador o creas otro.
 | **Laura Gil** | Administradora (también entra en el panel admin) |
 | **Nuria Becaria Nueva** | Socia que entra por primera vez: se crea su cuenta al vuelo |
 | **Pedro Sin Membresía** | **No socio**: ve la pantalla «acceso solo para socios» y no puede leer nada |
+
+Sobre la velocidad: en **debug** la app va mucho más lenta que la versión real (el código no está compilado), y
+en el emulador aún más. Avisos como «Skipped N frames» o «La app no responde» en debug no indican cómo irá en un
+móvil. Para juzgar la fluidez, usa un móvil real con `flutter run --profile` o `./scripts/perf-app.sh`.
 
 Durante la depuración:
 - **Hot reload:** guarda el fichero, o `r` en la consola de depuración.
@@ -154,7 +182,20 @@ Las plantillas que documentan cada variable (`.env.example`, `app/env/example.js
   SUPABASE_ANON_KEY=$ANON_KEY SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY \
     NODE_EXTRA_CA_CERTS=../../docker/certs/dev-ca.crt node --test --test-concurrency=1 ./*.test.mjs
   ```
-- **Rendimiento:** `./scripts/perf.sh`.
+- **Diseño en todos los tamaños:** `flutter test test/usability/layout_matrix_test.dart`. Cada pantalla en 4
+  tamaños (de 320 pt a tableta) con texto al 100 %, 130 % y 200 %; falla si algo se desborda.
+- **Accesibilidad:** `flutter test test/usability/accessibility_test.dart`. Zonas táctiles de 48 dp y 44 pt,
+  etiquetas para el lector de pantalla y contraste de texto.
+- **Presupuestos de latencia:** `flutter test test/performance`. Cuántas peticiones hace cada flujo (arranque,
+  cambio de pestaña, ráfagas de Realtime, búsqueda) y que recomendar no reconstruya otras tarjetas.
+- **Rendimiento de la base de datos:** `./scripts/perf.sh` (p95 de feed y directorio < 200 ms).
+- **Concurrencia (backend):** `python3 supabase/stress/concurrency.py`. Decenas de conexiones reales a la vez:
+  reintentos del mismo mensaje, primeros contactos cruzados, ráfagas de chat, aforos, límites del Orientador, colas,
+  borrados en mitad de la actividad, mantenimiento de particiones… y comprueba invariantes (nada duplicado,
+  contadores exactos, ningún interbloqueo). `CHAOS_SECONDS=150` alarga la prueba de caos. Ver `supabase/stress/README.md`.
+- **Escalabilidad (backend):** `python3 supabase/stress/scale.py`. Genera una comunidad de 30.000 socios
+  (`SCALE=0.2` para una rápida), mide p50/p95 de cada endpoint en serie y con 24 conexiones, revisa planes y limpia.
+- **Fluidez en un móvil real:** `./scripts/perf-app.sh` (modo profile; percentil 90 de frame < 16 ms).
 
 ## 9. Día a día
 
@@ -177,4 +218,8 @@ Las plantillas que documentan cada variable (`.env.example`, `app/env/example.js
 | El orientador o la subida de fotos fallan | Mira los logs: `docker logs -f supabase_edge_runtime_icex-atlas` |
 | `setup-local.sh`: «No he podido leer la configuración de la Supabase local» | `supabase start` no terminó o la base de datos aún arranca: espera a que `supabase status` responda bien y repite |
 | `supabase start` falla por puertos ocupados | Otro proyecto Supabase está encendido: `supabase stop --project-id <otro>` |
+| «Modo desarrollo»: no entra con las cuentas de prueba | La app muestra el motivo. Si es «acceso con email desactivado»: `supabase stop && ./scripts/start-local.sh` (el script ya reinicia solo cuando cambia `supabase/config.toml`). Si faltan las cuentas: `./scripts/setup-local.sh`, que además comprueba que Ana puede entrar |
+| Al arrancar el emulador aparece la web de acceso de ICEX Alumni | Es Chrome restaurado por el arranque rápido. `start-local.sh` ya lo cierra; si lo arrancaste a mano: `adb shell am force-stop com.android.chrome` |
+| `flutter run` se queda en «Installing…» o «No supported devices connected» | Casi siempre, dos `adb` distintos (ver apartado 4) o un emulador a medio arrancar: `adb kill-server` y vuelve a lanzar `start-local.sh`; si persiste, `COLD=1` |
+| Android: el login se abre pero no carga | Falta `adb reverse` (se pierde al reiniciar el emulador o al hacer `adb root`): `./scripts/android-dev.sh` |
 | El editor marca errores en `*.g.dart` | Regenera el código (tabla del apartado 9) |

@@ -111,6 +111,12 @@ jobs:
           node --test --test-concurrency=1 ./*.test.mjs
       - name: Rendimiento (p95 < 200 ms con los datos semilla)
         run: ./scripts/perf.sh
+      - name: Concurrencia (decenas de conexiones a la vez; invariantes)
+        run: |
+          pip install "psycopg[binary]"
+          python3 supabase/stress/concurrency.py
+      - name: Escalabilidad (comunidad sintética de 6.000 socios)
+        run: SCALE=0.2 LOAD_SECONDS=10 python3 supabase/stress/scale.py
       - name: Logs
         if: failure()
         run: |

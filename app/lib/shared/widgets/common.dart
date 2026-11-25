@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:icex_atlas/core/errors/failure.dart';
 import 'package:icex_atlas/core/theme/icex_theme.dart';
 import 'package:icex_atlas/l10n/app_localizations.dart';
+import 'package:intl/intl.dart';
 
 /// Franja superior roja/amarilla/roja del mockup.
 class IcexStripe extends StatelessWidget {
@@ -31,10 +32,15 @@ class IcexLogo extends StatelessWidget {
 
   final double height;
 
+  /// Proporción del archivo del logotipo (425 × 88; sin el sello del 50 aniversario): con ancho fijo el hueco no cambia de
+  /// tamaño mientras la imagen se carga.
+  static const double _aspect = 425 / 88;
+
   @override
   Widget build(BuildContext context) => Image.asset(
     'assets/images/icex_alumni_logo.png',
     height: height,
+    width: height * _aspect,
     semanticLabel: 'ICEX Alumni',
     errorBuilder: (_, _, _) => Text(
       'icex_alumni',
@@ -63,40 +69,6 @@ class DemoBanner extends StatelessWidget {
       style: Theme.of(context).textTheme.bodySmall,
     ),
   );
-}
-
-/// Cabecera de página: título Sora + subtítulo gris.
-class PageHeader extends StatelessWidget {
-  const PageHeader({required this.title, this.subtitle, this.leading, super.key});
-
-  final String title;
-  final String? subtitle;
-  final Widget? leading;
-
-  @override
-  Widget build(BuildContext context) {
-    final t = Theme.of(context).textTheme;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
-      child: Row(
-        children: [
-          if (leading != null) ...[leading!, const SizedBox(width: 12)],
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Semantics(header: true, child: Text(title, style: t.headlineMedium)),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 4),
-                  Text(subtitle!, style: t.bodyMedium?.copyWith(color: IcexColors.mutedForeground)),
-                ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class EmptyState extends StatelessWidget {
@@ -209,3 +181,79 @@ class IcexCard extends StatelessWidget {
 void showSnack(BuildContext context, String message) => ScaffoldMessenger.of(context)
   ..hideCurrentSnackBar()
   ..showSnackBar(SnackBar(content: Text(message)));
+
+/// 6340 → «6,3 mil»; 1250000 → «1,3 M» (formato corto en español).
+String compactNumber(int n) => n < 10000
+    ? NumberFormat.decimalPattern('es').format(n)
+    : NumberFormat.compact(locale: 'es').format(n);
+
+/// Esqueleto de publicación mientras carga el feed (en lugar de un spinner en blanco):
+/// la pantalla «tiene forma» desde el primer frame, como en LinkedIn o Instagram.
+class PostSkeleton extends StatefulWidget {
+  const PostSkeleton({super.key});
+
+  @override
+  State<PostSkeleton> createState() => _PostSkeletonState();
+}
+
+class _PostSkeletonState extends State<PostSkeleton> with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    Widget bar(double w, {double h = 12}) => Container(
+      width: w,
+      height: h,
+      decoration: BoxDecoration(color: IcexColors.muted, borderRadius: BorderRadius.circular(6)),
+    );
+    return Semantics(
+      label: AppLocalizations.of(context).loading,
+      child: FadeTransition(
+        opacity: Tween<double>(begin: 0.45, end: 1).animate(_c),
+        child: Container(
+          color: IcexColors.card,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 46,
+                    height: 46,
+                    decoration: const BoxDecoration(
+                      color: IcexColors.muted,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [bar(140), const SizedBox(height: 8), bar(90, h: 10)],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              bar(double.infinity),
+              const SizedBox(height: 8),
+              bar(double.infinity),
+              const SizedBox(height: 8),
+              bar(200),
+              const SizedBox(height: 16),
+              bar(double.infinity, h: 160),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

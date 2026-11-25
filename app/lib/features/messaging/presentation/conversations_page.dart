@@ -5,79 +5,105 @@ import 'package:icex_atlas/core/router/app_router.dart';
 import 'package:icex_atlas/core/theme/icex_theme.dart';
 import 'package:icex_atlas/features/messaging/application/chat_controller.dart';
 import 'package:icex_atlas/features/messaging/domain/messaging.dart';
+import 'package:icex_atlas/features/messaging/presentation/chat_page.dart';
+import 'package:icex_atlas/features/notifications/application/unread_counts.dart';
 import 'package:icex_atlas/l10n/app_localizations.dart';
+import 'package:icex_atlas/shared/widgets/app_shell.dart';
 import 'package:icex_atlas/shared/widgets/avatar.dart';
+import 'package:icex_atlas/shared/widgets/brand.dart';
 import 'package:icex_atlas/shared/widgets/common.dart';
+import 'package:intl/intl.dart';
 
-/// Lista de conversaciones con no leídos y filtro por categoría (mockup).
-class ConversationsPage extends ConsumerWidget {
+/// Lista de conversaciones con no leídos y filtro por categoría.
+///
+/// Lista a todo el ancho (WhatsApp / LinkedIn): avatar, nombre, hora, vista previa y
+/// contador; los filtros en una sola fila desplazable en lugar de un bloque de 7 chips.
+class ConversationsPage extends ConsumerStatefulWidget {
   const ConversationsPage({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ConversationsPage> createState() => _ConversationsPageState();
+}
+
+class _ConversationsPageState extends ConsumerState<ConversationsPage> {
+  final _scroll = ScrollController();
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    listenScrollToTop(ref, AppTab.messages, _scroll);
     final l = AppLocalizations.of(context);
     final s = ref.watch(conversationsControllerProvider);
     final value = s.value;
     return RefreshIndicator(
       onRefresh: () => ref.refresh(conversationsControllerProvider.future),
-      child: ListView(
-        padding: const EdgeInsets.only(bottom: 24),
-        children: [
-          PageHeader(
-            title: l.messagesTitle,
-            subtitle: value == null
-                ? null
-                : l.messagesSubtitle(value.items.length, value.totalUnread),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: IcexCard(
-              padding: EdgeInsets.zero,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Semantics(
-                          header: true,
-                          child: Text(
-                            l.conversationsTitle,
-                            style: Theme.of(context).textTheme.titleLarge,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        CategoryChips(
-                          selected: value?.categoria,
-                          allLabel: l.tabAll,
-                          onSelected: (c) =>
-                              ref.read(conversationsControllerProvider.notifier).filter(c),
-                        ),
-                      ],
+      child: CustomScrollView(
+        controller: _scroll,
+        physics: const AlwaysScrollableScrollPhysics(),
+        slivers: [
+          SliverToBoxAdapter(
+            child: HeroHeader(
+              title: l.messagesTitle,
+              subtitle: value == null
+                  ? null
+                  : l.messagesSubtitle(
+                      value.items.length,
+                      ref.watch(unreadProvider).value?.mensajes ?? 0,
                     ),
-                  ),
-                  const Divider(),
-                  ...switch (s) {
-                    AsyncData(:final value) when value.items.isEmpty => [
-                      EmptyState(message: l.noConversations, icon: Icons.forum_outlined),
-                    ],
-                    AsyncData(:final value) => [
-                      for (final c in value.items) ConversationTile(conversation: c),
-                    ],
-                    AsyncError(:final error) => [
-                      ErrorView(
-                        error: error,
-                        onRetry: () => ref.invalidate(conversationsControllerProvider),
-                      ),
-                    ],
-                    _ => [const Padding(padding: EdgeInsets.all(24), child: LoadingView())],
-                  },
-                ],
-              ),
             ),
           ),
+          SliverToBoxAdapter(
+            child: CategoryChips(
+              selected: value?.categoria,
+              allLabel: l.tabAll,
+              onSelected: (c) => ref.read(conversationsControllerProvider.notifier).filter(c),
+            ),
+          ),
+          const SliverToBoxAdapter(child: SizedBox(height: 8)),
+          ...switch (s) {
+            AsyncValue(:final value?) when value.items.isEmpty => [
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: EmptyState(
+                  message: value.categoria == null ? l.noConversations : l.noConversationsFilter,
+                  icon: Icons.forum_outlined,
+                  action: value.categoria == null
+                      ? FilledButton.tonal(
+                          onPressed: () =>
+                              StatefulNavigationShell.maybeOf(context)
+                                  ?.goBranch(AppTab.network.index),
+                          child: Text(l.exploreNetwork),
+                        )
+                      : null,
+                ),
+              ),
+            ],
+            AsyncValue(:final value?) => [
+              SliverList.builder(
+                itemCount: value.items.length,
+                itemBuilder: (_, i) => ConversationTile(
+                  key: ValueKey(value.items[i].id),
+                  conversation: value.items[i],
+                ),
+              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 24)),
+            ],
+            AsyncValue(:final error?) => [
+              SliverFillRemaining(
+                hasScrollBody: false,
+                child: ErrorView(
+                  error: error,
+                  onRetry: () => ref.invalidate(conversationsControllerProvider),
+                ),
+              ),
+            ],
+            _ => [const SliverFillRemaining(hasScrollBody: false, child: LoadingView())],
+          },
         ],
       ),
     );
@@ -97,22 +123,43 @@ class CategoryChips extends StatelessWidget {
   final String allLabel;
 
   @override
-  Widget build(BuildContext context) => Wrap(
-    spacing: 6,
-    runSpacing: 6,
-    children: [
-      _chip(allLabel, selected == null, () => onSelected(null)),
-      for (final c in Categoria.values) _chip(c.label, selected == c, () => onSelected(c)),
-    ],
+  Widget build(BuildContext context) => SizedBox(
+    height: 44,
+    child: ListView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      children: [
+        _chip(allLabel, null, selected == null, () => onSelected(null)),
+        for (final c in Categoria.values)
+          _chip(c.label, categoriaIcon(c), selected == c, () => onSelected(c)),
+      ],
+    ),
   );
 
-  Widget _chip(String label, bool on, VoidCallback tap) => ChoiceChip(
-    label: Text(label),
-    selected: on,
-    onSelected: (_) => tap(),
-    labelStyle: TextStyle(color: on ? Colors.white : IcexColors.foreground, fontSize: 13),
-    visualDensity: VisualDensity.compact,
+  Widget _chip(String label, IconData? icon, bool on, VoidCallback tap) => Padding(
+    padding: const EdgeInsets.only(right: 8),
+    child: ChoiceChip(
+      avatar: icon == null
+          ? null
+          : Icon(icon, size: 16, color: on ? Colors.white : IcexColors.mutedForeground),
+      label: Text(label),
+      selected: on,
+      onSelected: (_) => tap(),
+      labelStyle: TextStyle(color: on ? Colors.white : IcexColors.foreground, fontSize: 13),
+      visualDensity: VisualDensity.compact,
+    ),
   );
+}
+
+/// Hora corta para la lista: «14:05», «ayer», «lun», «12 nov».
+String conversationTime(AppLocalizations l, DateTime date, {DateTime? now}) {
+  final d = date.toLocal();
+  final n = now ?? DateTime.now();
+  final days = DateTime(n.year, n.month, n.day).difference(DateTime(d.year, d.month, d.day)).inDays;
+  if (days == 0) return DateFormat.Hm('es').format(d);
+  if (days == 1) return l.timeYesterday;
+  if (days < 7) return DateFormat.E('es').format(d).replaceAll('.', '');
+  return DateFormat('d MMM', 'es').format(d).replaceAll('.', '');
 }
 
 class ConversationTile extends StatelessWidget {
@@ -122,53 +169,90 @@ class ConversationTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
     final t = Theme.of(context).textTheme;
     final c = conversation;
     final unread = c.noLeidos > 0;
-    return InkWell(
-      onTap: () => context.push(Routes.chat(c.id)),
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: unread ? IcexColors.secondary : null,
-          border: const Border(bottom: BorderSide(color: IcexColors.border)),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Avatar.of(c.otro),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Expanded(child: Text(c.otro.nombre, style: t.titleSmall)),
-                      if (unread)
-                        Badge(
-                          label: Text('${c.noLeidos}'),
-                          backgroundColor: IcexColors.primary,
-                          largeSize: 20,
+    return Material(
+      color: unread ? IcexColors.primary.withValues(alpha: 0.035) : IcexColors.card,
+      child: InkWell(
+        onTap: () => context.push(Routes.chat(c.id)),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+          decoration: const BoxDecoration(
+            border: Border(bottom: BorderSide(color: IcexColors.border)),
+          ),
+          child: Row(
+            children: [
+              Avatar.of(c.otro, size: 54, ring: true),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            c.otro.nombre,
+                            style: t.titleSmall?.copyWith(
+                              fontWeight: unread ? FontWeight.w700 : FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
                         ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  CategoryTag(c.categoria),
-                  const SizedBox(height: 4),
-                  Text(
-                    c.ultimoMensajePreview ?? '',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: t.bodyMedium?.copyWith(
-                      color: unread ? IcexColors.foreground : IcexColors.mutedForeground,
-                      fontWeight: unread ? FontWeight.w600 : FontWeight.w400,
+                        if (c.ultimoMensajeEn != null)
+                          Text(
+                            conversationTime(l, c.ultimoMensajeEn!),
+                            style: t.bodySmall?.copyWith(
+                              color: unread ? IcexColors.primary : IcexColors.mutedForeground,
+                              fontWeight: unread ? FontWeight.w700 : FontWeight.w400,
+                            ),
+                          ),
+                      ],
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        if (c.silenciado)
+                          const Padding(
+                            padding: EdgeInsets.only(right: 4),
+                            child: Icon(
+                              Icons.notifications_off_outlined,
+                              size: 14,
+                              color: IcexColors.mutedForeground,
+                            ),
+                          ),
+                        Expanded(
+                          child: Text(
+                            c.ultimoMensajePreview ?? '',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: t.bodyMedium?.copyWith(
+                              color: unread ? IcexColors.foreground : IcexColors.mutedForeground,
+                              fontWeight: unread ? FontWeight.w600 : FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                        if (unread)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8),
+                            child: Badge(
+                              label: Text(c.noLeidos > 99 ? '99+' : '${c.noLeidos}'),
+                              backgroundColor: IcexColors.primary,
+                              largeSize: 20,
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    CategoryTag(c.categoria),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -182,11 +266,22 @@ class CategoryTag extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+    padding: const EdgeInsets.fromLTRB(6, 1, 8, 1),
     decoration: BoxDecoration(color: IcexColors.promoTag, borderRadius: BorderRadius.circular(6)),
-    child: Text(
-      categoria.label,
-      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: IcexColors.onAccent),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(categoriaIcon(categoria), size: 12, color: IcexColors.onAccent),
+        const SizedBox(width: 4),
+        Text(
+          categoria.label,
+          style: const TextStyle(
+            fontSize: 11.5,
+            fontWeight: FontWeight.w600,
+            color: IcexColors.onAccent,
+          ),
+        ),
+      ],
     ),
   );
 }

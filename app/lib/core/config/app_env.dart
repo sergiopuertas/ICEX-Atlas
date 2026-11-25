@@ -16,8 +16,10 @@ class AppEnv {
     this.sentryDsn = '',
     this.mapTileUrl = defaultTileUrl,
     this.mapTileAttribution = defaultTileAttribution,
-    this.associationWebUrl = 'https://icex-alumni.es',
+    this.associationWebUrl = defaultAssociationWebUrl,
+    this.membershipUrl = defaultMembershipUrl,
     this.showDemoBanner = false,
+    this.devLoginRequested = false,
   });
 
   factory AppEnv.fromEnvironment() => const AppEnv(
@@ -37,10 +39,19 @@ class AppEnv {
     ),
     associationWebUrl: String.fromEnvironment(
       'ASSOCIATION_WEB_URL',
-      defaultValue: 'https://icex-alumni.es',
+      defaultValue: defaultAssociationWebUrl,
     ),
+    membershipUrl: String.fromEnvironment('MEMBERSHIP_URL', defaultValue: defaultMembershipUrl),
     showDemoBanner: bool.fromEnvironment('SHOW_DEMO_BANNER', defaultValue: true),
+    devLoginRequested: bool.fromEnvironment('DEV_LOGIN'),
   );
+
+  /// Web de la asociación (antes `icex-alumni.es`, un dominio que no existe: el botón
+  /// «Ir a la web de ICEX Alumni» no abría nada).
+  static const defaultAssociationWebUrl = 'https://icex-alumni.com';
+
+  /// Página para hacerse socio, a la que se envía a quien entra sin membresía.
+  static const defaultMembershipUrl = 'https://icex-alumni.com/hazte-alumni/';
 
   static const defaultTileUrl = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
   static const defaultTileAttribution = '© OpenStreetMap contributors';
@@ -54,8 +65,16 @@ class AppEnv {
   final String mapTileUrl;
   final String mapTileAttribution;
   final String associationWebUrl;
+  final String membershipUrl;
   final bool showDemoBanner;
 
+  /// Valor de DEV_LOGIN tal cual llega; usa [devLogin], que lo ignora en producción.
+  final bool devLoginRequested;
+
   bool get isProduction => environment == 'production';
+
+  /// Acceso rápido de desarrollo (cuentas de prueba con contraseña, sin navegador).
+  /// Solo con `DEV_LOGIN=true` y NUNCA en un build de producción, aunque se pase el define.
+  bool get devLogin => devLoginRequested && !isProduction;
   bool get hasSentry => sentryDsn.isNotEmpty;
 }

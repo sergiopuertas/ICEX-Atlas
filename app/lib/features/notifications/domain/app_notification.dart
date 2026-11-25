@@ -53,6 +53,16 @@ class AppNotification {
 
   String? get postId => payload['post_id'] as String?;
 
+  AppNotification markedRead() => AppNotification(
+    id: id,
+    tipo: tipo,
+    total: total,
+    leido: true,
+    updatedAt: updatedAt,
+    actores: actores,
+    payload: payload,
+  );
+
   /// Ruta interna a la que lleva la notificación.
   String get route => switch (tipo) {
     NotificationTipo.nuevoSeguidor when actores.isNotEmpty => '/perfil/${actores.first.slug}',
