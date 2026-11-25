@@ -10,6 +10,16 @@ Leyenda: ☐ pendiente · Responsable sugerido entre corchetes.
 
 ---
 
+## 0. Beta abierta (preproducción): lo mínimo para empezar
+
+Guía completa en `docs/beta.md`. Resumen:
+☐ Supabase Pro + proyecto `icex-atlas-staging` (UE) + access token.
+☐ SMTP con dominio verificado (Resend/Brevo).
+☐ Política de privacidad publicada (borrador: `docs/legal/politica-privacidad-beta.md`, revisar con RGPD).
+☐ Clave de firma Android (`scripts/release/android-keystore.sh`) + Firebase App Distribution.
+☐ (iPhone) Apple Developer Program + TestFlight con grupo externo.
+☐ Secretos y variables del entorno `staging` en GitHub → *Deploy backend* → *Release beta*.
+
 ## A. Decisiones previas (sin coste)
 
 ☐ **A1. Validar si aplica el ENS** (Esquema Nacional de Seguridad, RD 311/2022) [junta + asesoría]

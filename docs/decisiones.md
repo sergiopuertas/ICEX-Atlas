@@ -229,3 +229,17 @@ la promoción en curso sin fase en el IdP empieza en Fase 0. El logotipo ya no l
 ## D-036 · Orientador sin texto libre
 El Orientador solo pide fase, país y sector (rellenos con el perfil). La Edge Function ya admitía la consulta
 vacía y genera la pregunta a partir del contexto.
+
+## D-037 · Beta abierta con email y contraseña
+Para tener más probadores, la beta (entorno staging) permite crear cuenta con correo y contraseña sin ser socio.
+- **Backend.** `config.app_config['access.mode']` = `open_beta` admite el proveedor `email` en el hook de alta. El
+  alta crea un socio con `identity.members.origen = 'beta'`; con `alumni` el registro se cierra. El flujo OIDC de
+  socios no cambia.
+- **App.** `AUTH_MODE=password` muestra la portada beta, el registro, el acceso, la recuperación y la contraseña
+  nueva.
+- **Promoción.** 0 = sin promoción. Las cuentas beta la declaran; los socios la traen del IdP.
+- **Despliegue.** `scripts/deploy/configure_supabase.py` deja el proyecto configurado por la Management API (Auth,
+  API, Vault, modo, secretos) y `smoke_test.py` lo comprueba.
+- **Distribución.** Android por Firebase App Distribution e iOS por TestFlight (`release-beta.yml`).
+
+Guía: `docs/beta.md`.

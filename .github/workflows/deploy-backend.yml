@@ -1,5 +1,7 @@
-# Despliegue del backend (migraciones + Edge Functions) a Supabase.
+# Despliegue del backend a Supabase: migraciones, Edge Functions y configuración del proyecto
+# (Auth, API, Vault, modo de acceso, secretos) + prueba de humo.
 # Manual y protegido por el entorno de GitHub (aprobación obligatoria para "production").
+# Qué secretos y variables necesita cada entorno: docs/beta.md.
 name: Deploy backend
 
 on:
@@ -22,12 +24,21 @@ jobs:
     env:
       SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
       SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
       PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
     steps:
       - uses: actions/checkout@v4
+      - name: Secretos mínimos presentes
+        run: |
+          for v in SUPABASE_ACCESS_TOKEN SUPABASE_DB_PASSWORD SUPABASE_PROJECT_REF; do
+            [ -n "${!v}" ] || { echo "::error::Falta el secreto $v en el entorno '${{ inputs.environment }}' (ver docs/beta.md)"; exit 1; }
+          done
       - uses: supabase/setup-cli@v1
         with:
           version: latest
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - run: supabase link --project-ref "$PROJECT_REF"
       - name: Migraciones pendientes (revisar en el log antes de aprobar producción)
         run: supabase db push --dry-run
@@ -38,3 +49,28 @@ jobs:
           for fn in orientador orientador-indexer push-dispatcher media-upload account-delete membership-sync; do
             supabase functions deploy "$fn" --project-ref "$PROJECT_REF"
           done
+      - name: Configurar el proyecto (Auth, API, Vault, modo de acceso, secretos)
+        env:
+          # Por defecto: beta abierta en staging; solo socios en producción.
+          ACCESS_MODE: ${{ vars.ACCESS_MODE || (inputs.environment == 'production' && 'alumni' || 'open_beta') }}
+          EXTRA_REDIRECT_URLS: ${{ vars.EXTRA_REDIRECT_URLS }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_SENDER_EMAIL: ${{ secrets.SMTP_SENDER_EMAIL }}
+          SMTP_SENDER_NAME: ${{ vars.SMTP_SENDER_NAME }}
+          EMAIL_RATE_LIMIT_PER_HOUR: ${{ vars.EMAIL_RATE_LIMIT_PER_HOUR }}
+          LLM_PROVIDER: ${{ secrets.LLM_PROVIDER }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+          EMBEDDINGS_PROVIDER: ${{ secrets.EMBEDDINGS_PROVIDER }}
+          PUSH_PROVIDER: ${{ secrets.PUSH_PROVIDER }}
+          FCM_SERVICE_ACCOUNT_JSON: ${{ secrets.FCM_SERVICE_ACCOUNT_JSON }}
+          WP_BASE_URL: ${{ secrets.WP_BASE_URL }}
+          WP_SYNC_TOKEN: ${{ secrets.WP_SYNC_TOKEN }}
+          ADMIN_ALLOWED_ORIGINS: ${{ vars.ADMIN_ALLOWED_ORIGINS }}
+        run: python3 scripts/deploy/configure_supabase.py
+      - name: Prueba de humo (registro, login, feed, publicar, permisos)
+        run: python3 scripts/deploy/smoke_test.py

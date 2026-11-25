@@ -6,5 +6,8 @@
   "APP_ENV": "local",
   "SENTRY_DSN": "",
   "SHOW_DEMO_BANNER": true,
-  "DEV_LOGIN": true
+  "DEV_LOGIN": true,
+  "AUTH_MODE": "oidc",
+  "FEEDBACK_URL": "",
+  "PRIVACY_URL": ""
 }

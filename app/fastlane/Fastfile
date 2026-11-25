@@ -74,12 +74,21 @@ platform :ios do
     sh("cd .. && flutter build ipa --release --export-method app-store --build-number=#{build_number} #{DART_DEFINES} --obfuscate --split-debug-info=build/symbols")
   end
 
-  desc "Sube a TestFlight (no envía a revisión)"
+  desc "Sube a TestFlight. Con TESTFLIGHT_GROUPS (p. ej. \"Beta\") lo reparte además a esos grupos externos"
   lane :beta do
     build
+    groups = ENV.fetch("TESTFLIGHT_GROUPS", "").split(",").map(&:strip).reject(&:empty?)
+    external = !groups.empty?
     upload_to_testflight(
       ipa: Dir[File.expand_path("../build/ios/ipa/*.ipa", __dir__)].first,
-      skip_waiting_for_build_processing: true, skip_submission: true
+      # Repartir a probadores externos exige esperar al procesado de Apple (~10-30 min).
+      skip_waiting_for_build_processing: !external,
+      skip_submission: !external,
+      distribute_external: external,
+      groups: external ? groups : nil,
+      changelog: ENV.fetch("RELEASE_NOTES", "Nueva versión de la beta de ICEX Atlas."),
+      beta_app_feedback_email: ENV["BETA_FEEDBACK_EMAIL"],
+      notify_external_testers: external
     )
   end
 end
