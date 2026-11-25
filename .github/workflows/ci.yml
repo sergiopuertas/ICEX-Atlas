@@ -82,15 +82,27 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
       - name: Supabase local
-        run: supabase start -x studio,mailpit,logflare,vector,supavisor
+        # Reintentos: la descarga de imágenes falla a veces por límite del registro.
+        run: |
+          for i in 1 2 3; do
+            supabase start -x studio,mailpit,logflare,vector,supavisor && exit 0
+            supabase stop --no-backup || true
+            sleep $((i * 30))
+          done
+          exit 1
       - name: Migraciones desde cero + seed
         run: supabase db reset
       - name: Ninguna migración pendiente de generar (sin cambios manuales)
         run: |
-          supabase db diff --local --schema api,identity,profiles,social,clubs,feed,messaging,notifications,orientador,moderation,config > /tmp/diff.sql
-          cat /tmp/diff.sql
-          grep -q '"diff":""' /tmp/diff.sql   # la CLI devuelve JSON; "diff" vacío = sin cambios fuera de migraciones
+          supabase db diff --local --schema api,identity,profiles,social,clubs,feed,messaging,notifications,orientador,moderation,config > /tmp/diff.sql 2> /tmp/diff.log
+          cat /tmp/diff.log /tmp/diff.sql
+          # Sin cambios = la salida estándar (el SQL de la diferencia) está vacía.
+          # (Antes se buscaba un JSON que la CLI ya no imprime: el paso fallaba siempre.)
+          if grep -q '[^[:space:]]' /tmp/diff.sql; then echo "::error::Hay cambios de esquema fuera de las migraciones"; exit 1; fi
       - name: pgTAP (incluye "RLS en todas las tablas")
         run: supabase test db
       - name: IdP de pruebas + proveedor OIDC
@@ -113,15 +125,23 @@ jobs:
         run: ./scripts/perf.sh
       - name: Concurrencia (decenas de conexiones a la vez; invariantes)
         run: |
-          pip install "psycopg[binary]"
-          python3 supabase/stress/concurrency.py
+          python -m pip install "psycopg[binary]"
+          python supabase/stress/concurrency.py
       - name: Escalabilidad (comunidad sintética de 6.000 socios)
-        run: SCALE=0.2 LOAD_SECONDS=10 python3 supabase/stress/scale.py
+        run: SCALE=0.2 LOAD_SECONDS=10 python supabase/stress/scale.py
       - name: Logs
         if: failure()
         run: |
           cat /tmp/functions.log || true
           for f in /tmp/fn-*.log; do echo "== $f"; tail -n 50 "$f"; done || true
+
+  scripts:
+    name: Scripts (shellcheck, pyflakes)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: shellcheck -S warning scripts/*.sh scripts/lib/*.sh scripts/deploy/*.sh
+      - run: python3 -m pip install pyflakes && python3 -m pyflakes supabase/stress/*.py
 
   secrets:
     name: Sin secretos en el repositorio
