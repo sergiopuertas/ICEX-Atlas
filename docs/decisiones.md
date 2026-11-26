@@ -243,3 +243,18 @@ Para tener más probadores, la beta (entorno staging) permite crear cuenta con c
 - **Distribución.** Android por Firebase App Distribution e iOS por TestFlight (`release-beta.yml`).
 
 Guía: `docs/beta.md`.
+
+## D-038 · Beta inicial: solo Android, planes gratuitos y prueba de carga por la API pública
+- **Alcance.** La primera beta es solo Android (Firebase App Distribution). El job de iOS de `release-beta.yml`
+  queda preparado pero solo se ejecuta con la variable de repositorio `IOS_BETA_ENABLED=true`.
+- **Coste cero.** Supabase en plan gratuito (las funciones que usamos, incluidos los hooks de Auth y el SMTP
+  propio, están incluidas). Riesgos asumidos: pausa tras 7 días sin actividad (lo evita `keepalive.yml`) y sin
+  copias automáticas. Se pasa a Pro cuando la beta tenga uso real o al abrirla a socios.
+- **Correo.** SMTP de Mailrelay, que ICEX Alumni ya paga: mismo dominio remitente que los boletines.
+- **Prueba de carga.** `scripts/load/carga.py` (Python + aiohttp, sin binarios externos) entra por Auth, PostgREST y
+  Realtime como la app, en escalones de usuarios simultáneos, contra un proyecto aparte («carga»), nunca contra el
+  de la beta. Complementa a `supabase/stress/`, que mide la base de datos directamente. Lo previsible es que el
+  primer límite del plan gratuito sean las 200 conexiones simultáneas de Realtime.
+- **Borrado de cuenta.** La prueba de carga destapó que, si los dos participantes borraban su cuenta, quedaba la
+  conversación vacía. `20261126000100` la borra al irse el último miembro.
+

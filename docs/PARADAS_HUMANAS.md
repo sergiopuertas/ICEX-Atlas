@@ -12,13 +12,13 @@ Leyenda: ☐ pendiente · Responsable sugerido entre corchetes.
 
 ## 0. Beta abierta (preproducción): lo mínimo para empezar
 
-Guía completa en `docs/beta.md`. Resumen:
-☐ Supabase Pro + proyecto `icex-atlas-staging` (UE) + access token.
-☐ SMTP con dominio verificado (Resend/Brevo).
+Guía completa y calendario en `docs/beta.md`. Beta inicial: **solo Android y todo en planes gratuitos**.
+☐ Proyecto gratuito de Supabase `icex-atlas-staging` (UE) + access token. Otro gratuito `icex-atlas-carga` para la prueba de carga.
+☐ SMTP de Mailrelay (cuenta de pago de ICEX Alumni) con el dominio remitente verificado (SPF y DKIM).
 ☐ Política de privacidad publicada (borrador: `docs/legal/politica-privacidad-beta.md`, revisar con RGPD).
 ☐ Clave de firma Android (`scripts/release/android-keystore.sh`) + Firebase App Distribution.
-☐ (iPhone) Apple Developer Program + TestFlight con grupo externo.
-☐ Secretos y variables del entorno `staging` en GitHub → *Deploy backend* → *Release beta*.
+☐ Secretos y variables de los entornos `staging` y `carga` en GitHub → *Deploy backend* → *Release beta*.
+☐ (Más adelante) iPhone: Apple Developer Program + TestFlight; se activa con `IOS_BETA_ENABLED=true`.
 
 ## A. Decisiones previas (sin coste)
 

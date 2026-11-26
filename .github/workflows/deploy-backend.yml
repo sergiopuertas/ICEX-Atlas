@@ -10,7 +10,7 @@ on:
       environment:
         description: Entorno
         type: choice
-        options: [staging, production]
+        options: [staging, carga, production]
         default: staging
 
 permissions:

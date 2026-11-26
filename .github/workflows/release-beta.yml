@@ -1,14 +1,15 @@
-# Builds de la BETA (entorno «staging»): Android → Firebase App Distribution, iOS → TestFlight.
+# Builds de la BETA (entorno «staging»): Android → Firebase App Distribution.
 # La app se compila contra el Supabase de staging con registro por email (AUTH_MODE=password).
-# Secretos y variables necesarios: docs/beta.md. Lo que falte se salta con un aviso
-# (p. ej. sin cuenta de Apple, solo se hace Android).
+# Secretos y variables necesarios: docs/beta.md.
+# iOS (TestFlight) está preparado pero apagado en la beta inicial: se activa con la variable
+# IOS_BETA_ENABLED=true en el entorno «staging» y eligiendo «ios» o «both».
 name: Release beta
 
 on:
   workflow_dispatch:
     inputs:
       platform:
-        description: Plataformas
+        description: Plataformas (iOS solo si IOS_BETA_ENABLED=true)
         type: choice
         options: [android, ios, both]
         default: android
@@ -111,7 +112,7 @@ jobs:
           rm -f "$RUNNER_TEMP/firebase-sa.json"
 
   ios:
-    if: inputs.platform != 'android'
+    if: inputs.platform != 'android' && vars.IOS_BETA_ENABLED == 'true'
     runs-on: macos-15
     environment: staging
     timeout-minutes: 60

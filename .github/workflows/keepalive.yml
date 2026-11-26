@@ -1,0 +1,31 @@
+# Evita que el proyecto gratuito de Supabase de la beta se pause por inactividad (7 días).
+# Dos veces por semana hace una petición real a Auth, a la API y a la base de datos.
+# Si el proyecto ya estaba pausado, el flujo sale en rojo y GitHub avisa por correo.
+# Nota: GitHub desactiva los flujos programados tras 60 días sin commits en el repositorio.
+name: Keepalive Supabase
+
+on:
+  schedule:
+    - cron: '17 7 * * 1,4'   # lunes y jueves, 07:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Ping
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+        run: |
+          if [ -z "$SUPABASE_PROJECT_REF" ]; then echo "::notice::Entorno staging sin configurar todavía"; exit 0; fi
+          python3 scripts/deploy/keepalive.py
