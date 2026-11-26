@@ -54,9 +54,9 @@ Guía completa y calendario en `docs/beta.md`. Beta inicial: **solo Android y to
       - Genera la contraseña de la base de datos con el gestor de contraseñas y guárdala ahí.
       - Postgres 17 (lo trae por defecto).
    5. Anota de cada proyecto: *Project ref*, URL, clave publishable/anon y clave secret/service_role.
-   6. En cada proyecto, *Authentication → Providers → Email* debe quedar **desactivado**. En local está activo solo
-      para el acceso rápido de desarrollo (`docs/autenticacion.md`). En staging y producción solo se entra con
-      WordPress.
+   6. En producción, *Authentication → Providers → Email* debe quedar **desactivado**: solo se entra con WordPress.
+      Durante la beta, staging lo tiene activado (lo hace `configure_supabase.py` con `ACCESS_MODE=open_beta`). En
+      local está activo para el acceso rápido de desarrollo (`docs/autenticacion.md`).
    → Desbloquea: despliegue (runbook §1).
 
 ☐ **B2. Activar PITR en producción** [responsable técnico]
