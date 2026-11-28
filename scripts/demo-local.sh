@@ -4,7 +4,7 @@
 #   ./scripts/demo-local.sh              # pone la demo (borra los datos locales de desarrollo)
 #   ./scripts/demo-local.sh --restaurar  # vuelve a los datos de desarrollo
 #
-# Antes: tener la app arrancada con  AUTH_MODE=password ./scripts/start-local.sh
+# Antes: tener la app arrancada con AVD=Pixel_3a_API_34_extension_level_7_arm64-v8a AUTH_MODE=password ./scripts/start-local.sh
 # Cuentas (contraseña DEMO_PASSWORD, por defecto demo1234):
 #   nueva@demo.icexatlas.invalid · marina@demo.icexatlas.invalid · javier@demo.icexatlas.invalid
 # Guion: docs/demo.md

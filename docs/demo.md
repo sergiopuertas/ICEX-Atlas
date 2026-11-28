@@ -65,7 +65,7 @@ más luce.
 
 ## 4. Sin GitHub (en local)
 
-Con la app arrancada (`AUTH_MODE=password ./scripts/start-local.sh`), en otra terminal:
+Con la app arrancada (`AVD=Pixel_3a_API_34_extension_level_7_arm64-v8a AUTH_MODE=password ./scripts/start-local.sh`), en otra terminal:
 
 ```bash
 ./scripts/demo-local.sh              # cambia los datos de desarrollo por los de la demo
