@@ -76,8 +76,9 @@ flutter {
 }
 
 dependencies {
-    // Solo para el APK de pruebas instrumentadas (no entra en la app).
-    androidTestImplementation("androidx.test:runner:1.6.2")
-    androidTestImplementation("androidx.test:rules:1.6.1")
-    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
+    // Solo para el APK de pruebas instrumentadas (no entra en la app). Mismas versiones que trae
+    // el plugin integration_test: Gradle exige que coincidan con las de la app en debug.
+    androidTestImplementation("androidx.test:runner:1.3.0")
+    androidTestImplementation("androidx.test:rules:1.2.0")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.3.0")
 }
