@@ -220,6 +220,7 @@ def endpoints(cl: Client, i: int):
         "search_directory (texto)": lambda: cl.call("search_directory", p_query=["garcía", "sener", "export", "madrid", "lu"][i % 5]),
         "search_directory (filtros)": lambda: cl.call("search_directory", p_promocion=1 + i % 60, p_tab="exterior"),
         "suggestions": lambda: cl.call("suggestions"),
+        "community_highlights": lambda: cl.call("community_highlights"),
         "get_profile": lambda: cl.call("get_profile", p_user=cl.user_id),
         "get_user_posts": lambda: cl.call("get_user_posts", p_user=cl.user_id),
         "list_conversations": lambda: cl.call("list_conversations"),

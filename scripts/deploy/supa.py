@@ -73,7 +73,18 @@ class Project:
         return self._keys
 
     def sql(self, query: str):
-        return self.mgmt("POST", "/database/query", {"query": query})
+        if self.token:
+            return self.mgmt("POST", "/database/query", {"query": query})
+        # Local: conexión directa (DB_URL, por defecto la del Supabase local). Requiere psycopg.
+        try:
+            import psycopg
+            from psycopg.rows import dict_row
+        except ImportError:
+            sys.exit('✗ En local, las consultas SQL necesitan psycopg: pip install "psycopg[binary]"')
+        dsn = opt("DB_URL", "postgresql://postgres:postgres@127.0.0.1:54322/postgres")
+        with psycopg.connect(dsn, autocommit=True, row_factory=dict_row) as conn:
+            cur = conn.execute(query)
+            return cur.fetchall() if cur.description else []
 
 
 def lit(value: str) -> str:

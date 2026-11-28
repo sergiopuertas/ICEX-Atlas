@@ -58,6 +58,17 @@ void main() {
     });
   }
 
+  group('Inicio el primer día', () {
+    for (final MapEntry(key: device, value: size) in Screens.all.entries) {
+      for (final scale in textScales) {
+        testWidgets('$device · texto ${(scale * 100).round()} %', (t) async {
+          await pumpApp(t, appHarness(coldApi()), size: size, textScale: scale);
+          expect(t.takeException(), isNull);
+        });
+      }
+    }
+  });
+
   for (final MapEntry(key: screen, value: location) in betaScreens.entries) {
     group(screen, () {
       for (final MapEntry(key: device, value: size) in Screens.all.entries) {

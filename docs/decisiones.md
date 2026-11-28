@@ -258,3 +258,17 @@ Guía: `docs/beta.md`.
 - **Borrado de cuenta.** La prueba de carga destapó que, si los dos participantes borraban su cuenta, quedaba la
   conversación vacía. `20261126000100` la borra al irse el último miembro.
 
+## D-039 · Arranque en frío, pruebas en móviles reales y demo
+- **Arranque en frío.** En la beta, quien llega no sigue a nadie y suele tener el perfil vacío. `api.suggestions`
+  completa con las personas más seguidas cuando no hay coincidencias (antes devolvía 0), y la promoción 0 ya no
+  cuenta como coincidencia. `api.community_highlights` rellena un feed vacío o corto con lo más interesante de los
+  últimos 30 días, solo de autores que aceptan aparecer en sugerencias y con posts para todos los socios. Su coste
+  está acotado: puntúa los 300 posts más recientes. Con mucho volumen, «destacado» significa «de las últimas
+  horas», y se acepta. «Completa tu perfil» se calcula en la app con los datos de `me()`, sin tocar el backend.
+- **Móviles reales.** El CI compila el APK de release en cada PR. Firebase Test Lab (cupo gratuito) ejecuta
+  `integration_test` contra staging antes de cada envío a los probadores, más un Robo test sobre el APK de
+  release. No se usa un emulador en el CI: es más lento, menos fiel y no detecta problemas de fabricante.
+- **Demo.** Comunidad ficticia (`scripts/demo/seed_demo.py`) creada a través de las funciones `api.*` con la
+  identidad de cada usuario (como la app, sin inicios de sesión ni límites de Auth), en el proyecto de pruebas y
+  con aviso de «perfiles ficticios» en la app.
+

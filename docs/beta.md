@@ -148,13 +148,35 @@ La URL y la clave pública de Supabase **no** hay que copiarlas: los flujos las 
 5. *Opcional*: para notificaciones push, descarga `google-services.json` y guárdalo en base64 en
    `GOOGLE_SERVICES_JSON_BASE64` (`base64 -i google-services.json | pbcopy`).
 
+### 5 bis. Pruebas en móviles reales (Firebase Test Lab)
+Antes de cada envío a los probadores, *Release beta* prueba la app en tres móviles: un Pixel 6
+físico y dos virtuales (pantalla normal y pequeña, Android 14 y 11). Si la prueba falla, no se
+envía. El cupo gratuito diario es de 5 pruebas en físicos y 10 en virtuales, y cada móvil cuenta
+una.
+1. En Google Cloud (el mismo proyecto de Firebase), activa las APIs **Cloud Testing API** y
+   **Cloud Tool Results API**.
+2. A la cuenta de servicio del paso 5.4, añádele los roles **Firebase Test Lab Admin**
+   (`roles/cloudtestservice.testAdmin`) y **Firebase Analytics Viewer**
+   (`roles/firebase.analyticsViewer`).
+3. Pruébalo con *Actions → Device test → Run workflow*. El resumen enlaza los resultados de
+   cada móvil (vídeo, capturas y registro).
+4. Para cambiar de móviles: variable `TEST_LAB_DEVICES` del entorno `staging`, separados por
+   `;` (p. ej. `model=oriole,version=33;model=a51,version=31`). Si un modelo deja de existir, el
+   flujo lista los disponibles.
+
+Qué se prueba: que la app arranca, que el registro se puede abrir, entrar con una cuenta
+temporal contra staging (se crea y se borra sola) y recorrer las pestañas. Además, un *Robo
+test* explora sola la APK de release durante 4 minutos y falla si la app se cierra. Sin estos
+secretos, el paso se salta con un aviso y la publicación sigue.
+
 ### 6. Desplegar y publicar
 1. *Actions → Deploy backend → Run workflow → staging*. Aplica las migraciones y las funciones y configura Auth (con
    correos en español), la API, Vault y el modo beta. Termina con una **prueba de humo**: crea una cuenta, entra,
    lee el feed, publica, comprueba los permisos y borra lo creado. Si algo falla, el flujo sale en rojo y dice qué.
 2. Repite con **carga** (mismo flujo, entorno `carga`).
-3. *Actions → Release beta → Run workflow* con las notas de la versión. Compila el APK firmado y lo envía a
-   Firebase; los probadores reciben un correo. El APK queda también como artefacto de la ejecución.
+3. *Actions → Release beta → Run workflow* con las notas de la versión. Primero lo prueba en móviles reales
+   (paso 5 bis) y, si pasa, compila el APK firmado y lo envía a Firebase; los probadores reciben un correo.
+   El APK queda también como artefacto de la ejecución.
 4. *Actions → Keepalive Supabase → Run workflow* una vez, para comprobar que funciona.
 
 Para cada versión nueva: fusiona en la rama, lanza *Deploy backend → staging* si hay migraciones o funciones nuevas
@@ -200,6 +222,10 @@ source scripts/lib/supabase-env.sh
 SUPABASE_URL=$API_URL SUPABASE_ANON_KEY=$ANON_KEY SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY \
   CARGA_CONFIRMAR=local ESCALONES=10,25 SEGUNDOS_ESCALON=40 python3 scripts/load/carga.py
 ```
+
+## Demo
+Guion, cuentas y cómo grabarla: `docs/demo.md`. Los datos de la demo viven en el proyecto de pruebas,
+no en el de la beta.
 
 ## Probarlo en local antes de subir
 ```bash

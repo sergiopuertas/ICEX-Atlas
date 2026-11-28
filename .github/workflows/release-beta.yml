@@ -1,4 +1,5 @@
 # Builds de la BETA (entorno «staging»): Android → Firebase App Distribution.
+# Antes de enviarla, la prueba en móviles reales (device-test.yml) tiene que pasar.
 # La app se compila contra el Supabase de staging con registro por email (AUTH_MODE=password).
 # Secretos y variables necesarios: docs/beta.md.
 # iOS (TestFlight) está preparado pero apagado en la beta inicial: se activa con la variable
@@ -17,6 +18,10 @@ on:
         description: Notas de la versión (las ven los probadores)
         type: string
         default: Nueva versión de la beta de ICEX Atlas.
+      probar:
+        description: Probar antes en móviles reales (Firebase Test Lab). Si falla, no se envía a los probadores
+        type: boolean
+        default: true
 
 permissions:
   contents: read
@@ -24,8 +29,16 @@ permissions:
 concurrency: release-beta
 
 jobs:
+  device-test:
+    if: inputs.platform != 'ios' && inputs.probar
+    uses: ./.github/workflows/device-test.yml
+    secrets: inherit
+
   android:
-    if: inputs.platform != 'ios'
+    needs: device-test
+    if: >-
+      !cancelled() && inputs.platform != 'ios' &&
+      (needs.device-test.result == 'success' || needs.device-test.result == 'skipped')
     runs-on: ubuntu-latest
     environment: staging
     timeout-minutes: 40

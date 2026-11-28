@@ -699,6 +699,46 @@ class AppLocalizationsEs extends AppLocalizations {
   String get emptyFeed => 'Sigue a otros alumni para ver aquí sus publicaciones.';
 
   @override
+  String get coldStartTitle => 'Te damos la bienvenida a la red';
+
+  @override
+  String get coldStartBody =>
+      'Sigue a personas que conozcas o que te interesen: sus publicaciones aparecerán aquí. Mientras, esto es lo que se mueve en la comunidad.';
+
+  @override
+  String get highlightsTitle => 'Destacado en la comunidad';
+
+  @override
+  String get highlightsSubtitle => 'De alumni a los que aún no sigues';
+
+  @override
+  String completionTitle(int percent) {
+    return 'Tu perfil está al $percent %';
+  }
+
+  @override
+  String get completionWhy =>
+      'Con un perfil completo te encuentran antes y las sugerencias aciertan más.';
+
+  @override
+  String get completionPhoto => 'Foto';
+
+  @override
+  String get completionPosition => 'Puesto y empresa';
+
+  @override
+  String get completionLocation => 'Ciudad';
+
+  @override
+  String get completionSector => 'Sector';
+
+  @override
+  String get completionBio => 'Sobre ti';
+
+  @override
+  String get completionExperience => 'Trayectoria';
+
+  @override
   String get timeNow => 'ahora';
 
   @override
