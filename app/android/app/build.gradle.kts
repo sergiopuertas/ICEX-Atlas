@@ -39,6 +39,8 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // Pruebas en dispositivos reales (Firebase Test Lab): integration_test/device_smoke_test.dart.
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
     signingConfigs {
@@ -71,4 +73,11 @@ kotlin {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    // Solo para el APK de pruebas instrumentadas (no entra en la app).
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test:rules:1.6.1")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
 }
