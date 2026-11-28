@@ -12,6 +12,10 @@ class FeedRepository {
   Future<FeedPage> feed({String? cursor, int limit = 20}) async =>
       FeedPage.fromJson(await _api.rpcJson('get_feed', {'p_cursor': cursor, 'p_limit': limit}));
 
+  /// Lo más interesante de los últimos días de gente a la que aún no sigues (arranque en frío).
+  Future<List<Post>> highlights({int limit = 10}) async =>
+      (await _api.rpcList('community_highlights', {'p_limit': limit})).map(Post.fromJson).toList();
+
   Future<FeedPage> news({String? cursor}) async =>
       FeedPage.fromJson(await _api.rpcJson('get_news', {'p_cursor': cursor}));
 

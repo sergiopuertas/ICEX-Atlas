@@ -1298,6 +1298,78 @@ abstract class AppLocalizations {
   /// **'Sigue a otros alumni para ver aquí sus publicaciones.'**
   String get emptyFeed;
 
+  /// No description provided for @coldStartTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Te damos la bienvenida a la red'**
+  String get coldStartTitle;
+
+  /// No description provided for @coldStartBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Sigue a personas que conozcas o que te interesen: sus publicaciones aparecerán aquí. Mientras, esto es lo que se mueve en la comunidad.'**
+  String get coldStartBody;
+
+  /// No description provided for @highlightsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Destacado en la comunidad'**
+  String get highlightsTitle;
+
+  /// No description provided for @highlightsSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'De alumni a los que aún no sigues'**
+  String get highlightsSubtitle;
+
+  /// No description provided for @completionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu perfil está al {percent} %'**
+  String completionTitle(int percent);
+
+  /// No description provided for @completionWhy.
+  ///
+  /// In es, this message translates to:
+  /// **'Con un perfil completo te encuentran antes y las sugerencias aciertan más.'**
+  String get completionWhy;
+
+  /// No description provided for @completionPhoto.
+  ///
+  /// In es, this message translates to:
+  /// **'Foto'**
+  String get completionPhoto;
+
+  /// No description provided for @completionPosition.
+  ///
+  /// In es, this message translates to:
+  /// **'Puesto y empresa'**
+  String get completionPosition;
+
+  /// No description provided for @completionLocation.
+  ///
+  /// In es, this message translates to:
+  /// **'Ciudad'**
+  String get completionLocation;
+
+  /// No description provided for @completionSector.
+  ///
+  /// In es, this message translates to:
+  /// **'Sector'**
+  String get completionSector;
+
+  /// No description provided for @completionBio.
+  ///
+  /// In es, this message translates to:
+  /// **'Sobre ti'**
+  String get completionBio;
+
+  /// No description provided for @completionExperience.
+  ///
+  /// In es, this message translates to:
+  /// **'Trayectoria'**
+  String get completionExperience;
+
   /// No description provided for @timeNow.
   ///
   /// In es, this message translates to:

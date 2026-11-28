@@ -96,6 +96,7 @@ class FeedController extends _$FeedController {
     ref.read(postOverridesProvider.notifier).clear();
     ref
       ..invalidate(suggestionsProvider)
+      ..invalidate(communityHighlightsProvider)
       ..invalidateSelf();
     await future;
   }
@@ -124,6 +125,17 @@ class FeedController extends _$FeedController {
     }
     return post;
   }
+}
+
+/// Un feed con menos publicaciones que esto se considera «en frío»: se completa con lo
+/// destacado de la comunidad para que quien acaba de llegar tenga algo que leer.
+const coldFeedThreshold = 5;
+
+/// «Destacado en la comunidad» (posts de gente a la que aún no sigues).
+@Riverpod(keepAlive: true)
+Future<List<Post>> communityHighlights(Ref ref) {
+  ref.watch(sessionUserIdProvider);
+  return ref.watch(feedRepositoryProvider).highlights();
 }
 
 @Riverpod(keepAlive: true)

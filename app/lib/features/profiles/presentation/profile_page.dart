@@ -6,6 +6,8 @@ import 'package:icex_atlas/core/theme/icex_theme.dart';
 import 'package:icex_atlas/features/feed/presentation/post_actions.dart';
 import 'package:icex_atlas/features/profiles/application/profile_controller.dart';
 import 'package:icex_atlas/features/profiles/domain/profile.dart';
+import 'package:icex_atlas/features/profiles/domain/profile_completion.dart';
+import 'package:icex_atlas/features/profiles/presentation/profile_completion_card.dart';
 import 'package:icex_atlas/features/social/data/social_repository.dart';
 import 'package:icex_atlas/l10n/app_localizations.dart';
 import 'package:icex_atlas/shared/widgets/avatar.dart';
@@ -288,7 +290,7 @@ class _Header extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 14),
-                if (p.isSelf)
+                if (p.isSelf) ...[
                   SizedBox(
                     width: double.infinity,
                     child: OutlinedButton.icon(
@@ -296,8 +298,12 @@ class _Header extends ConsumerWidget {
                       icon: const Icon(Icons.edit_outlined, size: 18),
                       label: Text(l.profileEdit),
                     ),
-                  )
-                else
+                  ),
+                  if (!ProfileCompletion.of(p).isComplete) ...[
+                    const SizedBox(height: 12),
+                    ProfileCompletionCard(completion: ProfileCompletion.of(p)),
+                  ],
+                ] else
                   Row(
                     children: [
                       Expanded(

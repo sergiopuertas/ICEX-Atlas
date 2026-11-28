@@ -22,6 +22,7 @@ import 'package:icex_atlas/features/orientador/presentation/orientador_page.dart
 import 'package:icex_atlas/features/profiles/domain/profile.dart';
 import 'package:icex_atlas/l10n/app_localizations.dart';
 
+import '../helpers/app_harness.dart' show coldApi;
 import '../helpers/fakes.dart';
 
 const _phone = Size(400, 860);
@@ -175,6 +176,16 @@ void main() {
     await t.tap(find.text('Recomendar').first);
     await t.pump();
     expect(api.calls.any((c) => c.name == 'recommend'), isTrue);
+  });
+
+  testWidgets('Inicio el primer día (beta: sin seguir a nadie, perfil vacío)', (t) async {
+    await pumpPhone(t, harness(const Scaffold(body: HomePage()), coldApi()));
+    expect(find.byKey(const Key('profile-completion')), findsOneWidget);
+    expect(find.byKey(const Key('cold-start-intro')), findsOneWidget);
+    await expectLater(
+      find.byType(Scaffold).first,
+      matchesGoldenFile('files/inicio_primer_dia.png'),
+    );
   });
 
   testWidgets('Red (directorio)', (t) async {
