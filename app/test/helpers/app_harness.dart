@@ -176,28 +176,68 @@ FakeApiClient fullDemoApi({int posts = 6}) => FakeApiClient({
   'unfollow': (_) => {'is_following': false, 'seguidores_count': 0},
 });
 
+/// Recién llegada a la beta: sin foto, puesto, ciudad, sector, bio ni trayectoria.
+Map<String, dynamic> newcomerMe() => {
+  'user_id': 'u-1',
+  'role': 'socio',
+  'origen': 'beta',
+  'profile': {
+    ...cardJson(nombre: 'Nora Nueva', promocion: 0, cargo: null, empresa: null),
+    'ciudad': null,
+    'pais': null,
+    'sector': null,
+    'seguidores_count': 0,
+    'siguiendo_count': 0,
+    'bio': null,
+    'experiences': <Object>[],
+    'acepta_sugerencias': true,
+  },
+};
+
+Map<String, dynamic> highlight(String id, String nombre) => {
+  ...postJson(
+    id: id,
+    autor: cardJson(id: 'u-$id', nombre: nombre),
+  ),
+  'texto': 'Publicación destacada de $nombre',
+};
+
+/// Primer día en la beta: feed vacío (o corto) y lo destacado de la comunidad.
+FakeApiClient coldApi({int posts = 0, Map<String, dynamic>? me}) {
+  final api = fullDemoApi(posts: posts);
+  api.responders['me'] = (_) => me ?? newcomerMe();
+  api.responders['get_feed'] = (_) => {
+    'items': [for (var i = 0; i < posts; i++) postJson(id: 'p$i')],
+    'destacadas': <Object>[],
+    'next_cursor': null,
+  };
+  api.responders['community_highlights'] = (_) => [
+    highlight('h1', 'Carmen Destacada'),
+    highlight('h2', 'Pablo Destacado'),
+    // Repetida con el feed: no se pinta dos veces.
+    postJson(id: 'p0'),
+  ];
+  return api;
+}
+
 /// La app completa, ya con sesión iniciada como Ana (u-1).
-Widget appHarness(FakeApiClient api, {FakeAuthGateway? auth, FakeRealtime? realtime}) {
-  final db = AppDatabase(NativeDatabase.memory());
-  addTearDown(db.close);
+Widget appHarness(
+  FakeApiClient api, {
+  FakeAuthGateway? auth,
+  FakeRealtime? realtime,
+  AppEnv? env,
+  AppDatabase? db,
+}) {
+  final database = db ?? AppDatabase(NativeDatabase.memory());
+  if (db == null) addTearDown(database.close);
   return ProviderScope(
     overrides: [
       apiClientProvider.overrideWithValue(api),
       authGatewayProvider.overrideWithValue(auth ?? FakeAuthGateway(currentUserId: 'u-1')),
       realtimeGatewayProvider.overrideWithValue(realtime ?? FakeRealtime()),
-      appDatabaseProvider.overrideWithValue(db),
+      appDatabaseProvider.overrideWithValue(database),
       idGeneratorProvider.overrideWithValue(FakeIds()),
-      appEnvProvider.overrideWithValue(
-        const AppEnv(
-          supabaseUrl: 'http://x',
-          supabaseAnonKey: 'k',
-          oidcProvider: 'custom:icex-alumni',
-          authRedirect: 'x://y',
-          environment: 'test',
-          // Sin teselas de red en los tests.
-          mapTileUrl: '',
-        ),
-      ),
+      appEnvProvider.overrideWithValue(env ?? testEnv),
     ],
     child: Consumer(
       builder: (context, ref, _) => MaterialApp.router(
@@ -216,6 +256,27 @@ Widget appHarness(FakeApiClient api, {FakeAuthGateway? auth, FakeRealtime? realt
     ),
   );
 }
+
+/// Entorno de los tests (sin teselas de red). [betaEnv]: beta abierta con email y contraseña.
+const testEnv = AppEnv(
+  supabaseUrl: 'http://x',
+  supabaseAnonKey: 'k',
+  oidcProvider: 'custom:icex-alumni',
+  authRedirect: 'x://y',
+  environment: 'test',
+  mapTileUrl: '',
+);
+const betaEnv = AppEnv(
+  supabaseUrl: 'http://x',
+  supabaseAnonKey: 'k',
+  oidcProvider: 'custom:icex-alumni',
+  authRedirect: 'x://y',
+  environment: 'staging',
+  mapTileUrl: '',
+  authMode: 'password',
+  feedbackUrl: 'https://forms.example/beta',
+  privacyUrl: 'https://example.org/privacidad',
+);
 
 /// Bombea la app a [size] y [textScale] y espera a que carguen sesión y datos.
 Future<void> pumpApp(

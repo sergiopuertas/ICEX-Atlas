@@ -6,10 +6,13 @@ import 'package:icex_atlas/core/providers.dart';
 import 'package:icex_atlas/core/router/app_router.dart';
 import 'package:icex_atlas/core/theme/icex_theme.dart';
 import 'package:icex_atlas/features/feed/application/feed_controller.dart';
+import 'package:icex_atlas/features/feed/domain/post.dart';
 import 'package:icex_atlas/features/feed/presentation/composer.dart';
 import 'package:icex_atlas/features/feed/presentation/post_actions.dart';
 import 'package:icex_atlas/features/feed/presentation/post_card.dart';
 import 'package:icex_atlas/features/profiles/domain/profile.dart';
+import 'package:icex_atlas/features/profiles/domain/profile_completion.dart';
+import 'package:icex_atlas/features/profiles/presentation/profile_completion_card.dart';
 import 'package:icex_atlas/l10n/app_localizations.dart';
 import 'package:icex_atlas/shared/widgets/app_shell.dart';
 import 'package:icex_atlas/shared/widgets/avatar.dart';
@@ -23,6 +26,10 @@ import 'package:icex_atlas/shared/widgets/follow_button.dart';
 /// Disposición tipo LinkedIn: «Comparte una novedad» arriba, comunicado destacado y
 /// publicaciones a todo el ancho separadas por una franja fina. Solo se intercala, una vez,
 /// el carrusel de «Personas que quizá conozcas»: el feed tiene que leerse sin anuncios.
+///
+/// Arranque en frío (quien acaba de llegar no sigue a nadie): bajo un feed vacío o corto
+/// aparece «Destacado en la comunidad» y, si al perfil le falta lo básico, el aviso de
+/// completarlo (descartable).
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
 
@@ -51,6 +58,20 @@ class _HomePageState extends ConsumerState<HomePage> {
     final session = ref.watch(sessionControllerProvider);
     final me = session is SignedIn ? session.me : null;
     final showDemo = ref.watch(appEnvProvider).showDemoBanner;
+    final completion = me == null ? null : ProfileCompletion.of(me.profile);
+    final showCompletion =
+        (completion?.worthNudgingOnHome ?? false) &&
+        ref.watch(profileCompletionDismissedProvider).value == false;
+    final cold = switch (feed) {
+      AsyncValue(:final value?) => !value.hasMore && value.posts.length < coldFeedThreshold,
+      _ => false,
+    };
+    final known = feed.value?.posts.map((p) => p.id).toSet() ?? const <String>{};
+    final highlights = cold
+        ? (ref.watch(communityHighlightsProvider).value ?? const <Post>[])
+              .where((p) => !known.contains(p.id))
+              .toList()
+        : const <Post>[];
 
     Widget extrasAfter(int i) => i == _suggestionsAfter
         ? const Padding(padding: EdgeInsets.symmetric(vertical: 8), child: SuggestionsCarousel())
@@ -79,6 +100,13 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
               ),
             if (showDemo) const SliverToBoxAdapter(child: DemoBanner()),
+            if (showCompletion && completion != null)
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                sliver: SliverToBoxAdapter(
+                  child: ProfileCompletionCard(completion: completion, dismissible: true),
+                ),
+              ),
             ...switch (feed) {
               AsyncValue(:final value?) => [
                 for (final d in value.destacadas)
@@ -90,14 +118,17 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                 if (value.posts.isEmpty) ...[
                   SliverToBoxAdapter(
-                    child: EmptyState(
-                      message: l.emptyFeed,
-                      icon: Icons.dynamic_feed_outlined,
-                      action: FilledButton.tonal(
-                        onPressed: () => StatefulNavigationShell.maybeOf(context)?.goBranch(1),
-                        child: Text(l.exploreNetwork),
-                      ),
-                    ),
+                    child: highlights.isEmpty
+                        ? EmptyState(
+                            message: l.emptyFeed,
+                            icon: Icons.dynamic_feed_outlined,
+                            action: FilledButton.tonal(
+                              onPressed: () =>
+                                  StatefulNavigationShell.maybeOf(context)?.goBranch(1),
+                              child: Text(l.exploreNetwork),
+                            ),
+                          )
+                        : const _ColdStartIntro(),
                   ),
                   const SliverToBoxAdapter(child: SuggestionsCarousel()),
                 ],
@@ -122,6 +153,18 @@ class _HomePageState extends ConsumerState<HomePage> {
                     padding: EdgeInsets.symmetric(vertical: 8),
                     sliver: SliverToBoxAdapter(child: SuggestionsCarousel()),
                   ),
+                if (highlights.isNotEmpty) ...[
+                  const SliverToBoxAdapter(child: _HighlightsHeader()),
+                  SliverList.separated(
+                    itemCount: highlights.length,
+                    separatorBuilder: (_, _) => const SizedBox(height: 8),
+                    itemBuilder: (context, i) => ConnectedPostCard(
+                      key: ValueKey('hl-${highlights[i].id}'),
+                      post: highlights[i],
+                      flat: true,
+                    ),
+                  ),
+                ],
                 const SliverToBoxAdapter(child: SizedBox(height: 16)),
               ],
               AsyncValue(:final error?) => [
@@ -146,6 +189,58 @@ class _HomePageState extends ConsumerState<HomePage> {
             },
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Feed vacío pero con contenido de la comunidad: en vez de «no hay nada», qué hacer.
+class _ColdStartIntro extends StatelessWidget {
+  const _ColdStartIntro();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final t = Theme.of(context).textTheme;
+    return Padding(
+      key: const Key('cold-start-intro'),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l.coldStartTitle, style: t.titleMedium),
+          const SizedBox(height: 4),
+          Text(l.coldStartBody, style: t.bodyMedium?.copyWith(color: IcexColors.mutedForeground)),
+        ],
+      ),
+    );
+  }
+}
+
+class _HighlightsHeader extends StatelessWidget {
+  const _HighlightsHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final t = Theme.of(context).textTheme;
+    return Padding(
+      key: const Key('highlights-header'),
+      padding: const EdgeInsets.fromLTRB(16, 20, 16, 8),
+      child: Row(
+        children: [
+          const Icon(Icons.local_fire_department_outlined, size: 20, color: IcexColors.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Semantics(header: true, child: Text(l.highlightsTitle, style: t.titleSmall)),
+                Text(l.highlightsSubtitle, style: t.bodySmall),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

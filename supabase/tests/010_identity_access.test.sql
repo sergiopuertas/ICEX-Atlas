@@ -2,6 +2,8 @@
 begin;
 \ir helpers.inc
 select plan(31);
+-- Estas pruebas son del modo «solo socios» (la beta abierta se prueba en 100_open_beta).
+delete from config.app_config where key = 'access.mode';
 
 -- ------------------------------------------------------------ hooks ----------
 select is(identity.before_user_created(jsonb_build_object('user', jsonb_build_object(
@@ -21,7 +23,7 @@ select is(identity.before_user_created(jsonb_build_object('user', jsonb_build_ob
 select is(identity.before_user_created(jsonb_build_object('user', jsonb_build_object(
   'app_metadata', jsonb_build_object('provider', 'email'),
   'user_metadata', jsonb_build_object('icex_member_verified', true)))) -> 'error' ->> 'message',
-  'icex_member_not_verified', 'before_user_created rechaza otros proveedores (email, etc.)');
+  'signup_closed', 'before_user_created rechaza el email fuera de la beta abierta, aunque traiga el claim');
 
 select tests.create_member('Socia Activa') as socia \gset
 select tests.create_unverified('No Verificado') as nover \gset

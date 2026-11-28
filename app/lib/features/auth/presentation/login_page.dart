@@ -3,7 +3,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:icex_atlas/core/auth/session_controller.dart';
+import 'package:icex_atlas/core/config/app_env.dart';
 import 'package:icex_atlas/core/providers.dart';
 import 'package:icex_atlas/core/theme/icex_theme.dart';
 import 'package:icex_atlas/features/auth/domain/dev_accounts.dart';
@@ -57,6 +59,8 @@ class _LoginPageState extends ConsumerState<LoginPage> {
     final busy = session is SigningIn;
     final error = session is SignedOut ? session.error : null;
     final env = ref.watch(appEnvProvider);
+
+    if (env.passwordAuth) return _BetaWelcome(env: env);
 
     return _WelcomeScaffold(
       hero: Column(
@@ -144,6 +148,87 @@ class _LoginPageState extends ConsumerState<LoginPage> {
           const SizedBox(height: 4),
           Text(l.loginPrivacyNote, textAlign: TextAlign.center, style: t.bodySmall),
           if (env.devLogin) ...[const SizedBox(height: 20), _DevLoginPanel(enabled: !busy)],
+        ],
+      ),
+    );
+  }
+}
+
+/// Portada de la beta abierta: mismo estilo, con «Crear cuenta» y «Ya tengo cuenta».
+class _BetaWelcome extends StatelessWidget {
+  const _BetaWelcome({required this.env});
+
+  final AppEnv env;
+
+  @override
+  Widget build(BuildContext context) {
+    final l = AppLocalizations.of(context);
+    final t = Theme.of(context).textTheme;
+    return _WelcomeScaffold(
+      hero: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const AccentBar(),
+              const SizedBox(width: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: IcexColors.accent,
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  l.betaBadge,
+                  style: const TextStyle(
+                    color: IcexColors.onAccent,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 12,
+                    letterSpacing: 1,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Semantics(
+            header: true,
+            child: Text(
+              l.loginTitle,
+              style: t.headlineLarge?.copyWith(color: Colors.white, fontSize: 34, height: 1.1),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            l.betaSubtitle,
+            style: t.bodyLarge?.copyWith(color: Colors.white.withValues(alpha: 0.9)),
+          ),
+          const SizedBox(height: 28),
+          _Feature(icon: Icons.public_rounded, text: l.loginFeatureWorld),
+          _Feature(icon: Icons.groups_rounded, text: l.loginFeaturePromo),
+          _Feature(icon: Icons.work_outline_rounded, text: l.loginFeatureOpportunities),
+        ],
+      ),
+      sheet: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          FilledButton.icon(
+            key: const Key('beta-signup'),
+            onPressed: () => context.push('/registro'),
+            icon: const Icon(Icons.person_add_alt_1),
+            label: Text(l.betaCreateAccount),
+            style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(56)),
+          ),
+          const SizedBox(height: 10),
+          OutlinedButton(
+            key: const Key('beta-signin'),
+            onPressed: () => context.push('/entrar'),
+            style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
+            child: Text(l.betaHaveAccount),
+          ),
+          const SizedBox(height: 12),
+          Text(l.betaPrivacyNote, textAlign: TextAlign.center, style: t.bodySmall),
+          if (env.devLogin) ...[const SizedBox(height: 20), const _DevLoginPanel(enabled: true)],
         ],
       ),
     );

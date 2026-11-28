@@ -16,7 +16,7 @@ class AppLocalizationsEs extends AppLocalizations {
   String get loginTitle => 'Tu red profesional ICEX';
 
   @override
-  String get loginSubtitle => 'La comunidad privada de becarios y alumni de las 51 promociones.';
+  String get loginSubtitle => 'La comunidad privada de becarios y alumni de todas las promociones.';
 
   @override
   String get loginButton => 'Entrar con mi cuenta ICEX Alumni';
@@ -699,6 +699,46 @@ class AppLocalizationsEs extends AppLocalizations {
   String get emptyFeed => 'Sigue a otros alumni para ver aquí sus publicaciones.';
 
   @override
+  String get coldStartTitle => 'Te damos la bienvenida a la red';
+
+  @override
+  String get coldStartBody =>
+      'Sigue a personas que conozcas o que te interesen: sus publicaciones aparecerán aquí. Mientras, esto es lo que se mueve en la comunidad.';
+
+  @override
+  String get highlightsTitle => 'Destacado en la comunidad';
+
+  @override
+  String get highlightsSubtitle => 'De alumni a los que aún no sigues';
+
+  @override
+  String completionTitle(int percent) {
+    return 'Tu perfil está al $percent %';
+  }
+
+  @override
+  String get completionWhy =>
+      'Con un perfil completo te encuentran antes y las sugerencias aciertan más.';
+
+  @override
+  String get completionPhoto => 'Foto';
+
+  @override
+  String get completionPosition => 'Puesto y empresa';
+
+  @override
+  String get completionLocation => 'Ciudad';
+
+  @override
+  String get completionSector => 'Sector';
+
+  @override
+  String get completionBio => 'Sobre ti';
+
+  @override
+  String get completionExperience => 'Trayectoria';
+
+  @override
   String get timeNow => 'ahora';
 
   @override
@@ -924,4 +964,166 @@ class AppLocalizationsEs extends AppLocalizations {
 
   @override
   String get newsEmpty => 'Todavía no hay comunicados de la asociación.';
+
+  @override
+  String get betaBadge => 'BETA';
+
+  @override
+  String get betaSubtitle =>
+      'Estás probando la beta de la red profesional de ICEX Alumni. Crea tu cuenta y cuéntanos qué te parece.';
+
+  @override
+  String get betaCreateAccount => 'Crear cuenta';
+
+  @override
+  String get betaHaveAccount => 'Ya tengo cuenta';
+
+  @override
+  String get betaPrivacyNote =>
+      'Beta abierta: no hace falta ser socio. Más adelante podrás vincular tu cuenta de ICEX Alumni.';
+
+  @override
+  String get authEmail => 'Correo electrónico';
+
+  @override
+  String get authPassword => 'Contraseña';
+
+  @override
+  String get authPasswordHint => 'Mínimo 8 caracteres';
+
+  @override
+  String get authName => 'Nombre y apellidos';
+
+  @override
+  String get authPromo => 'Promoción ICEX (opcional, si eres alumni)';
+
+  @override
+  String get authPromoNone => 'Sin promoción';
+
+  @override
+  String get authShowPassword => 'Mostrar contraseña';
+
+  @override
+  String get authHidePassword => 'Ocultar contraseña';
+
+  @override
+  String get authAcceptPrivacy => 'He leído y acepto la política de privacidad';
+
+  @override
+  String get authReadPrivacy => 'Leer la política de privacidad';
+
+  @override
+  String get authSignInTitle => 'Entrar';
+
+  @override
+  String get authSignInButton => 'Entrar';
+
+  @override
+  String get authSignUpTitle => 'Crear cuenta';
+
+  @override
+  String get authSignUpButton => 'Crear mi cuenta';
+
+  @override
+  String get authForgot => '¿Has olvidado tu contraseña?';
+
+  @override
+  String get authNoAccount => '¿No tienes cuenta? Crear una';
+
+  @override
+  String get authHaveAccount => '¿Ya tienes cuenta? Entrar';
+
+  @override
+  String get authInvalidEmail => 'Escribe un correo válido';
+
+  @override
+  String get authShortPassword => 'La contraseña debe tener al menos 8 caracteres';
+
+  @override
+  String get authNameRequired => 'Escribe tu nombre (mínimo 2 letras)';
+
+  @override
+  String get authMustAcceptPrivacy => 'Tienes que aceptar la política de privacidad';
+
+  @override
+  String get authErrInvalidCredentials => 'Correo o contraseña incorrectos.';
+
+  @override
+  String get authErrUserExists =>
+      'Ya hay una cuenta con este correo. Prueba a entrar o a recuperar la contraseña.';
+
+  @override
+  String get authErrWeakPassword =>
+      'La contraseña es demasiado débil. Usa al menos 8 caracteres y mezcla letras y números.';
+
+  @override
+  String get authErrRateLimit =>
+      'Demasiados intentos seguidos. Espera unos minutos y vuelve a probar.';
+
+  @override
+  String get authErrSignupClosed => 'El registro está cerrado en este momento.';
+
+  @override
+  String get authErrSamePassword => 'La contraseña nueva tiene que ser distinta de la anterior.';
+
+  @override
+  String get authForgotTitle => 'Recuperar contraseña';
+
+  @override
+  String get authForgotIntro =>
+      'Te enviaremos un correo con un enlace para elegir una contraseña nueva.';
+
+  @override
+  String get authForgotSend => 'Enviar enlace';
+
+  @override
+  String get authForgotSent =>
+      'Si hay una cuenta con ese correo, te acabamos de enviar el enlace. Ábrelo desde este móvil.';
+
+  @override
+  String get authCheckEmailTitle => 'Revisa tu correo';
+
+  @override
+  String authCheckEmailBody(String email) {
+    return 'Te hemos enviado un enlace a $email. Ábrelo desde este móvil para activar tu cuenta.';
+  }
+
+  @override
+  String get authCheckEmailSpam => '¿No llega? Mira en la carpeta de correo no deseado.';
+
+  @override
+  String get authResend => 'Reenviar el correo';
+
+  @override
+  String get authResent => 'Correo reenviado.';
+
+  @override
+  String get authConfirmedSignIn => 'Ya lo he confirmado: entrar';
+
+  @override
+  String get authBack => 'Volver';
+
+  @override
+  String get authNewPasswordTitle => 'Elige una contraseña nueva';
+
+  @override
+  String get authNewPasswordButton => 'Guardar y entrar';
+
+  @override
+  String get authRepeatPassword => 'Repite la contraseña';
+
+  @override
+  String get authPasswordsDontMatch => 'Las contraseñas no coinciden';
+
+  @override
+  String get settingsFeedback => 'Enviar comentarios de la beta';
+
+  @override
+  String get settingsPrivacyPolicy => 'Política de privacidad';
+
+  @override
+  String get editPromo => 'Promoción ICEX';
+
+  @override
+  String get editPromoHelp => 'Si eres alumni, indica tu promoción. Aparecerá en tu perfil.';
 }

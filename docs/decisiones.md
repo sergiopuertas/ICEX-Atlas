@@ -229,3 +229,46 @@ la promoción en curso sin fase en el IdP empieza en Fase 0. El logotipo ya no l
 ## D-036 · Orientador sin texto libre
 El Orientador solo pide fase, país y sector (rellenos con el perfil). La Edge Function ya admitía la consulta
 vacía y genera la pregunta a partir del contexto.
+
+## D-037 · Beta abierta con email y contraseña
+Para tener más probadores, la beta (entorno staging) permite crear cuenta con correo y contraseña sin ser socio.
+- **Backend.** `config.app_config['access.mode']` = `open_beta` admite el proveedor `email` en el hook de alta. El
+  alta crea un socio con `identity.members.origen = 'beta'`; con `alumni` el registro se cierra. El flujo OIDC de
+  socios no cambia.
+- **App.** `AUTH_MODE=password` muestra la portada beta, el registro, el acceso, la recuperación y la contraseña
+  nueva.
+- **Promoción.** 0 = sin promoción. Las cuentas beta la declaran; los socios la traen del IdP.
+- **Despliegue.** `scripts/deploy/configure_supabase.py` deja el proyecto configurado por la Management API (Auth,
+  API, Vault, modo, secretos) y `smoke_test.py` lo comprueba.
+- **Distribución.** Android por Firebase App Distribution e iOS por TestFlight (`release-beta.yml`).
+
+Guía: `docs/beta.md`.
+
+## D-038 · Beta inicial: solo Android, planes gratuitos y prueba de carga por la API pública
+- **Alcance.** La primera beta es solo Android (Firebase App Distribution). El job de iOS de `release-beta.yml`
+  queda preparado pero solo se ejecuta con la variable de repositorio `IOS_BETA_ENABLED=true`.
+- **Coste cero.** Supabase en plan gratuito (las funciones que usamos, incluidos los hooks de Auth y el SMTP
+  propio, están incluidas). Riesgos asumidos: pausa tras 7 días sin actividad (lo evita `keepalive.yml`) y sin
+  copias automáticas. Se pasa a Pro cuando la beta tenga uso real o al abrirla a socios.
+- **Correo.** SMTP de Mailrelay, que ICEX Alumni ya paga: mismo dominio remitente que los boletines.
+- **Prueba de carga.** `scripts/load/carga.py` (Python + aiohttp, sin binarios externos) entra por Auth, PostgREST y
+  Realtime como la app, en escalones de usuarios simultáneos, contra un proyecto aparte («carga»), nunca contra el
+  de la beta. Complementa a `supabase/stress/`, que mide la base de datos directamente. Lo previsible es que el
+  primer límite del plan gratuito sean las 200 conexiones simultáneas de Realtime.
+- **Borrado de cuenta.** La prueba de carga destapó que, si los dos participantes borraban su cuenta, quedaba la
+  conversación vacía. `20261126000100` la borra al irse el último miembro.
+
+## D-039 · Arranque en frío, pruebas en móviles reales y demo
+- **Arranque en frío.** En la beta, quien llega no sigue a nadie y suele tener el perfil vacío. `api.suggestions`
+  completa con las personas más seguidas cuando no hay coincidencias (antes devolvía 0), y la promoción 0 ya no
+  cuenta como coincidencia. `api.community_highlights` rellena un feed vacío o corto con lo más interesante de los
+  últimos 30 días, solo de autores que aceptan aparecer en sugerencias y con posts para todos los socios. Su coste
+  está acotado: puntúa los 300 posts más recientes. Con mucho volumen, «destacado» significa «de las últimas
+  horas», y se acepta. «Completa tu perfil» se calcula en la app con los datos de `me()`, sin tocar el backend.
+- **Móviles reales.** El CI compila el APK de release en cada PR. Firebase Test Lab (cupo gratuito) ejecuta
+  `integration_test` contra staging antes de cada envío a los probadores, más un Robo test sobre el APK de
+  release. No se usa un emulador en el CI: es más lento, menos fiel y no detecta problemas de fabricante.
+- **Demo.** Comunidad ficticia (`scripts/demo/seed_demo.py`) creada a través de las funciones `api.*` con la
+  identidad de cada usuario (como la app, sin inicios de sesión ni límites de Auth), en el proyecto de pruebas y
+  con aviso de «perfiles ficticios» en la app.
+

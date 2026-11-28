@@ -94,6 +94,37 @@ class FakeAuthGateway implements AuthGateway {
     await onPasswordSignIn?.call(email);
   }
 
+  /// Alta: por defecto pide confirmar el correo (como en la nube). Configurable.
+  Future<bool> Function(String email)? onSignUp;
+  Map<String, Object?>? lastSignUp;
+  final passwordResets = <String>[];
+  final resends = <String>[];
+  String? lastNewPassword;
+  Exception? updatePasswordError;
+
+  @override
+  Future<bool> signUp({
+    required String email,
+    required String password,
+    required String name,
+    int? promocion,
+  }) async {
+    lastSignUp = {'email': email, 'password': password, 'name': name, 'promocion': promocion};
+    return await onSignUp?.call(email) ?? true;
+  }
+
+  @override
+  Future<void> resendConfirmation(String email) async => resends.add(email);
+
+  @override
+  Future<void> sendPasswordReset(String email) async => passwordResets.add(email);
+
+  @override
+  Future<void> updatePassword(String newPassword) async {
+    if (updatePasswordError != null) throw updatePasswordError!;
+    lastNewPassword = newPassword;
+  }
+
   @override
   Future<void> signOut() async {
     signOutCalls++;

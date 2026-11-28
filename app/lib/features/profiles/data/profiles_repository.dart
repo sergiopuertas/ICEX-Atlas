@@ -66,6 +66,10 @@ class ProfilesRepository {
   Future<ProfileDetail> updateMyProfile(ProfileUpdate update) async =>
       ProfileDetail.fromJson(await _api.rpcJson('update_my_profile', update.toParams()));
 
+  /// Solo cuentas de la beta abierta (los socios traen la promoción de ICEX Alumni).
+  Future<ProfileDetail> setMyPromocion(int promocion) async =>
+      ProfileDetail.fromJson(await _api.rpcJson('set_my_promocion', {'p_promocion': promocion}));
+
   Future<ProfileDetail> setPrivacy({
     Map<String, Visibilidad>? visibilidad,
     bool? aceptaSugerencias,

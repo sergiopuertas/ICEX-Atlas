@@ -1,0 +1,142 @@
+# Prueba en MÓVILES REALES con Firebase Test Lab (cuota gratuita diaria del plan Spark:
+# 5 pruebas en dispositivos físicos y 10 en virtuales; cada dispositivo cuenta una).
+#
+# 1. Prueba instrumentada (integration_test/device_smoke_test.dart) contra el Supabase de la
+#    beta: arranque, registro, entrar con una cuenta temporal y recorrer las pestañas.
+# 2. Robo test sobre el APK de release (el que reciben los probadores): explora la app sola
+#    unos minutos y falla si se cierra (útil para fallos de R8/ofuscación o de un plugin nativo).
+#
+# Se lanza a mano o desde «Release beta». Sin los secretos necesarios, se salta con un aviso.
+# Configuración: docs/beta.md → «Pruebas en móviles reales».
+name: Device test
+
+on:
+  workflow_dispatch:
+    inputs:
+      devices:
+        description: 'Dispositivos separados por ; (model=…,version=…). Vacío = variable TEST_LAB_DEVICES o los de por defecto'
+        type: string
+        default: ''
+      robo:
+        description: Ejecutar también el Robo test sobre el APK de release
+        type: boolean
+        default: true
+  workflow_call:
+    inputs:
+      devices:
+        type: string
+        default: ''
+      robo:
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency: device-test
+
+jobs:
+  test-lab:
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: app
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      # Por defecto: un Pixel 6 físico y dos virtuales (pantalla normal y pequeña, Android 14 y 11).
+      DEVICES: ${{ inputs.devices || vars.TEST_LAB_DEVICES || 'model=oriole,version=33;model=MediumPhone.arm,version=34;model=SmallPhone.arm,version=30' }}
+      ROBO: ${{ inputs.robo }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configuración presente
+        id: cfg
+        env:
+          SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          missing=""
+          for v in SUPABASE_ACCESS_TOKEN SUPABASE_PROJECT_REF; do [ -n "${!v}" ] || missing="$missing $v"; done
+          [ -n "$SA" ] || missing="$missing FIREBASE_SERVICE_ACCOUNT_JSON"
+          if [ -n "$missing" ]; then
+            echo "::warning::Pruebas en dispositivos saltadas: faltan$missing en el entorno staging (docs/beta.md)."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-java@v4
+        if: steps.cfg.outputs.skip != 'true'
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+      - uses: subosito/flutter-action@v2
+        if: steps.cfg.outputs.skip != 'true'
+        with:
+          flutter-version-file: app/pubspec.yaml
+          cache: true
+      - uses: actions/setup-python@v5
+        if: steps.cfg.outputs.skip != 'true'
+        with:
+          python-version: '3.12'
+      - name: Configuración de la app (staging) y cuenta de prueba temporal
+        if: steps.cfg.outputs.skip != 'true'
+        run: |
+          python3 ../scripts/deploy/app_env.py staging
+          python3 ../scripts/deploy/test_account.py delete --stale
+          python3 ../scripts/deploy/test_account.py create
+      - name: APKs
+        if: steps.cfg.outputs.skip != 'true'
+        run: |
+          flutter pub get
+          flutter build apk --debug --dart-define-from-file=env/staging.json \
+            --dart-define=TEST_EMAIL="$TEST_EMAIL" --dart-define=TEST_PASSWORD="$TEST_PASSWORD" \
+            -t integration_test/device_smoke_test.dart
+          (cd android && ./gradlew app:assembleAndroidTest --no-daemon --quiet)
+          if [ "$ROBO" = "true" ]; then
+            flutter build apk --release --dart-define-from-file=env/staging.json
+          fi
+      - uses: google-github-actions/auth@v2
+        if: steps.cfg.outputs.skip != 'true'
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+      - uses: google-github-actions/setup-gcloud@v2
+        if: steps.cfg.outputs.skip != 'true'
+      - name: Prueba instrumentada en dispositivos
+        if: steps.cfg.outputs.skip != 'true'
+        run: |
+          args=()
+          while IFS= read -r d; do
+            d="$(echo "$d" | xargs)"; [ -n "$d" ] && args+=(--device "$d")
+          done < <(echo "$DEVICES" | tr ';' '\n')
+          gcloud firebase test android run \
+            --type instrumentation \
+            --app build/app/outputs/apk/debug/app-debug.apk \
+            --test build/app/outputs/apk/androidTest/debug/app-debug-androidTest.apk \
+            "${args[@]}" \
+            --timeout 10m \
+            --results-history-name "ICEX Atlas · prueba en dispositivo" \
+            2>&1 | tee "$RUNNER_TEMP/instrumentation.log"   # pipefail: si falla gcloud, falla el paso
+      - name: Robo test (APK de release, sin sesión)
+        if: steps.cfg.outputs.skip != 'true' && env.ROBO == 'true'
+        run: |
+          first="$(echo "$DEVICES" | tr ';' '\n' | grep -v '^\s*$' | tail -1 | xargs)"
+          gcloud firebase test android run \
+            --type robo \
+            --app build/app/outputs/flutter-apk/app-release.apk \
+            --device "$first" \
+            --timeout 4m \
+            --results-history-name "ICEX Atlas · robo" 2>&1 | tee "$RUNNER_TEMP/robo.log"
+      - name: Resumen
+        if: always() && steps.cfg.outputs.skip != 'true'
+        run: |
+          {
+            echo "### Firebase Test Lab"
+            grep -hoE 'https://console\.firebase\.google\.com/[^ ]+' "$RUNNER_TEMP"/*.log 2>/dev/null | sort -u | sed 's/^/- /' || true
+            grep -hE '│|Passed|Failed|Inconclusive|Skipped' "$RUNNER_TEMP"/*.log 2>/dev/null | head -40 || true
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Dispositivos disponibles (si el nombre de un modelo ya no existe)
+        if: failure() && steps.cfg.outputs.skip != 'true'
+        run: gcloud firebase test android models list --format="table(id,name,form,supportedVersionIds.list())" | head -60
+      - name: Borrar la cuenta de prueba
+        if: always() && steps.cfg.outputs.skip != 'true'
+        run: python3 ../scripts/deploy/test_account.py delete

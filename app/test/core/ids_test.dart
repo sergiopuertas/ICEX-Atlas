@@ -27,7 +27,8 @@ void main() {
   });
 
   test('desviaciones pequeñas (latencia, redondeo de iat) no se corrigen', () {
-    final clock = ServerClock(deviceNow: () => device)..observe(device.add(const Duration(seconds: 3)));
+    final clock = ServerClock(deviceNow: () => device)
+      ..observe(device.add(const Duration(seconds: 3)));
     expect(clock.offset, Duration.zero);
     expect(clock.now(), device);
   });

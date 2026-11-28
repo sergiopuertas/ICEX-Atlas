@@ -107,7 +107,7 @@ abstract class AppLocalizations {
   /// No description provided for @loginSubtitle.
   ///
   /// In es, this message translates to:
-  /// **'La comunidad privada de becarios y alumni de las 51 promociones.'**
+  /// **'La comunidad privada de becarios y alumni de todas las promociones.'**
   String get loginSubtitle;
 
   /// No description provided for @loginButton.
@@ -1298,6 +1298,78 @@ abstract class AppLocalizations {
   /// **'Sigue a otros alumni para ver aquí sus publicaciones.'**
   String get emptyFeed;
 
+  /// No description provided for @coldStartTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Te damos la bienvenida a la red'**
+  String get coldStartTitle;
+
+  /// No description provided for @coldStartBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Sigue a personas que conozcas o que te interesen: sus publicaciones aparecerán aquí. Mientras, esto es lo que se mueve en la comunidad.'**
+  String get coldStartBody;
+
+  /// No description provided for @highlightsTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Destacado en la comunidad'**
+  String get highlightsTitle;
+
+  /// No description provided for @highlightsSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'De alumni a los que aún no sigues'**
+  String get highlightsSubtitle;
+
+  /// No description provided for @completionTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Tu perfil está al {percent} %'**
+  String completionTitle(int percent);
+
+  /// No description provided for @completionWhy.
+  ///
+  /// In es, this message translates to:
+  /// **'Con un perfil completo te encuentran antes y las sugerencias aciertan más.'**
+  String get completionWhy;
+
+  /// No description provided for @completionPhoto.
+  ///
+  /// In es, this message translates to:
+  /// **'Foto'**
+  String get completionPhoto;
+
+  /// No description provided for @completionPosition.
+  ///
+  /// In es, this message translates to:
+  /// **'Puesto y empresa'**
+  String get completionPosition;
+
+  /// No description provided for @completionLocation.
+  ///
+  /// In es, this message translates to:
+  /// **'Ciudad'**
+  String get completionLocation;
+
+  /// No description provided for @completionSector.
+  ///
+  /// In es, this message translates to:
+  /// **'Sector'**
+  String get completionSector;
+
+  /// No description provided for @completionBio.
+  ///
+  /// In es, this message translates to:
+  /// **'Sobre ti'**
+  String get completionBio;
+
+  /// No description provided for @completionExperience.
+  ///
+  /// In es, this message translates to:
+  /// **'Trayectoria'**
+  String get completionExperience;
+
   /// No description provided for @timeNow.
   ///
   /// In es, this message translates to:
@@ -1717,6 +1789,312 @@ abstract class AppLocalizations {
   /// In es, this message translates to:
   /// **'Todavía no hay comunicados de la asociación.'**
   String get newsEmpty;
+
+  /// No description provided for @betaBadge.
+  ///
+  /// In es, this message translates to:
+  /// **'BETA'**
+  String get betaBadge;
+
+  /// No description provided for @betaSubtitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Estás probando la beta de la red profesional de ICEX Alumni. Crea tu cuenta y cuéntanos qué te parece.'**
+  String get betaSubtitle;
+
+  /// No description provided for @betaCreateAccount.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear cuenta'**
+  String get betaCreateAccount;
+
+  /// No description provided for @betaHaveAccount.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya tengo cuenta'**
+  String get betaHaveAccount;
+
+  /// No description provided for @betaPrivacyNote.
+  ///
+  /// In es, this message translates to:
+  /// **'Beta abierta: no hace falta ser socio. Más adelante podrás vincular tu cuenta de ICEX Alumni.'**
+  String get betaPrivacyNote;
+
+  /// No description provided for @authEmail.
+  ///
+  /// In es, this message translates to:
+  /// **'Correo electrónico'**
+  String get authEmail;
+
+  /// No description provided for @authPassword.
+  ///
+  /// In es, this message translates to:
+  /// **'Contraseña'**
+  String get authPassword;
+
+  /// No description provided for @authPasswordHint.
+  ///
+  /// In es, this message translates to:
+  /// **'Mínimo 8 caracteres'**
+  String get authPasswordHint;
+
+  /// No description provided for @authName.
+  ///
+  /// In es, this message translates to:
+  /// **'Nombre y apellidos'**
+  String get authName;
+
+  /// No description provided for @authPromo.
+  ///
+  /// In es, this message translates to:
+  /// **'Promoción ICEX (opcional, si eres alumni)'**
+  String get authPromo;
+
+  /// No description provided for @authPromoNone.
+  ///
+  /// In es, this message translates to:
+  /// **'Sin promoción'**
+  String get authPromoNone;
+
+  /// No description provided for @authShowPassword.
+  ///
+  /// In es, this message translates to:
+  /// **'Mostrar contraseña'**
+  String get authShowPassword;
+
+  /// No description provided for @authHidePassword.
+  ///
+  /// In es, this message translates to:
+  /// **'Ocultar contraseña'**
+  String get authHidePassword;
+
+  /// No description provided for @authAcceptPrivacy.
+  ///
+  /// In es, this message translates to:
+  /// **'He leído y acepto la política de privacidad'**
+  String get authAcceptPrivacy;
+
+  /// No description provided for @authReadPrivacy.
+  ///
+  /// In es, this message translates to:
+  /// **'Leer la política de privacidad'**
+  String get authReadPrivacy;
+
+  /// No description provided for @authSignInTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Entrar'**
+  String get authSignInTitle;
+
+  /// No description provided for @authSignInButton.
+  ///
+  /// In es, this message translates to:
+  /// **'Entrar'**
+  String get authSignInButton;
+
+  /// No description provided for @authSignUpTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear cuenta'**
+  String get authSignUpTitle;
+
+  /// No description provided for @authSignUpButton.
+  ///
+  /// In es, this message translates to:
+  /// **'Crear mi cuenta'**
+  String get authSignUpButton;
+
+  /// No description provided for @authForgot.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Has olvidado tu contraseña?'**
+  String get authForgot;
+
+  /// No description provided for @authNoAccount.
+  ///
+  /// In es, this message translates to:
+  /// **'¿No tienes cuenta? Crear una'**
+  String get authNoAccount;
+
+  /// No description provided for @authHaveAccount.
+  ///
+  /// In es, this message translates to:
+  /// **'¿Ya tienes cuenta? Entrar'**
+  String get authHaveAccount;
+
+  /// No description provided for @authInvalidEmail.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribe un correo válido'**
+  String get authInvalidEmail;
+
+  /// No description provided for @authShortPassword.
+  ///
+  /// In es, this message translates to:
+  /// **'La contraseña debe tener al menos 8 caracteres'**
+  String get authShortPassword;
+
+  /// No description provided for @authNameRequired.
+  ///
+  /// In es, this message translates to:
+  /// **'Escribe tu nombre (mínimo 2 letras)'**
+  String get authNameRequired;
+
+  /// No description provided for @authMustAcceptPrivacy.
+  ///
+  /// In es, this message translates to:
+  /// **'Tienes que aceptar la política de privacidad'**
+  String get authMustAcceptPrivacy;
+
+  /// No description provided for @authErrInvalidCredentials.
+  ///
+  /// In es, this message translates to:
+  /// **'Correo o contraseña incorrectos.'**
+  String get authErrInvalidCredentials;
+
+  /// No description provided for @authErrUserExists.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya hay una cuenta con este correo. Prueba a entrar o a recuperar la contraseña.'**
+  String get authErrUserExists;
+
+  /// No description provided for @authErrWeakPassword.
+  ///
+  /// In es, this message translates to:
+  /// **'La contraseña es demasiado débil. Usa al menos 8 caracteres y mezcla letras y números.'**
+  String get authErrWeakPassword;
+
+  /// No description provided for @authErrRateLimit.
+  ///
+  /// In es, this message translates to:
+  /// **'Demasiados intentos seguidos. Espera unos minutos y vuelve a probar.'**
+  String get authErrRateLimit;
+
+  /// No description provided for @authErrSignupClosed.
+  ///
+  /// In es, this message translates to:
+  /// **'El registro está cerrado en este momento.'**
+  String get authErrSignupClosed;
+
+  /// No description provided for @authErrSamePassword.
+  ///
+  /// In es, this message translates to:
+  /// **'La contraseña nueva tiene que ser distinta de la anterior.'**
+  String get authErrSamePassword;
+
+  /// No description provided for @authForgotTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Recuperar contraseña'**
+  String get authForgotTitle;
+
+  /// No description provided for @authForgotIntro.
+  ///
+  /// In es, this message translates to:
+  /// **'Te enviaremos un correo con un enlace para elegir una contraseña nueva.'**
+  String get authForgotIntro;
+
+  /// No description provided for @authForgotSend.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar enlace'**
+  String get authForgotSend;
+
+  /// No description provided for @authForgotSent.
+  ///
+  /// In es, this message translates to:
+  /// **'Si hay una cuenta con ese correo, te acabamos de enviar el enlace. Ábrelo desde este móvil.'**
+  String get authForgotSent;
+
+  /// No description provided for @authCheckEmailTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Revisa tu correo'**
+  String get authCheckEmailTitle;
+
+  /// No description provided for @authCheckEmailBody.
+  ///
+  /// In es, this message translates to:
+  /// **'Te hemos enviado un enlace a {email}. Ábrelo desde este móvil para activar tu cuenta.'**
+  String authCheckEmailBody(String email);
+
+  /// No description provided for @authCheckEmailSpam.
+  ///
+  /// In es, this message translates to:
+  /// **'¿No llega? Mira en la carpeta de correo no deseado.'**
+  String get authCheckEmailSpam;
+
+  /// No description provided for @authResend.
+  ///
+  /// In es, this message translates to:
+  /// **'Reenviar el correo'**
+  String get authResend;
+
+  /// No description provided for @authResent.
+  ///
+  /// In es, this message translates to:
+  /// **'Correo reenviado.'**
+  String get authResent;
+
+  /// No description provided for @authConfirmedSignIn.
+  ///
+  /// In es, this message translates to:
+  /// **'Ya lo he confirmado: entrar'**
+  String get authConfirmedSignIn;
+
+  /// No description provided for @authBack.
+  ///
+  /// In es, this message translates to:
+  /// **'Volver'**
+  String get authBack;
+
+  /// No description provided for @authNewPasswordTitle.
+  ///
+  /// In es, this message translates to:
+  /// **'Elige una contraseña nueva'**
+  String get authNewPasswordTitle;
+
+  /// No description provided for @authNewPasswordButton.
+  ///
+  /// In es, this message translates to:
+  /// **'Guardar y entrar'**
+  String get authNewPasswordButton;
+
+  /// No description provided for @authRepeatPassword.
+  ///
+  /// In es, this message translates to:
+  /// **'Repite la contraseña'**
+  String get authRepeatPassword;
+
+  /// No description provided for @authPasswordsDontMatch.
+  ///
+  /// In es, this message translates to:
+  /// **'Las contraseñas no coinciden'**
+  String get authPasswordsDontMatch;
+
+  /// No description provided for @settingsFeedback.
+  ///
+  /// In es, this message translates to:
+  /// **'Enviar comentarios de la beta'**
+  String get settingsFeedback;
+
+  /// No description provided for @settingsPrivacyPolicy.
+  ///
+  /// In es, this message translates to:
+  /// **'Política de privacidad'**
+  String get settingsPrivacyPolicy;
+
+  /// No description provided for @editPromo.
+  ///
+  /// In es, this message translates to:
+  /// **'Promoción ICEX'**
+  String get editPromo;
+
+  /// No description provided for @editPromoHelp.
+  ///
+  /// In es, this message translates to:
+  /// **'Si eres alumni, indica tu promoción. Aparecerá en tu perfil.'**
+  String get editPromoHelp;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

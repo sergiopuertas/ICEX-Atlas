@@ -10,6 +10,16 @@ Leyenda: ☐ pendiente · Responsable sugerido entre corchetes.
 
 ---
 
+## 0. Beta abierta (preproducción): lo mínimo para empezar
+
+Guía completa y calendario en `docs/beta.md`. Beta inicial: **solo Android y todo en planes gratuitos**.
+☐ Proyecto gratuito de Supabase `icex-atlas-staging` (UE) + access token. Otro gratuito `icex-atlas-carga` para la prueba de carga.
+☐ SMTP de Mailrelay (cuenta de pago de ICEX Alumni) con el dominio remitente verificado (SPF y DKIM).
+☐ Política de privacidad publicada (borrador: `docs/legal/politica-privacidad-beta.md`, revisar con RGPD).
+☐ Clave de firma Android (`scripts/release/android-keystore.sh`) + Firebase App Distribution.
+☐ Secretos y variables de los entornos `staging` y `carga` en GitHub → *Deploy backend* → *Release beta*.
+☐ (Más adelante) iPhone: Apple Developer Program + TestFlight; se activa con `IOS_BETA_ENABLED=true`.
+
 ## A. Decisiones previas (sin coste)
 
 ☐ **A1. Validar si aplica el ENS** (Esquema Nacional de Seguridad, RD 311/2022) [junta + asesoría]
@@ -44,9 +54,9 @@ Leyenda: ☐ pendiente · Responsable sugerido entre corchetes.
       - Genera la contraseña de la base de datos con el gestor de contraseñas y guárdala ahí.
       - Postgres 17 (lo trae por defecto).
    5. Anota de cada proyecto: *Project ref*, URL, clave publishable/anon y clave secret/service_role.
-   6. En cada proyecto, *Authentication → Providers → Email* debe quedar **desactivado**. En local está activo solo
-      para el acceso rápido de desarrollo (`docs/autenticacion.md`). En staging y producción solo se entra con
-      WordPress.
+   6. En producción, *Authentication → Providers → Email* debe quedar **desactivado**: solo se entra con WordPress.
+      Durante la beta, staging lo tiene activado (lo hace `configure_supabase.py` con `ACCESS_MODE=open_beta`). En
+      local está activo para el acceso rápido de desarrollo (`docs/autenticacion.md`).
    → Desbloquea: despliegue (runbook §1).
 
 ☐ **B2. Activar PITR en producción** [responsable técnico]

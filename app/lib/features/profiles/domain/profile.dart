@@ -199,17 +199,28 @@ class ProfileDetail {
 
 /// Usuario de la sesión (api.me()).
 class Me {
-  const Me({required this.userId, required this.role, required this.profile});
+  const Me({
+    required this.userId,
+    required this.role,
+    required this.profile,
+    this.origen = 'alumni',
+  });
 
   factory Me.fromJson(Map<String, dynamic> j) => Me(
     userId: j['user_id'] as String,
     role: j['role'] as String? ?? 'socio',
+    origen: j['origen'] as String? ?? 'alumni',
     profile: ProfileDetail.fromJson(Map<String, dynamic>.from(j['profile'] as Map? ?? const {})),
   );
 
   final String userId;
   final String role;
   final ProfileDetail profile;
+
+  /// `alumni` (verificado por ICEX Alumni) o `beta` (cuenta de email de la beta abierta).
+  final String origen;
+
+  bool get isBetaAccount => origen == 'beta';
 
   bool get isAdmin => role == 'admin';
   bool get isModerator => role == 'moderador' || isAdmin;

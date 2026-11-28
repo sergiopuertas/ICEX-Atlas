@@ -1,0 +1,73 @@
+# Comunidad de demostración + APK para grabar la demo (docs/demo.md).
+# Va contra el proyecto de PRUEBAS («carga»), nunca contra el de la beta.
+# Secretos del entorno «carga»: SUPABASE_ACCESS_TOKEN, SUPABASE_PROJECT_REF y DEMO_PASSWORD
+# (contraseña común de las cuentas de la demo; no se imprime en los logs).
+name: Demo
+
+on:
+  workflow_dispatch:
+    inputs:
+      accion:
+        description: Qué hacer con los datos de la demo
+        type: choice
+        options: [crear, borrar, solo-apk]
+        default: crear
+      aviso:
+        description: Mostrar en la app el aviso «comunidad de demostración · perfiles ficticios»
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency: demo
+
+jobs:
+  demo:
+    runs-on: ubuntu-latest
+    environment: carga
+    timeout-minutes: 40
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      DEMO_CONFIRMAR: ${{ secrets.SUPABASE_PROJECT_REF }}
+      DEMO_PASSWORD: ${{ secrets.DEMO_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Secretos presentes
+        run: |
+          for v in SUPABASE_ACCESS_TOKEN SUPABASE_PROJECT_REF DEMO_PASSWORD; do
+            [ -n "${!v}" ] || { echo "::error::Falta $v en el entorno 'carga' (docs/demo.md)"; exit 1; }
+          done
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Datos de la demo
+        if: inputs.accion != 'solo-apk'
+        run: python3 scripts/demo/seed_demo.py ${{ inputs.accion == 'borrar' && '--borrar' || '' }}
+      - uses: actions/setup-java@v4
+        if: inputs.accion != 'borrar'
+        with:
+          distribution: temurin
+          java-version: 17
+          cache: gradle
+      - uses: subosito/flutter-action@v2
+        if: inputs.accion != 'borrar'
+        with:
+          flutter-version-file: app/pubspec.yaml
+          cache: true
+      - name: APK de la demo (apunta al proyecto de pruebas)
+        if: inputs.accion != 'borrar'
+        working-directory: app
+        env:
+          SHOW_DEMO_BANNER: ${{ inputs.aviso && '1' || '0' }}
+        run: |
+          python3 ../scripts/deploy/app_env.py demo
+          flutter pub get
+          flutter build apk --release --dart-define-from-file=env/demo.json --build-number=${{ github.run_number }}
+      - uses: actions/upload-artifact@v4
+        if: inputs.accion != 'borrar'
+        with:
+          name: icex-atlas-demo-${{ github.run_number }}.apk
+          path: app/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 14

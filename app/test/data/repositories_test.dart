@@ -369,7 +369,11 @@ void main() {
     expect(AppFailure.fromCode('42501', 'x'), isA<ForbiddenFailure>());
     expect(AppFailure.fromCode('403', null), isA<ForbiddenFailure>());
     expect(AppFailure.fromCode('P0002', 'x'), isA<NotFoundFailure>());
-    expect(AppFailure.fromCode('23503', 'x'), isA<NotFoundFailure>(), reason: 'borrado a la vez por otro');
+    expect(
+      AppFailure.fromCode('23503', 'x'),
+      isA<NotFoundFailure>(),
+      reason: 'borrado a la vez por otro',
+    );
     expect(AppFailure.fromCode('P0001', 'x', hint: 'rate_limited'), isA<RateLimitedFailure>());
     expect(AppFailure.fromCode('429', 'x'), isA<RateLimitedFailure>());
     expect(AppFailure.fromCode('P0001', 'x'), isA<UnknownFailure>());

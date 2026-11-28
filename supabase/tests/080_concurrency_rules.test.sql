@@ -3,7 +3,7 @@
 -- aquí se fijan las reglas deterministas que las hacen seguras.
 begin;
 \ir helpers.inc
-select plan(33);
+select plan(34);
 
 select tests.create_member('Ana') as ana \gset
 select tests.create_member('Bea') as bea \gset
@@ -92,6 +92,17 @@ select is((select ultimo_mensaje_preview from messaging.conversations where id =
   'al borrar la cuenta no queda la vista previa de su último mensaje');
 select is((select no_leidos from messaging.conversation_members where conversation_id = :'conv_cb' and user_id = :'bea'), 0,
   'ni cuentan como no leídos sus mensajes borrados');
+
+select tests.create_member('Dora') as dora \gset
+select tests.create_member('Eli') as eli \gset
+select tests.authenticate_as(:'dora');
+select (api.send_message(util.uuid_v7(), 'hola Eli', null, :'eli') ->> 'conversation_id') as conv_de \gset
+select api.delete_my_account('BORRAR MI CUENTA');
+select tests.authenticate_as(:'eli');
+select api.delete_my_account('BORRAR MI CUENTA');
+select tests.clear_authentication();
+select is((select count(*)::int from messaging.conversations where id = :'conv_de'), 0,
+  'si los dos participantes borran su cuenta, la conversación desaparece');
 
 -- ------------------------------------- mapa y «cerca de ti» (SECURITY DEFINER) ---
 -- Pasaron a definer por rendimiento: aplican ellas mismas los filtros de la RLS.

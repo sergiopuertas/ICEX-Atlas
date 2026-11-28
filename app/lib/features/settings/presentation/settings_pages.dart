@@ -14,6 +14,7 @@ import 'package:icex_atlas/l10n/app_localizations.dart';
 import 'package:icex_atlas/shared/widgets/avatar.dart';
 import 'package:icex_atlas/shared/widgets/common.dart';
 import 'package:icex_atlas/shared/widgets/dialogs.dart';
+import 'package:icex_atlas/shared/widgets/links.dart';
 import 'package:share_plus/share_plus.dart';
 
 /// Ajustes: notificaciones, privacidad, bloqueados, exportar datos, borrar cuenta, cerrar sesión.
@@ -23,6 +24,7 @@ class SettingsPage extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l = AppLocalizations.of(context);
+    final env = ref.watch(appEnvProvider);
     return Scaffold(
       appBar: AppBar(title: Text(l.settingsTitle)),
       body: ListView(
@@ -45,6 +47,21 @@ class SettingsPage extends ConsumerWidget {
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('${Routes.settings}/bloqueados'),
           ),
+          if (env.feedbackUrl.isNotEmpty)
+            ListTile(
+              key: const Key('feedback'),
+              leading: const Icon(Icons.rate_review_outlined),
+              title: Text(l.settingsFeedback),
+              trailing: const Icon(Icons.open_in_new, size: 18),
+              onTap: () => openExternalUrl(context, env.feedbackUrl),
+            ),
+          if (env.privacyUrl.isNotEmpty)
+            ListTile(
+              leading: const Icon(Icons.policy_outlined),
+              title: Text(l.settingsPrivacyPolicy),
+              trailing: const Icon(Icons.open_in_new, size: 18),
+              onTap: () => openExternalUrl(context, env.privacyUrl),
+            ),
           const Divider(),
           ListTile(
             leading: const Icon(Icons.download_outlined),

@@ -41,7 +41,9 @@ scripts/e2e/node_modules/
 **/test/goldens/failures/
 app/env/*.json
 !app/env/example.json
+!app/env/staging.example.json
 **/android/key.properties
 
 # FVM Version Cache
-.fvm/__pycache__/
+.fvm/
+__pycache__/

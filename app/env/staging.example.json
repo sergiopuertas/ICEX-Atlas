@@ -1,0 +1,13 @@
+{
+  "SUPABASE_URL": "https://<project-ref>.supabase.co",
+  "SUPABASE_ANON_KEY": "<clave anon del proyecto de staging>",
+  "APP_ENV": "staging",
+  "AUTH_MODE": "password",
+  "AUTH_REDIRECT": "es.icexalumni.atlas://login-callback",
+  "OIDC_PROVIDER": "custom:icex-alumni",
+  "SENTRY_DSN": "",
+  "FEEDBACK_URL": "",
+  "PRIVACY_URL": "",
+  "SHOW_DEMO_BANNER": false,
+  "DEV_LOGIN": false
+}

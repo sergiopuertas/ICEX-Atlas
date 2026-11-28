@@ -52,6 +52,12 @@ export async function sync(db: Db, lookup: Lookup, maxRevokeRatio = 0.05) {
 if (import.meta.main) {
   Deno.serve({ port: Number(Deno.env.get("FN_PORT") ?? 8000) }, handle(async (req) => {
     if (!isServiceCall(req)) throw new HttpError(401, 'unauthorized', 'Solo servicio');
+    // Beta abierta (sin WordPress todavía): no hay nada que sincronizar. Las cuentas beta
+    // no tienen wp_subject, así que tampoco se revisarían.
+    if (!Deno.env.get('WP_BASE_URL')) {
+      log('membership_sync', { skipped: 'wordpress_no_configurado' });
+      return json(req, { skipped: 'wordpress_no_configurado' });
+    }
     const result = await sync(serviceClient(), wordpressLookup(env('WP_BASE_URL'), env('WP_SYNC_TOKEN')),
       Number(Deno.env.get('MEMBERSHIP_MAX_REVOKE_RATIO') ?? '0.05'));
     log('membership_sync', result);

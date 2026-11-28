@@ -100,8 +100,10 @@ cat > app/env/local.json <<JSON
   "AUTH_REDIRECT": "es.icexalumni.atlas://login-callback",
   "APP_ENV": "local",
   "SHOW_DEMO_BANNER": true,
-  "DEV_LOGIN": true
+  "DEV_LOGIN": true,
+  "AUTH_MODE": "${AUTH_MODE:-oidc}"
 }
 JSON
 echo "✓ Entorno local listo. Usuarios OIDC de prueba: ana, javier, laura (admin), nueva (alta nueva), pedro (no socio)."
 echo "  Acceso rápido sin navegador: botones «Modo desarrollo» en la portada (DEV_LOGIN=true)."
+echo "  Portada de la beta (registro con email): AUTH_MODE=password ./scripts/start-local.sh"

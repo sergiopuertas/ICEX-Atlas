@@ -1,0 +1,177 @@
+# Builds de la BETA (entorno «staging»): Android → Firebase App Distribution.
+# Antes de enviarla, la prueba en móviles reales (device-test.yml) tiene que pasar.
+# La app se compila contra el Supabase de staging con registro por email (AUTH_MODE=password).
+# Secretos y variables necesarios: docs/beta.md.
+# iOS (TestFlight) está preparado pero apagado en la beta inicial: se activa con la variable
+# IOS_BETA_ENABLED=true en el entorno «staging» y eligiendo «ios» o «both».
+name: Release beta
+
+on:
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: Plataformas (iOS solo si IOS_BETA_ENABLED=true)
+        type: choice
+        options: [android, ios, both]
+        default: android
+      notes:
+        description: Notas de la versión (las ven los probadores)
+        type: string
+        default: Nueva versión de la beta de ICEX Atlas.
+      probar:
+        description: Probar antes en móviles reales (Firebase Test Lab). Si falla, no se envía a los probadores
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency: release-beta
+
+jobs:
+  device-test:
+    if: inputs.platform != 'ios' && inputs.probar
+    uses: ./.github/workflows/device-test.yml
+    secrets: inherit
+
+  android:
+    needs: device-test
+    if: >-
+      !cancelled() && inputs.platform != 'ios' &&
+      (needs.device-test.result == 'success' || needs.device-test.result == 'skipped')
+    runs-on: ubuntu-latest
+    environment: staging
+    timeout-minutes: 40
+    defaults:
+      run:
+        working-directory: app
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      FEEDBACK_URL: ${{ vars.FEEDBACK_URL }}
+      PRIVACY_URL: ${{ vars.PRIVACY_URL }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Secretos de firma presentes
+        env:
+          K: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          [ -n "$K" ] || { echo "::error::Falta ANDROID_KEYSTORE_BASE64 (créalo con scripts/release/android-keystore.sh). Sin una firma fija los probadores no podrían actualizar."; exit 1; }
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: app/pubspec.yaml
+          cache: true
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Configuración de la app (URL y clave pública de staging)
+        run: python3 ../scripts/deploy/app_env.py staging
+      - name: Firebase (push) si está configurado
+        env:
+          GS: ${{ secrets.GOOGLE_SERVICES_JSON_BASE64 }}
+        run: |
+          if [ -n "$GS" ]; then echo "$GS" | base64 -d > android/app/google-services.json; else echo "::warning::Sin google-services.json: la beta funcionará sin notificaciones push."; fi
+      - name: Firma
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "$ANDROID_KEYSTORE_BASE64" | base64 -d > android/app/upload.jks
+          cat > android/key.properties <<PROPS
+          storeFile=upload.jks
+          storePassword=$ANDROID_KEYSTORE_PASSWORD
+          keyAlias=$ANDROID_KEY_ALIAS
+          keyPassword=$ANDROID_KEY_PASSWORD
+          PROPS
+      - run: flutter pub get
+      - name: APK de la beta
+        run: >
+          flutter build apk --release
+          --build-number=${{ github.run_number }}
+          --dart-define-from-file=env/staging.json
+          --obfuscate --split-debug-info=build/symbols
+      - uses: actions/upload-artifact@v4
+        with:
+          name: icex-atlas-beta-${{ github.run_number }}.apk
+          path: app/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+      - uses: actions/upload-artifact@v4
+        with:
+          name: simbolos-android-${{ github.run_number }}
+          path: app/build/symbols
+          retention-days: 90
+      - name: Firebase App Distribution
+        env:
+          FIREBASE_APP_ID: ${{ secrets.FIREBASE_ANDROID_APP_ID }}
+          FIREBASE_SA: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+          TESTER_GROUPS: ${{ vars.FIREBASE_TESTER_GROUPS || 'beta' }}
+          NOTES: ${{ inputs.notes }}
+        run: |
+          if [ -z "$FIREBASE_APP_ID" ] || [ -z "$FIREBASE_SA" ]; then
+            echo "::warning::Sin FIREBASE_ANDROID_APP_ID / FIREBASE_SERVICE_ACCOUNT_JSON: el APK queda como artefacto de esta ejecución."
+            exit 0
+          fi
+          echo "$FIREBASE_SA" > "$RUNNER_TEMP/firebase-sa.json"
+          GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/firebase-sa.json" npx --yes firebase-tools@latest \
+            appdistribution:distribute build/app/outputs/flutter-apk/app-release.apk \
+            --app "$FIREBASE_APP_ID" --groups "$TESTER_GROUPS" --release-notes "$NOTES"
+          rm -f "$RUNNER_TEMP/firebase-sa.json"
+
+  ios:
+    if: inputs.platform != 'android' && vars.IOS_BETA_ENABLED == 'true'
+    runs-on: macos-15
+    environment: staging
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: app
+    env:
+      SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+      SUPABASE_PROJECT_REF: ${{ secrets.SUPABASE_PROJECT_REF }}
+      FEEDBACK_URL: ${{ vars.FEEDBACK_URL }}
+      PRIVACY_URL: ${{ vars.PRIVACY_URL }}
+      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cuenta de Apple configurada
+        env:
+          KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          MATCH: ${{ secrets.MATCH_GIT_URL }}
+        run: |
+          [ -n "$KEY" ] && [ -n "$MATCH" ] || { echo "::error::Faltan los secretos de Apple (APP_STORE_CONNECT_API_*, MATCH_*). Ver docs/beta.md → iOS."; exit 1; }
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version-file: app/pubspec.yaml
+          cache: true
+      - uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
+          working-directory: app
+      - name: Configuración de la app (URL y clave pública de staging)
+        run: python3 ../scripts/deploy/app_env.py staging
+      - name: Firebase (push) si está configurado
+        env:
+          GS: ${{ secrets.GOOGLE_SERVICE_INFO_PLIST_BASE64 }}
+        run: |
+          if [ -n "$GS" ]; then echo "$GS" | base64 -d > ios/Runner/GoogleService-Info.plist; else echo "::warning::Sin GoogleService-Info.plist: sin notificaciones push."; fi
+      - run: flutter pub get && cd ios && pod install
+      - run: bundle exec fastlane ios beta
+        env:
+          APP_ENV: staging
+          RELEASE_NOTES: ${{ inputs.notes }}
+          TESTFLIGHT_GROUPS: ${{ vars.TESTFLIGHT_GROUPS }}
+          BETA_FEEDBACK_EMAIL: ${{ vars.BETA_FEEDBACK_EMAIL }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+          APP_STORE_CONNECT_API_KEY_CONTENT: ${{ secrets.APP_STORE_CONNECT_API_KEY_CONTENT }}
+          MATCH_GIT_URL: ${{ secrets.MATCH_GIT_URL }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
