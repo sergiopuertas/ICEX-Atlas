@@ -62,8 +62,8 @@ select pg_temp.post(:'autora', 'Post con mucha conversación') as p_viral \gset
 select pg_temp.post(:'autora', 'Post tranquilo') as p_tranquilo \gset
 select pg_temp.post(:'autora', 'Tercer post de la misma autora') as p_tercero \gset
 update feed.posts set recomendaciones_count = 40, comentarios_count = 10 where id = :'p_viral';
-update feed.posts set created_at = now() - interval '1 hour' where id = :'p_tranquilo';
-update feed.posts set created_at = now() - interval '2 hours' where id = :'p_tercero';
+update feed.posts set created_at = now() - interval '1 minute' where id = :'p_tranquilo';
+update feed.posts set created_at = now() - interval '2 minutes' where id = :'p_tercero';
 select pg_temp.post(:'popular', 'De alguien a quien ya sigo') as p_seguido \gset
 select pg_temp.post(:'nueva', 'Mío') as p_mio \gset
 select pg_temp.post(:'autora', 'Solo para seguidores', 'seguidores') as p_privado \gset

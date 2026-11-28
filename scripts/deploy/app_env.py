@@ -31,7 +31,8 @@ def main(argv: list[str]) -> int:
         "SENTRY_DSN": opt("SENTRY_DSN"),
         "FEEDBACK_URL": opt("FEEDBACK_URL"),
         "PRIVACY_URL": opt("PRIVACY_URL"),
-        "SHOW_DEMO_BANNER": False,
+        # Aviso «comunidad de demostración · perfiles ficticios» (SHOW_DEMO_BANNER=1 en la APK de la demo).
+        "SHOW_DEMO_BANNER": opt("SHOW_DEMO_BANNER") == "1",
         "DEV_LOGIN": False,
     }
     if not env["PRIVACY_URL"]:

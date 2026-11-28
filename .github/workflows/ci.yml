@@ -185,7 +185,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - run: shellcheck -S warning scripts/*.sh scripts/lib/*.sh scripts/release/*.sh
-      - run: python3 -m pip install pyflakes && python3 -m pyflakes supabase/stress/*.py scripts/deploy/*.py scripts/load/*.py
+      - run: python3 -m pip install pyflakes && python3 -m pyflakes supabase/stress/*.py scripts/deploy/*.py scripts/load/*.py scripts/demo/*.py
 
   secrets:
     name: Sin secretos en el repositorio
