@@ -65,11 +65,12 @@ más luce.
 
 ## 4. Sin GitHub (en local)
 
+Con la app arrancada (`AUTH_MODE=password ./scripts/start-local.sh`), en otra terminal:
+
 ```bash
-pip install "psycopg[binary]"
-source scripts/lib/supabase-env.sh
-SUPABASE_URL=$API_URL SUPABASE_ANON_KEY=$ANON_KEY SUPABASE_SERVICE_ROLE_KEY=$SERVICE_ROLE_KEY \
-  DEMO_CONFIRMAR=local DEMO_PASSWORD=demo1234 python3 scripts/demo/seed_demo.py
+./scripts/demo-local.sh              # cambia los datos de desarrollo por los de la demo
+./scripts/demo-local.sh --restaurar  # vuelve a los datos de desarrollo
 ```
-En local, la comunidad de la demo convive con los datos semilla de desarrollo, así que las
-sugerencias y el feed mezclan ambos. Para grabar, mejor el proyecto de pruebas.
+
+Prepara Python si hace falta: si a tu `python3` le falta psycopg, crea un entorno en `~/.venvs/icex`. Las
+cuentas son las de arriba, con la contraseña `demo1234`, o la que pongas en `DEMO_PASSWORD`.
